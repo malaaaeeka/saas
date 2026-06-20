@@ -30,7 +30,7 @@ const [emailLoading, setEmailLoading] = useState(false)
 
   const fetchInvoice = async (token: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/invoices/${params.id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${params.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -49,7 +49,7 @@ const [emailLoading, setEmailLoading] = useState(false)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(
-        `http://localhost:5000/api/invoices/${invoice.id}/submit-fbr`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/submit-fbr`,
         { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }
       )
       const data = await res.json()
@@ -70,7 +70,7 @@ const [emailLoading, setEmailLoading] = useState(false)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(
-        `http://localhost:5000/api/invoices/${invoice.id}/pdf`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/pdf`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       )
       const blob = await res.blob()
@@ -94,7 +94,7 @@ const [emailLoading, setEmailLoading] = useState(false)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(
-        `http://localhost:5000/api/invoices/${invoice.id}/send-email`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/send-email`,
         {
           method: 'POST',
           headers: {
