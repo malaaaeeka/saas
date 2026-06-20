@@ -19,7 +19,7 @@ export default function CommissionPage() {
 
   const fetchData = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/ca/dashboard', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ca/dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const json = await res.json()

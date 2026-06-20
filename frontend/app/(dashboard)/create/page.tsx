@@ -409,7 +409,7 @@ function CreateInvoicePageContent() {
 
   const fetchBusinessProfile = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/business/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/business/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -524,7 +524,7 @@ function CreateInvoicePageContent() {
 
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch('http://localhost:5000/api/invoices', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({

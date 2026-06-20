@@ -30,7 +30,7 @@ export default function ClientsPage() {
 
   const fetchClients = async (token: string, pageNum: number) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/ca/clients?page=${pageNum}&limit=10`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ca/clients?page=${pageNum}&limit=10`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()

@@ -43,7 +43,7 @@ export default function SettingsPage() {
 
   const fetchBusinessProfile = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/business/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/business/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
 
@@ -112,7 +112,7 @@ export default function SettingsPage() {
       const token = localStorage.getItem('token')
       const method = business ? 'PUT' : 'POST'
 
-      const res = await fetch('http://localhost:5000/api/business/profile', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/business/profile`, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ export default function SettingsPage() {
     try {
       const token = localStorage.getItem('token')
 
-      const res = await fetch('http://localhost:5000/api/business/fbr-token', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/business/fbr-token`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

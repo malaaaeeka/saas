@@ -16,7 +16,7 @@ export default function DashboardPage() {
 
   const fetchStats = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/invoices/stats', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()

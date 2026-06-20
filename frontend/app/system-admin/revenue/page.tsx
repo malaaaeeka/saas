@@ -19,7 +19,7 @@ export default function RevenuePage() {
 
   const fetchRevenue = async (token: string) => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/revenue', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/revenue`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()

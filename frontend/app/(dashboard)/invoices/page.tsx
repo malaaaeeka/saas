@@ -25,7 +25,7 @@ export default function InvoicesPage() {
     setLoading(true)
     try {
       const res = await fetch(
-        `http://localhost:5000/api/invoices?page=${currentPage}&limit=${PAGE_SIZE}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices?page=${currentPage}&limit=${PAGE_SIZE}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       )
       const data = await res.json()
@@ -106,7 +106,7 @@ export default function InvoicesPage() {
   const handleSubmitFBR = async (e: React.MouseEvent, invoiceId: string) => {
     e.stopPropagation()
     const token = localStorage.getItem('token')
-    const res = await fetch(`http://localhost:5000/api/invoices/${invoiceId}/submit-fbr`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoiceId}/submit-fbr`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` }
     })

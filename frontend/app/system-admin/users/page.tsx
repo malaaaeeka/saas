@@ -32,8 +32,8 @@ export default function UsersPage() {
   const fetchUsers = async (token: string, pageNum: number, role: string) => {
     try {
       const url = role === 'ALL' 
-        ? `http://localhost:5000/api/admin/users?page=${pageNum}&limit=10`
-        : `http://localhost:5000/api/admin/users?page=${pageNum}&limit=10&role=${role}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users?page=${pageNum}&limit=10`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users?page=${pageNum}&limit=10&role=${role}`
       
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }

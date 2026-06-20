@@ -32,8 +32,8 @@ export default function InvoicesPage() {
   const fetchInvoices = async (token: string, pageNum: number, status: string) => {
     try {
       const url = status === 'ALL'
-        ? `http://localhost:5000/api/admin/invoices?page=${pageNum}&limit=10`
-        : `http://localhost:5000/api/admin/invoices?page=${pageNum}&limit=10&status=${status}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10&status=${status}`
       
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
