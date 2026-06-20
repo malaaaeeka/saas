@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -333,7 +333,7 @@ const DEFAULT_ITEM = {
   discount: 0
 }
 
-export default function CreateInvoicePage() {
+function CreateInvoicePageContent() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [business, setBusiness] = useState<any>(null)
@@ -963,5 +963,17 @@ export default function CreateInvoicePage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function CreateInvoicePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        Loading...
+      </div>
+    }>
+      <CreateInvoicePageContent />
+    </Suspense>
   )
 }
