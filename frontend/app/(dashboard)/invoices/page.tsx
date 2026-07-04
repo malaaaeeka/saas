@@ -85,21 +85,21 @@ export default function InvoicesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'SENT':    return 'text-green-400 bg-green-500/10'
-      case 'PENDING': return 'text-yellow-400 bg-yellow-500/10'
-      case 'FAILED':  return 'text-red-400 bg-red-500/10'
-      case 'AMENDED': return 'text-gray-400 bg-gray-500/10'
-      default:        return 'text-gray-400 bg-gray-500/10'
+      case 'SENT':    return 'text-success-text bg-success-bg'
+      case 'PENDING': return 'text-warning-text bg-warning-bg'
+      case 'FAILED':  return 'text-error-text bg-error-bg'
+      case 'AMENDED': return 'text-muted bg-border-light'
+      default:        return 'text-muted bg-border-light'
     }
   }
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'SALE':        return { label: 'Sale',        color: 'text-blue-400' }
-      case 'PURCHASE':    return { label: 'Purchase',    color: 'text-purple-400' }
-      case 'CREDIT_NOTE': return { label: 'Credit Note', color: 'text-red-400' }
-      case 'DEBIT_NOTE':  return { label: 'Debit Note',  color: 'text-orange-400' }
-      default:            return { label: type,          color: 'text-gray-400' }
+      case 'SALE':        return { label: 'Sale',        color: 'text-link' }
+      case 'PURCHASE':    return { label: 'Purchase',    color: 'text-muted-dark' }
+      case 'CREDIT_NOTE': return { label: 'Credit Note', color: 'text-error-text' }
+      case 'DEBIT_NOTE':  return { label: 'Debit Note',  color: 'text-warning-text' }
+      default:            return { label: type,          color: 'text-muted' }
     }
   }
 
@@ -129,12 +129,12 @@ export default function InvoicesPage() {
     return (
       <tr
         onClick={() => router.push(`/invoices/${invoice.id}`)}
-        className={`border-t border-gray-800 hover:bg-gray-800/50 transition cursor-pointer ${isAmendment ? 'bg-gray-900/70' : ''}`}
+        className={`border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
       >
         <td className="px-6 py-4">
           <div className="flex items-center gap-2">
-            {isAmendment && <span className="text-gray-600 text-lg leading-none">└─</span>}
-            <span className="font-mono text-xs text-gray-400">{invoice.id.slice(0, 12)}...</span>
+            {isAmendment && <span className="text-muted text-lg leading-none">└─</span>}
+            <span className="font-mono text-xs text-muted">{invoice.id.slice(0, 12)}...</span>
           </div>
         </td>
         <td className="px-6 py-4 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
@@ -143,43 +143,43 @@ export default function InvoicesPage() {
         </td>
         <td className="px-6 py-4 text-sm">{invoice.buyerName || 'Walk-in Customer'}</td>
         <td className="px-6 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
-        <td className="px-6 py-4 text-green-400">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
+        <td className="px-6 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
         <td className="px-6 py-4">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)}`}>
             {invoice.status}
           </span>
         </td>
-        <td className="px-6 py-4 font-mono text-xs text-blue-400">{invoice.fbrInvoiceNo || '—'}</td>
+        <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
         <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED') && (
             <button
               onClick={e => handleSubmitFBR(e, invoice.id)}
-              className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition"
+              className="bg-accent hover:opacity-80 text-heading px-3 py-1 rounded text-xs font-semibold transition"
             >
               Submit to FBR
             </button>
           )}
-          {invoice.status === 'SENT'    && <span className="text-green-400 text-xs">✓ Submitted</span>}
-          {invoice.status === 'AMENDED' && <span className="text-gray-400 text-xs">Amended</span>}
-          {invoice.status === 'FAILED'  && <span className="text-red-400 text-xs">✗ Failed</span>}
+          {invoice.status === 'SENT'    && <span className="text-success-text text-xs">✓ Submitted</span>}
+          {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
+          {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
         </td>
       </tr>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
+    <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">Invoices</h1>
-            <p className="text-gray-400">All your FBR invoices</p>
+            <p className="text-muted">All your FBR invoices</p>
           </div>
           <button
             onClick={() => router.push('/create')}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+            className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
           >
             + New Invoice
           </button>
@@ -192,12 +192,12 @@ export default function InvoicesPage() {
             placeholder="Search buyer, FBR no, ID..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition w-64"
+            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition w-64"
           />
           <select
             value={typeFilter}
             onChange={e => setTypeFilter(e.target.value)}
-            className="bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition"
+            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition"
           >
             <option value="ALL">All Types</option>
             <option value="SALE">Sale</option>
@@ -208,7 +208,7 @@ export default function InvoicesPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-blue-500 transition"
+            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition"
           >
             <option value="ALL">All Statuses</option>
             <option value="PENDING">Pending</option>
@@ -219,54 +219,54 @@ export default function InvoicesPage() {
           {(typeFilter !== 'ALL' || statusFilter !== 'ALL' || search !== '') && (
             <button
               onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white px-4 py-2 rounded-lg text-sm transition"
+              className="bg-surface border border-border hover:border-heading text-muted hover:text-heading px-4 py-2 rounded-lg text-sm transition"
             >
               ✕ Clear
             </button>
           )}
-          <span className="ml-auto text-gray-500 text-sm self-center">
+          <span className="ml-auto text-muted text-sm self-center">
             {totalCount} total invoices
           </span>
         </div>
 
         {/* Table */}
         {loading ? (
-          <p className="text-gray-400">Loading invoices...</p>
+          <p className="text-muted">Loading invoices...</p>
         ) : invoices.length === 0 && page === 1 ? (
-          <div className="bg-gray-900 rounded-lg p-12 border border-gray-800 text-center">
-            <p className="text-gray-400 text-lg mb-4">No invoices yet</p>
+          <div className="bg-surface rounded-lg p-12 border border-border text-center">
+            <p className="text-muted text-lg mb-4">No invoices yet</p>
             <button
               onClick={() => router.push('/create')}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+              className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
             >
               Create Your First Invoice
             </button>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-gray-900 rounded-lg p-12 border border-gray-800 text-center">
-            <p className="text-gray-400 text-lg mb-2">No invoices match your filters</p>
+          <div className="bg-surface rounded-lg p-12 border border-border text-center">
+            <p className="text-muted text-lg mb-2">No invoices match your filters</p>
             <button
               onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }}
-              className="text-blue-400 hover:text-blue-300 text-sm transition"
+              className="text-link hover:opacity-70 text-sm transition"
             >
               Clear filters
             </button>
           </div>
         ) : (
           <>
-            <div className="bg-gray-900 rounded-lg border border-gray-800 overflow-hidden mb-4">
+            <div className="bg-surface rounded-lg border border-border overflow-hidden mb-4">
               <table className="w-full">
-                <thead className="bg-gray-800">
+                <thead className="bg-border-light">
                   <tr>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Invoice ID</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Date</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Type</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Buyer</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Amount</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Tax</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Status</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">FBR No.</th>
-                    <th className="text-left px-6 py-4 text-gray-400 text-sm">Action</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Invoice ID</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Date</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Type</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Buyer</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Amount</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Tax</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Status</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">FBR No.</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -285,21 +285,21 @@ export default function InvoicesPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between">
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted text-sm">
                   Page {page} of {totalPages} — showing {invoices.length} invoices
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handlePageChange(1)}
                     disabled={page === 1}
-                    className="px-3 py-2 rounded-lg text-sm bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="px-3 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     «
                   </button>
                   <button
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 1}
-                    className="px-4 py-2 rounded-lg text-sm bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="px-4 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     ← Prev
                   </button>
@@ -314,15 +314,15 @@ export default function InvoicesPage() {
                     }, [])
                     .map((p, idx) =>
                       p === '...' ? (
-                        <span key={`ellipsis-${idx}`} className="px-3 py-2 text-gray-500 text-sm">...</span>
+                        <span key={`ellipsis-${idx}`} className="px-3 py-2 text-muted text-sm">...</span>
                       ) : (
                         <button
                           key={p}
                           onClick={() => handlePageChange(p as number)}
                           className={`px-4 py-2 rounded-lg text-sm transition ${
                             page === p
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                              ? 'bg-btn-dark text-btn-dark-text'
+                              : 'bg-surface border border-border hover:border-heading text-body'
                           }`}
                         >
                           {p}
@@ -334,14 +334,14 @@ export default function InvoicesPage() {
                   <button
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page === totalPages}
-                    className="px-4 py-2 rounded-lg text-sm bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="px-4 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     Next →
                   </button>
                   <button
                     onClick={() => handlePageChange(totalPages)}
                     disabled={page === totalPages}
-                    className="px-3 py-2 rounded-lg text-sm bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="px-3 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
                   >
                     »
                   </button>
