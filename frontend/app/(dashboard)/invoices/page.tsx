@@ -176,14 +176,14 @@ export default function InvoicesPage() {
         <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
         <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED') && (
-            <button
-              onClick={e => handleSubmitFBR(e, invoice.id)}
-              className="bg-accent hover:opacity-80 text-heading px-3 py-1 rounded text-xs font-semibold transition"
-            >
-              Submit to FBR
-            </button>
+           <button
+  onClick={e => handleSubmitFBR(e, invoice.id)}
+  className="bg-accent hover:opacity-80 text-heading px-3 py-1 rounded text-xs font-semibold transition underline"
+>
+  Submit
+</button>
           )}
-          {invoice.status === 'SENT'    && <span className="text-success-text text-xs">✓ Submitted</span>}
+          {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
           {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
           {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
         </td>
