@@ -11,7 +11,7 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
   const qrBuffer = await generateQRCode(qrData)
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' })
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
     const chunks: Buffer[] = []
 
     doc.on('data', (chunk) => chunks.push(chunk))
@@ -26,24 +26,22 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
     }
     const title = titleMap[invoice.invoiceType] || 'Sale Invoice'
+    const pageWidth = doc.page.width - 60 // usable width inside 30pt margins
 
-    const pageWidth = doc.page.width - 80 // usable width inside 40pt margins
-
-    // ===== Header: Business name (left) + logo/QR block (right) =====
-    doc.fontSize(16).font('Helvetica-Bold').text(invoice.business.businessName || 'N/A', 40, 40)
-    doc.image(qrBuffer, doc.page.width - 130, 35, { width: 80, height: 80 })
+    // ===== Header: Business name (left) + QR (right) =====
+    doc.fontSize(16).font('Helvetica-Bold').text(invoice.business.businessName || 'N/A', 30, 30)
+    doc.image(qrBuffer, doc.page.width - 110, 25, { width: 80, height: 80 })
     doc.fontSize(7).fillColor('gray')
-      .text('Scan to verify', doc.page.width - 130, 117, { width: 80, align: 'center' })
+      .text('Scan to verify', doc.page.width - 110, 107, { width: 80, align: 'center' })
     doc.fillColor('black')
 
-    doc.moveDown(2)
-    doc.moveTo(40, 130).lineTo(doc.page.width - 40, 130).stroke()
+    doc.moveTo(30, 120).lineTo(doc.page.width - 30, 120).stroke()
 
     // ===== Three-column info block: Seller | Buyer | Invoice Summary =====
-    const colY = 145
-    const col1 = 40
-    const col2 = 300
-    const col3 = 560
+    const colY = 132
+    const col1 = 30
+    const col2 = 290
+    const col3 = 550
 
     doc.fontSize(10).font('Helvetica-Bold').text('Seller Information', col1, colY)
     doc.fontSize(9).font('Helvetica')
@@ -86,75 +84,105 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 
     // ===== Items table =====
     let tableTop = colY + 90
-    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
-    tableTop += 8
-
-    // Column layout (landscape gives ~760pt usable width)
-    const cols = [
-      { key: 'sr',       label: 'Sr.',           x: 40,  w: 25  },
-      { key: 'hsCode',    label: 'HS Code',       x: 65,  w: 55  },
-      { key: 'desc',      label: 'Description',   x: 120, w: 160 },
-      { key: 'saleType',  label: 'Sale Type',     x: 280, w: 90  },
-      { key: 'qty',       label: 'Qty',           x: 370, w: 45  },
-      { key: 'uom',       label: 'UoM',           x: 415, w: 40  },
-      { key: 'rate',      label: 'Rate',          x: 455, w: 55  },
-      { key: 'value',     label: 'Sales Value',   x: 510, w: 70  },
-      { key: 'tax',       label: 'Sales Tax',     x: 580, w: 65  },
-      { key: 'fed',       label: 'FED',           x: 645, w: 45  },
-      { key: 'discount',  label: 'Discount',      x: 690, w: 55  },
-      { key: 'sro',       label: 'SRO/Schedule',  x: 745, w: 90  },
-    ]
-
-    doc.fontSize(8).font('Helvetica-Bold')
-    cols.forEach(c => doc.text(c.label, c.x, tableTop, { width: c.w }))
-    tableTop += 14
-    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
+    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
     tableTop += 6
 
-    doc.font('Helvetica').fontSize(7.5)
+    // Column definitions — 19 columns matching FBR portal layout
+    const cols = [
+      { key: 'sr',          label: 'Sr.',            x: 30,  w: 18  },
+      { key: 'hsCode',      label: 'HS Code',         x: 48,  w: 40  },
+      { key: 'hsDesc',      label: 'HS Code Desc.',   x: 88,  w: 95  },
+      { key: 'prodDesc',    label: 'Product Desc.',   x: 183, w: 75  },
+      { key: 'saleType',    label: 'Sale Type',       x: 258, w: 60  },
+      { key: 'qty',         label: 'Qty',             x: 318, w: 28  },
+      { key: 'uom',         label: 'UoM',             x: 346, w: 26  },
+      { key: 'rate',        label: 'Rate',            x: 372, w: 35  },
+      { key: 'salesValue',  label: 'Sales Value',     x: 407, w: 48  },
+      { key: 'retailPrice', label: 'Retail Price',    x: 455, w: 42  },
+      { key: 'salesTax',    label: 'Sales Tax',       x: 497, w: 40  },
+      { key: 'extraTax',    label: 'Extra Tax',       x: 537, w: 35  },
+      { key: 'furtherTax',  label: 'Further Tax',     x: 572, w: 35  },
+      { key: 'fed',         label: 'FED',             x: 607, w: 26  },
+      { key: 'stWht',       label: 'ST WHT',          x: 633, w: 30  },
+      { key: 'discount',    label: 'Discount',        x: 663, w: 30  },
+      { key: 'sro',         label: 'SRO/Schedule',    x: 693, w: 48  },
+      { key: 'sroItemSr',   label: 'SRO Item Sr.',    x: 741, w: 32  },
+      { key: 'status',      label: 'Status',          x: 773, w: 26  },
+    ]
+
+    doc.fontSize(6.5).font('Helvetica-Bold')
+    cols.forEach(c => doc.text(c.label, c.x, tableTop, { width: c.w }))
+    tableTop += 12
+    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
+    tableTop += 5
+
+    doc.font('Helvetica').fontSize(6.5)
     invoice.items.forEach((item: any, i: number) => {
-      const qty    = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
-      const amount = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
-      const tax    = isCreditNote ? Math.abs(Number(item.salesTax))    : Number(item.salesTax)
-      const fed    = Number(item.fed || 0)
-      const discount = Number(item.discount || 0)
+      const qty          = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
+      const salesValue   = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
+      const salesTax     = isCreditNote ? Math.abs(Number(item.salesTax))    : Number(item.salesTax)
+      const fed          = Number(item.fed || 0)
+      const discount     = Number(item.discount || 0)
+      const extraTax     = Number(item.extraTax || 0)
+      const furtherTax   = Number(item.furtherTax || 0)
+      const retailPrice  = Number(item.fixedNotifiedValue || 0)
+      const stWht        = Number(item.stWithheld || 0)
 
       const rowY = tableTop
-      doc.text(String(i + 1),                          40,  rowY, { width: 25 })
-      doc.text(item.hsCode || '—',                      65,  rowY, { width: 55 })
-      doc.text(item.description || '—',                 120, rowY, { width: 160 })
-      doc.text(invoice.saleType || '—',                 280, rowY, { width: 90 })
-      doc.text(String(qty),                             370, rowY, { width: 45 })
-      doc.text(item.uom || '—',                         415, rowY, { width: 40 })
-      doc.text(Number(item.rate).toFixed(2),            455, rowY, { width: 55 })
-      doc.text(amount.toFixed(2),                       510, rowY, { width: 70 })
-      doc.text(tax.toFixed(2),                          580, rowY, { width: 65 })
-      doc.text(fed.toFixed(2),                          645, rowY, { width: 45 })
-      doc.text(discount.toFixed(2),                     690, rowY, { width: 55 })
-      doc.text(item.sroSchedule || '—',                 745, rowY, { width: 90 })
+      doc.text(String(i + 1),                          30,  rowY, { width: 18 })
+      doc.text(item.hsCode || '—',                      48,  rowY, { width: 40 })
+      doc.text(item.hsCodeDescription || '—',           88,  rowY, { width: 95 })
+      doc.text(item.description || '—',                 183, rowY, { width: 75 })
+      doc.text(invoice.saleType || '—',                 258, rowY, { width: 60 })
+      doc.text(String(qty),                             318, rowY, { width: 28 })
+      doc.text(item.uom || '—',                         346, rowY, { width: 26 })
+      doc.text(Number(item.rate).toFixed(2),            372, rowY, { width: 35 })
+      doc.text(salesValue.toFixed(2),                   407, rowY, { width: 48 })
+      doc.text(retailPrice.toFixed(2),                  455, rowY, { width: 42 })
+      doc.text(salesTax.toFixed(2),                     497, rowY, { width: 40 })
+      doc.text(extraTax.toFixed(2),                     537, rowY, { width: 35 })
+      doc.text(furtherTax.toFixed(2),                   572, rowY, { width: 35 })
+      doc.text(fed.toFixed(2),                          607, rowY, { width: 26 })
+      doc.text(stWht.toFixed(2),                        633, rowY, { width: 30 })
+      doc.text(discount.toFixed(2),                     663, rowY, { width: 30 })
+      doc.text(item.sroSchedule || '—',                 693, rowY, { width: 48 })
+      doc.text(item.itemSNo || '—',                     741, rowY, { width: 32 })
+      doc.text(invoice.status || '—',                   773, rowY, { width: 26 })
 
-      // advance tableTop by the tallest wrapped cell (description is usually tallest)
-      const descHeight = doc.heightOfString(item.description || '—', { width: 160 })
-      tableTop += Math.max(descHeight, 12) + 6
+      // advance row by the tallest wrapped cell (HS Code Desc or Product Desc usually tallest)
+      const hsDescHeight   = doc.heightOfString(item.hsCodeDescription || '—', { width: 95 })
+      const prodDescHeight = doc.heightOfString(item.description || '—', { width: 75 })
+      const tallest = Math.max(hsDescHeight, prodDescHeight, 10)
+      tableTop += tallest + 5
     })
 
-    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
+    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
     tableTop += 10
 
     // ===== Totals row =====
     const subtotal   = isCreditNote ? Math.abs(Number(invoice.totalAmount))   : Number(invoice.totalAmount)
-    const salesTax   = isCreditNote ? Math.abs(Number(invoice.totalSalesTax)) : Number(invoice.totalSalesTax)
+    const salesTaxTotal = isCreditNote ? Math.abs(Number(invoice.totalSalesTax)) : Number(invoice.totalSalesTax)
     const fedTotal   = isCreditNote ? Math.abs(Number(invoice.totalFed))     : Number(invoice.totalFed)
     const discountTotal = Number(invoice.totalDiscount)
-    const grandTotal = subtotal + salesTax + fedTotal - discountTotal
+    const grandTotal = subtotal + salesTaxTotal + fedTotal - discountTotal
 
     doc.fontSize(9).font('Helvetica-Bold')
-      .text(`Total Sales Value: PKR ${subtotal.toFixed(2)}`,   500, tableTop)
-      .text(`Total Sales Tax: PKR ${salesTax.toFixed(2)}`,     500, tableTop + 14)
-      .text(`Grand Total: PKR ${grandTotal.toFixed(2)}`,       500, tableTop + 32)
+      .text(`Total Sales Value: PKR ${subtotal.toFixed(2)}`,     500, tableTop)
+      .text(`Total Sales Tax: PKR ${salesTaxTotal.toFixed(2)}`,  500, tableTop + 14)
+      .text(`Grand Total: PKR ${grandTotal.toFixed(2)}`,         500, tableTop + 32)
 
+    tableTop += 60
+
+    if (isAmendment) {
+      doc.fontSize(8).font('Helvetica-Bold')
+        .text(`This is a ${title}. It supersedes and corrects the original invoice referenced above.`, 30, tableTop, { align: 'center', width: pageWidth })
+      tableTop += 14
+    }
+
+    // ===== Footer =====
     doc.fontSize(7).font('Helvetica').fillColor('gray')
-      .text('This is a computer generated document. Scan QR code to verify authenticity.', 40, doc.page.height - 50, { align: 'center', width: pageWidth })
+      .text('In the above invoices, "E" denotes that the invoice has been edited, whereas "C" indicates that the invoice has been cancelled.', 30, doc.page.height - 40, { width: pageWidth - 60 })
+      .text('This is a computer generated document. Scan QR code to verify authenticity.', 30, doc.page.height - 40, { align: 'right', width: pageWidth })
     doc.fillColor('black')
 
     doc.end()
@@ -193,6 +221,7 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
           createMany: {
             data: items.map((item: any) => ({
               hsCode: item.hsCode,
+              hsCodeDescription: item.hsCodeDescription || null,
               productCode: item.productCode,
               description: item.description,
               quantity: item.quantity,
@@ -201,7 +230,12 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
               totalAmount: item.totalAmount,
               salesTax: item.salesTax,
               sroSchedule: item.sroSchedule,
+              itemSNo: item.itemSNo || null,
               fed: item.fed || 0,
+              extraTax: item.extraTax || 0,
+              furtherTax: item.furtherTax || 0,
+              fixedNotifiedValue: item.fixedNotifiedValue || 0,
+              stWithheld: item.stWithheld || 0,
               withholdingTax: item.withholdingTax || 0,
               discount: item.discount || 0
             }))
