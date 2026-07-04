@@ -1,56 +1,50 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400&family=Montserrat:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
         .nav-root {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 100;
-          transition: background 0.4s ease, backdrop-filter 0.4s ease, box-shadow 0.4s ease;
-          background: ${scrolled
-            ? 'rgba(10, 8, 6, 0.88)'
-            : 'transparent'};
-          backdrop-filter: ${scrolled ? 'blur(14px)' : 'none'};
-          -webkit-backdrop-filter: ${scrolled ? 'blur(14px)' : 'none'};
-          box-shadow: ${scrolled ? '0 1px 0 rgba(180,150,80,0.18)' : 'none'};
+          --bg: #1e2216;
+          --lime: #c8e64c;
+          --text: #f0edd8;
+          --text-muted: #9a9a7e;
+          --border: rgba(200,230,76,0.15);
+          font-family: 'DM Sans', sans-serif;
         }
 
-        .nav-inner {
-          max-width: 1400px;
-          margin: 0 auto;
-          padding: 0 2.5rem;
-          height: 72px;
+        .nav-bar {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          background: var(--bg);
           display: flex;
           align-items: center;
           justify-content: space-between;
+          padding: 0 2.5rem;
+          height: 64px;
+          transition: background 0.2s;
+        }
+
+        @media (max-width: 768px) {
+          .nav-bar { padding: 0 1.25rem; }
         }
 
         /* Brand */
         .nav-brand {
-          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 2.2rem;
+          font-weight: 300;
           font-style: italic;
-          font-size: 1.6rem;
-          font-weight: 400;
-          letter-spacing: 0.04em;
-          color: #e8d9b5;
+          letter-spacing: -0.01em;
+          color: var(--text);
           text-decoration: none;
           white-space: nowrap;
           flex-shrink: 0;
@@ -60,43 +54,26 @@ export default function Navbar() {
         .nav-links {
           display: flex;
           align-items: center;
-          gap: 2.8rem;
+          gap: 0.5rem;
           list-style: none;
           margin: 0;
           padding: 0;
         }
+        @media (max-width: 768px) { .nav-links { display: none; } }
 
         .nav-links a {
-          font-family: 'Montserrat', sans-serif;
-          font-size: 0.88rem;
-          font-weight: 500;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(232, 217, 181, 0.75);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.82rem;
+          font-weight: 400;
+          letter-spacing: 0.01em;
+          color: var(--text-muted);
           text-decoration: none;
-          position: relative;
-          transition: color 0.25s ease;
-        }
-
-        .nav-links a::after {
-          content: '';
-          position: absolute;
-          bottom: -3px;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: #c8a84b;
-          transform: scaleX(0);
-          transition: transform 0.25s ease;
-          transform-origin: left;
+          padding: 0.4rem 0.85rem;
+          transition: color 0.2s ease;
         }
 
         .nav-links a:hover {
-          color: #e8d9b5;
-        }
-
-        .nav-links a:hover::after {
-          transform: scaleX(1);
+          color: var(--lime);
         }
 
         /* Right buttons */
@@ -106,46 +83,47 @@ export default function Navbar() {
           gap: 0.75rem;
           flex-shrink: 0;
         }
+        @media (max-width: 768px) { .nav-actions { display: none; } }
 
         .btn-portal {
-          font-family: 'Montserrat', sans-serif;
+          font-family: 'DM Sans', sans-serif;
           font-size: 0.78rem;
-          font-weight: 500;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: #e8d9b5;
+          font-weight: 400;
+          letter-spacing: 0.02em;
+          color: var(--text-muted);
           background: transparent;
-          border: 1px solid rgba(200, 168, 75, 0.6);
-          padding: 0.55rem 1.25rem;
+          border: 1px solid rgba(200,230,76,0.35);
+          border-radius: 6px;
+          padding: 0.4rem 1.1rem;
           text-decoration: none;
           cursor: pointer;
-          transition: border-color 0.25s ease, color 0.25s ease, background 0.25s ease;
+          transition: color 0.15s ease, border-color 0.15s ease;
+          display: inline-block;
         }
 
         .btn-portal:hover {
-          border-color: #c8a84b;
-          background: rgba(200, 168, 75, 0.08);
-          color: #f0e4c0;
+          color: var(--text);
+          border-color: var(--lime);
         }
 
         .btn-register {
-          font-family: 'Montserrat', sans-serif;
+          font-family: 'DM Sans', sans-serif;
           font-size: 0.78rem;
           font-weight: 500;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: #0a0806;
-          background: #c8a84b;
-          border: 1px solid #c8a84b;
-          padding: 0.55rem 1.25rem;
+          letter-spacing: 0.01em;
+          color: #1e2216;
+          background: var(--lime);
+          border: none;
+          border-radius: 6px;
+          padding: 0.45rem 1.2rem;
           text-decoration: none;
           cursor: pointer;
-          transition: background 0.25s ease, color 0.25s ease;
+          transition: background 0.15s ease;
+          display: inline-block;
         }
 
         .btn-register:hover {
-          background: #e8d9b5;
-          border-color: #e8d9b5;
+          background: #d6f05a;
         }
 
         /* Mobile hamburger */
@@ -158,12 +136,14 @@ export default function Navbar() {
           cursor: pointer;
           padding: 4px;
         }
+        @media (max-width: 768px) { .hamburger { display: flex; } }
 
         .hamburger span {
           display: block;
           width: 22px;
-          height: 1px;
-          background: #e8d9b5;
+          height: 1.5px;
+          background: var(--text);
+          border-radius: 2px;
           transition: all 0.25s ease;
         }
 
@@ -180,43 +160,44 @@ export default function Navbar() {
         /* Mobile drawer */
         .mobile-menu {
           display: none;
+          position: fixed;
+          top: 64px;
+          left: 0;
+          right: 0;
           flex-direction: column;
-          background: rgba(10, 8, 6, 0.97);
-          border-top: 1px solid rgba(200, 168, 75, 0.2);
-          padding: 1.5rem 2.5rem 2rem;
-          gap: 1.5rem;
+          background: var(--bg);
+          border-top: 1px solid var(--border);
+          padding: 1rem 1.5rem 1.5rem;
+          gap: 0.25rem;
+          z-index: 99;
         }
+
+        .mobile-menu.open { display: flex; }
 
         .mobile-menu a {
-          font-family: 'Montserrat', sans-serif;
-          font-size: 0.82rem;
-          font-weight: 500;
-          letter-spacing: 0.18em;
-          text-transform: uppercase;
-          color: rgba(232, 217, 181, 0.75);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.9rem;
+          font-weight: 400;
+          color: var(--text-muted);
           text-decoration: none;
-          transition: color 0.2s;
+          padding: 0.6rem 0.75rem;
+          border-radius: 8px;
+          transition: color 0.15s ease;
         }
 
-        .mobile-menu a:hover { color: #e8d9b5; }
+        .mobile-menu a:hover { color: var(--lime); }
 
         .mobile-actions {
           display: flex;
           gap: 0.75rem;
           padding-top: 0.5rem;
-          border-top: 1px solid rgba(200, 168, 75, 0.15);
-        }
-
-        @media (max-width: 768px) {
-          .nav-links { display: none; }
-          .nav-actions { display: none; }
-          .hamburger { display: flex; }
-          .mobile-menu { display: ${menuOpen ? 'flex' : 'none'}; }
+          margin-top: 0.5rem;
+          border-top: 1px solid var(--border);
         }
       `}</style>
 
-      <nav className="nav-root">
-        <div className="nav-inner">
+      <div className="nav-root">
+        <nav className="nav-bar">
           {/* Brand */}
           <Link href="/" className="nav-brand">
             E-Invoice
@@ -246,11 +227,10 @@ export default function Navbar() {
             <span />
             <span />
           </button>
-        </div>
-
+        </nav>
 
         {/* Mobile drawer */}
-        <div className="mobile-menu">
+        <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
           <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link href="/features" onClick={() => setMenuOpen(false)}>Features</Link>
           <Link href="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
@@ -260,7 +240,7 @@ export default function Navbar() {
             <Link href="/register" className="btn-register" onClick={() => setMenuOpen(false)}>Register</Link>
           </div>
         </div>
-      </nav>
+      </div>
     </>
   );
 }

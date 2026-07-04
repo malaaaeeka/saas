@@ -50,15 +50,15 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
     }
   }
 
-  if (loading) return <p className="text-gray-400">Loading invoices...</p>
+  if (loading) return <p className="text-muted">Loading invoices...</p>
 
   const getStatusColor = (status: string) => {
     switch(status) {
-      case 'SENT': return 'bg-green-900 text-green-200'
-      case 'FAILED': return 'bg-red-900 text-red-200'
-      case 'PENDING': return 'bg-yellow-900 text-yellow-200'
-      case 'RETRY': return 'bg-orange-900 text-orange-200'
-      default: return 'bg-gray-800 text-gray-200'
+      case 'SENT': return 'bg-success-bg text-success-text'
+      case 'FAILED': return 'bg-error-bg text-error-text'
+      case 'PENDING': return 'bg-warning-bg text-warning-text'
+      case 'RETRY': return 'bg-warning-bg text-warning-text'
+      default: return 'bg-border-light text-body'
     }
   }
 
@@ -67,7 +67,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Invoices Overview</h1>
-          <p className="text-gray-400">All system invoices</p>
+          <p className="text-muted">All system invoices</p>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
             setStatusFilter(e.target.value)
             setPage(1)
           }}
-          className="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2"
+          className="bg-surface-alt border border-border text-heading rounded-lg px-4 py-2"
         >
           <option value="ALL">All Status</option>
           <option value="PENDING">Pending</option>
@@ -90,9 +90,9 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       </div>
 
       {/* Invoices Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-800">
+          <thead className="bg-border-light">
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold">Invoice ID</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Business</th>
@@ -105,7 +105,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
           <tbody>
             {invoices.length > 0 ? (
               invoices.map((inv) => (
-                <tr key={inv.id} className="border-t border-gray-800 hover:bg-gray-800/50">
+                <tr key={inv.id} className="border-t border-border hover:bg-border-light/50">
                   <td className="px-6 py-4 text-sm font-mono">{inv.id.substring(0, 8)}...</td>
                   <td className="px-6 py-4">{inv.business?.businessName || 'N/A'}</td>
                   <td className="px-6 py-4 font-medium">
@@ -116,11 +116,11 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
                       {inv.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-400">
+                  <td className="px-6 py-4 text-sm text-muted">
                     {new Date(inv.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-400 hover:text-blue-300 text-sm">
+                    <button className="text-link hover:opacity-70 text-sm">
                       View
                     </button>
                   </td>
@@ -128,7 +128,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-gray-400">
+                <td colSpan={6} className="px-6 py-8 text-center text-muted">
                   No invoices found
                 </td>
               </tr>
@@ -139,14 +139,14 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
 
       {/* Pagination */}
       <div className="mt-6 flex justify-between items-center">
-        <p className="text-gray-400">
+        <p className="text-muted">
           Showing {invoices.length} of {total} invoices
         </p>
         <div className="flex gap-2">
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded"
+            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Previous
           </button>
@@ -154,7 +154,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
           <button
             onClick={() => setPage(page + 1)}
             disabled={page * 10 >= total}
-            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded"
+            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Next
           </button>

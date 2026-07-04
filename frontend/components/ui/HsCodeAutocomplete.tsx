@@ -88,13 +88,13 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
           onChange={handleChange}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Type HS code or keyword to search..."
-          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 pr-8 text-sm focus:outline-none focus:border-blue-500"
+          className="w-full bg-surface-alt border border-border text-heading rounded px-3 py-1 pr-8 text-sm focus:outline-none focus:border-accent"
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white text-xs"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-heading text-xs"
           >
             ✕
           </button>
@@ -102,24 +102,24 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
       </div>
 
       {loading && (
-        <div className="absolute z-50 w-full bg-gray-800 border border-gray-600 rounded mt-1 px-3 py-2 text-sm text-gray-400">
+        <div className="absolute z-50 w-full bg-surface border border-border rounded mt-1 px-3 py-2 text-sm text-muted">
           Searching...
         </div>
       )}
 
       {error && (
-        <div className="absolute z-50 w-full bg-gray-800 border border-red-600 rounded mt-1 px-3 py-2 text-sm text-red-400">
+        <div className="absolute z-50 w-full bg-surface border border-error-border rounded mt-1 px-3 py-2 text-sm text-error-text">
           {error}
         </div>
       )}
 
       {open && !loading && results.length > 0 && (
-        <ul className="absolute z-50 w-full bg-gray-800 border border-gray-600 rounded mt-1 max-h-48 overflow-y-auto text-sm shadow-lg">
+        <ul className="absolute z-50 w-full bg-surface border border-border rounded mt-1 max-h-48 overflow-y-auto text-sm shadow-lg">
           {results.map((item) => (
             <li
               key={item.fullEntry}
               onMouseDown={() => handleSelect(item)}
-              className="px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 text-gray-200 whitespace-nowrap overflow-x-auto"
+              className="px-3 py-2 hover:bg-border-light cursor-pointer border-b border-border last:border-0 text-body whitespace-nowrap overflow-x-auto"
             >
               {item.fullEntry}
             </li>
@@ -128,7 +128,7 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
       )}
 
       {open && !loading && query.length >= 2 && results.length === 0 && (
-        <div className="absolute z-50 w-full bg-gray-800 border border-gray-600 rounded mt-1 px-3 py-2 text-sm text-gray-400">
+        <div className="absolute z-50 w-full bg-surface border border-border rounded mt-1 px-3 py-2 text-sm text-muted">
           No HS codes found for &quot;{query}&quot;
         </div>
       )}

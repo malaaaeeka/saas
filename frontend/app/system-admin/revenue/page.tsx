@@ -33,7 +33,7 @@ export default function RevenuePage() {
     }
   }
 
-  if (loading) return <p>Loading...</p>
+  if (loading) return <p className="text-muted">Loading...</p>
 
   return (
     <div className="max-w-7xl">
@@ -41,22 +41,22 @@ export default function RevenuePage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-1">Total Revenue</p>
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-1">Total Revenue</p>
           <p className="text-4xl font-bold">
             PKR {(revenue?.totalRevenue || 0).toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-1">Total Tax</p>
-          <p className="text-4xl font-bold text-yellow-400">
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-1">Total Tax</p>
+          <p className="text-4xl font-bold text-warning-text">
             PKR {(revenue?.totalTax || 0).toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-1">Invoices by Status</p>
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-1">Invoices by Status</p>
           <p className="text-2xl font-bold">
             {revenue?.invoicesByStatus?.length || 0} statuses
           </p>
@@ -65,9 +65,9 @@ export default function RevenuePage() {
 
       {/* CA Earnings */}
       <h2 className="text-2xl font-bold mb-4">CA Partner Earnings</h2>
-      <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-800">
+          <thead className="bg-border-light">
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold">CA Name</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Email</th>
@@ -76,7 +76,7 @@ export default function RevenuePage() {
           </thead>
           <tbody>
             {revenue?.caEarnings?.map((ca: any) => (
-              <tr key={ca.id} className="border-t border-gray-800 hover:bg-gray-800/50">
+              <tr key={ca.id} className="border-t border-border hover:bg-border-light/50">
                 <td className="px-6 py-4">{ca.firmName}</td>
                 <td className="px-6 py-4">{ca.user.email}</td>
                 <td className="px-6 py-4">{ca.commissionPct}%</td>

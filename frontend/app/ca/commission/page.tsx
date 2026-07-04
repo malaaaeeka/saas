@@ -31,31 +31,31 @@ export default function CommissionPage() {
     }
   }
 
-  if (loading) return <p className="text-gray-400">Loading...</p>
+  if (loading) return <p className="text-muted">Loading...</p>
 
   return (
     <div className="max-w-4xl">
       <h1 className="text-3xl font-bold mb-2">Commission</h1>
-      <p className="text-gray-400 mb-8">Your earnings and commission details</p>
+      <p className="text-muted mb-8">Your earnings and commission details</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-2">Commission Rate</p>
-          <p className="text-3xl font-bold text-blue-400">{data?.commissionRate || 0}%</p>
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-2">Commission Rate</p>
+          <p className="text-3xl font-bold text-link">{data?.commissionRate || 0}%</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-2">Total Earnings</p>
-          <p className="text-3xl font-bold text-yellow-400">PKR {data?.myEarnings || 0}</p>
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-2">Total Earnings</p>
+          <p className="text-3xl font-bold text-warning-text">PKR {data?.myEarnings || 0}</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-          <p className="text-gray-400 text-sm mb-2">Client Revenue</p>
-          <p className="text-3xl font-bold text-green-400">PKR {data?.clientRevenue || 0}</p>
+        <div className="bg-surface border border-border rounded-lg p-6">
+          <p className="text-muted text-sm mb-2">Client Revenue</p>
+          <p className="text-3xl font-bold text-success-text">PKR {data?.clientRevenue || 0}</p>
         </div>
       </div>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-surface border border-border rounded-lg p-6">
         <h2 className="text-xl font-bold mb-4">How Commission Works</h2>
-        <div className="space-y-3 text-gray-400">
+        <div className="space-y-3 text-muted">
           <p>• Your clients create invoices on the platform</p>
           <p>• You earn {data?.commissionRate || 0}% of every invoice amount</p>
           <p>• Earnings are calculated automatically</p>

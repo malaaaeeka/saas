@@ -12,32 +12,32 @@ export default function CALayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-background text-heading">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 w-64 h-screen bg-gray-900 border-r border-gray-800 p-6">
+      <div className="fixed left-0 top-0 w-64 h-screen bg-surface border-r border-border p-6">
         <h2 className="text-2xl font-bold mb-8">CA Portal</h2>
 
         <nav className="space-y-4 mb-8">
-          <Link href="/ca" className="block hover:text-blue-400 transition">
-            📊 Dashboard
+          <Link href="/ca" className="block hover:text-link transition">
+             Dashboard
           </Link>
-          <Link href="/ca/clients" className="block hover:text-blue-400 transition">
-            👥 My Clients
+          <Link href="/ca/clients" className="block hover:text-link transition">
+             My Clients
           </Link>
-          <Link href="/ca/commission" className="block hover:text-blue-400 transition">
-            💰 Commission
+          <Link href="/ca/commission" className="block hover:text-link transition">
+             Commission
           </Link>
-          <Link href="/ca/referrals" className="block hover:text-blue-400 transition">
-            🔗 Referrals
+          <Link href="/ca/referrals" className="block hover:text-link transition">
+             Referrals
           </Link>
-          <Link href="/ca/settings" className="block hover:text-blue-400 transition">
-            ⚙️ Settings
+          <Link href="/ca/settings" className="block hover:text-link transition">
+             Settings
           </Link>
         </nav>
 
         <button
           onClick={handleLogout}
-          className="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition"
+          className="w-full bg-error-bg hover:bg-error-bg/70 border border-error-border text-error-text px-4 py-2 rounded-lg transition"
         >
           Logout
         </button>

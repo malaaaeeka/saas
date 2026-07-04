@@ -153,33 +153,33 @@ const [emailLoading, setEmailLoading] = useState(false)
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'SENT':     return 'text-green-400 bg-green-500/10 border-green-500/30'
-      case 'PENDING':  return 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30'
-      case 'FAILED':   return 'text-red-400 bg-red-500/10 border-red-500/30'
-      case 'AMENDED':  return 'text-gray-400 bg-gray-500/10 border-gray-500/30'
-      default:         return 'text-gray-400 bg-gray-500/10 border-gray-500/30'
+      case 'SENT':     return 'text-success-text bg-success-bg border-success-border'
+      case 'PENDING':  return 'text-warning-text bg-warning-bg border-warning-border'
+      case 'FAILED':   return 'text-error-text bg-error-bg border-error-border'
+      case 'AMENDED':  return 'text-muted bg-border-light border-border'
+      default:         return 'text-muted bg-border-light border-border'
     }
   }
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'SALE':        return { label: 'Sale', color: 'text-blue-400' }
-      case 'PURCHASE':    return { label: 'Purchase', color: 'text-purple-400' }
-      case 'CREDIT_NOTE': return { label: 'Credit Note', color: 'text-red-400' }
-      case 'DEBIT_NOTE':  return { label: 'Debit Note', color: 'text-orange-400' }
-      default:            return { label: type, color: 'text-gray-400' }
+      case 'SALE':        return { label: 'Sale', color: 'text-link' }
+      case 'PURCHASE':    return { label: 'Purchase', color: 'text-muted-dark' }
+      case 'CREDIT_NOTE': return { label: 'Credit Note', color: 'text-error-text' }
+      case 'DEBIT_NOTE':  return { label: 'Debit Note', color: 'text-warning-text' }
+      default:            return { label: type, color: 'text-muted' }
     }
   }
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <p className="text-gray-400">Loading invoice...</p>
+    <div className="min-h-screen bg-background text-heading flex items-center justify-center">
+      <p className="text-muted">Loading invoice...</p>
     </div>
   )
 
   if (!invoice) return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-      <p className="text-gray-400">Invoice not found</p>
+    <div className="min-h-screen bg-background text-heading flex items-center justify-center">
+      <p className="text-muted">Invoice not found</p>
     </div>
   )
 
@@ -188,7 +188,7 @@ const [emailLoading, setEmailLoading] = useState(false)
   const typeInfo = getTypeLabel(invoice.invoiceType)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
+    <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
@@ -196,7 +196,7 @@ const [emailLoading, setEmailLoading] = useState(false)
           <div>
             <button
               onClick={() => router.push('/invoices')}
-              className="text-gray-400 hover:text-white text-sm mb-2 flex items-center gap-1 transition"
+              className="text-muted hover:text-heading text-sm mb-2 flex items-center gap-1 transition"
             >
               ← Back to Invoices
             </button>
@@ -216,8 +216,8 @@ const [emailLoading, setEmailLoading] = useState(false)
         {notification && (
           <div className={`px-4 py-3 rounded-lg mb-6 ${
             notification.type === 'success'
-              ? 'bg-green-500/10 border border-green-500/50 text-green-400'
-              : 'bg-red-500/10 border border-red-500/50 text-red-400'
+              ? 'bg-success-bg border border-success-border text-success-text'
+              : 'bg-error-bg border border-error-border text-error-text'
           }`}>
             {notification.type === 'success' ? '✓' : '✕'} {notification.message}
           </div>
@@ -225,11 +225,11 @@ const [emailLoading, setEmailLoading] = useState(false)
 
         {/* FBR Submission Info */}
         {invoice.fbrInvoiceNo && (
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 mb-6">
-            <p className="text-green-400 font-semibold">✓ Submitted to FBR</p>
-            <p className="text-white font-mono mt-1">FBR Invoice No: {invoice.fbrInvoiceNo}</p>
+          <div className="bg-success-bg border border-success-border rounded-lg p-4 mb-6">
+            <p className="text-success-text font-semibold">✓ Submitted to FBR</p>
+            <p className="text-heading font-mono mt-1">FBR Invoice No: {invoice.fbrInvoiceNo}</p>
             {invoice.sentAt && (
-              <p className="text-gray-400 text-xs mt-1">
+              <p className="text-muted text-xs mt-1">
                 Submitted on {new Date(invoice.sentAt).toLocaleString()}
               </p>
             )}
@@ -239,19 +239,19 @@ const [emailLoading, setEmailLoading] = useState(false)
         {/* 72-Hour Amendment Window — only on original SALE/PURCHASE invoices */}
         {(invoice.status === 'SENT' || invoice.status === 'AMENDED') && amendmentWindow && 
          (invoice.invoiceType === 'SALE' || invoice.invoiceType === 'PURCHASE') && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-5 mb-6">
+          <div className="bg-warning-bg border border-warning-border rounded-lg p-5 mb-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-yellow-400 font-semibold text-sm">
+                <p className="text-warning-text font-semibold text-sm">
                   ⏱ Amendment Window Open
                 </p>
-                <p className="text-gray-300 text-sm mt-1">
+                <p className="text-body text-sm mt-1">
                   FBR allows amendments within 72 hours of submission.
-                  <span className="text-yellow-400 font-semibold ml-1">
+                  <span className="text-warning-text font-semibold ml-1">
                     {amendmentWindow.hoursLeft}h {amendmentWindow.minutesLeft}m remaining
                   </span>
                 </p>
-                <p className="text-gray-400 text-xs mt-2">
+                <p className="text-muted text-xs mt-2">
                   Raise a Credit Note if the original amount was too high, or a Debit Note if it was too low.
                 </p>
               </div>
@@ -259,13 +259,13 @@ const [emailLoading, setEmailLoading] = useState(false)
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => handleAmendment('CREDIT_NOTE')}
-                className="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition"
+                className="bg-error-bg hover:opacity-80 border border-error-border text-error-text text-sm font-semibold px-5 py-2 rounded-lg transition"
               >
                 Raise Credit Note
               </button>
               <button
                 onClick={() => handleAmendment('DEBIT_NOTE')}
-                className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition"
+                className="bg-warning-bg hover:opacity-80 border border-warning-border text-warning-text text-sm font-semibold px-5 py-2 rounded-lg transition"
               >
                 Raise Debit Note
               </button>
@@ -275,8 +275,8 @@ const [emailLoading, setEmailLoading] = useState(false)
 
         {/* Amendment window expired notice */}
         {invoice.status === 'SENT' && !amendmentWindow && invoice.sentAt && (
-          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
-            <p className="text-gray-400 text-sm">
+          <div className="bg-surface-alt border border-border rounded-lg p-4 mb-6">
+            <p className="text-muted text-sm">
               ⏱ Amendment window has expired (72 hours passed since submission)
             </p>
           </div>
@@ -284,35 +284,35 @@ const [emailLoading, setEmailLoading] = useState(false)
 
         {/* Invoice Info */}
         <div className="grid grid-cols-2 gap-6 mb-6">
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <h2 className="text-lg font-semibold mb-4 text-gray-300">Invoice Information</h2>
+          <div className="bg-surface rounded-lg p-6 border border-border">
+            <h2 className="text-lg font-semibold mb-4 text-body">Invoice Information</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Invoice ID</span>
-                <span className="font-mono text-xs text-gray-300">{invoice.id}</span>
+                <span className="text-muted text-sm">Invoice ID</span>
+                <span className="font-mono text-xs text-body">{invoice.id}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Type</span>
+                <span className="text-muted text-sm">Type</span>
                 <span className={`font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Date</span>
-                <span className="text-white">{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
+                <span className="text-muted text-sm">Date</span>
+                <span className="text-heading">{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Sale Type</span>
-                <span className="text-white">{invoice.saleType === 'T1000017' ? 'Goods' : 'Services'}</span>
+                <span className="text-muted text-sm">Sale Type</span>
+                <span className="text-heading">{invoice.saleType === 'T1000017' ? 'Goods' : 'Services'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Created At</span>
-                <span className="text-white">{new Date(invoice.createdAt).toLocaleString()}</span>
+                <span className="text-muted text-sm">Created At</span>
+                <span className="text-heading">{new Date(invoice.createdAt).toLocaleString()}</span>
               </div>
               {invoice.originalInvoiceId && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400 text-sm">Amends Invoice</span>
+                  <span className="text-muted text-sm">Amends Invoice</span>
                   <button
                     onClick={() => router.push(`/invoices/${invoice.originalInvoiceId}`)}
-                    className="font-mono text-xs text-blue-400 hover:text-blue-300 transition"
+                    className="font-mono text-xs text-link hover:opacity-70 transition"
                   >
                     {invoice.originalInvoiceId.slice(0, 12)}...
                   </button>
@@ -321,50 +321,50 @@ const [emailLoading, setEmailLoading] = useState(false)
             </div>
           </div>
 
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <h2 className="text-lg font-semibold mb-4 text-gray-300">Buyer Information</h2>
+          <div className="bg-surface rounded-lg p-6 border border-border">
+            <h2 className="text-lg font-semibold mb-4 text-body">Buyer Information</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">Name</span>
-                <span className="text-white">{invoice.buyerName || 'Walk-in Customer'}</span>
+                <span className="text-muted text-sm">Name</span>
+                <span className="text-heading">{invoice.buyerName || 'Walk-in Customer'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">NTN</span>
-                <span className="text-white font-mono">{invoice.buyerNtn || '—'}</span>
+                <span className="text-muted text-sm">NTN</span>
+                <span className="text-heading font-mono">{invoice.buyerNtn || '—'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400 text-sm">CNIC</span>
-                <span className="text-white font-mono">{invoice.buyerCnic || '—'}</span>
+                <span className="text-muted text-sm">CNIC</span>
+                <span className="text-heading font-mono">{invoice.buyerCnic || '—'}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Items Table */}
-        <div className="bg-gray-900 rounded-lg border border-gray-800 mb-6">
-          <div className="px-6 py-4 border-b border-gray-800">
+        <div className="bg-surface rounded-lg border border-border mb-6">
+          <div className="px-6 py-4 border-b border-border">
             <h2 className="text-lg font-semibold">Invoice Items</h2>
           </div>
           <table className="w-full">
-            <thead className="bg-gray-800">
+            <thead className="bg-border-light">
               <tr>
-                <th className="text-left px-6 py-3 text-gray-400 text-sm">Description</th>
-                <th className="text-left px-6 py-3 text-gray-400 text-sm">HS Code</th>
-                <th className="text-right px-6 py-3 text-gray-400 text-sm">Qty</th>
-                <th className="text-right px-6 py-3 text-gray-400 text-sm">Rate</th>
-                <th className="text-right px-6 py-3 text-gray-400 text-sm">Amount</th>
-                <th className="text-right px-6 py-3 text-gray-400 text-sm">Sales Tax</th>
+                <th className="text-left px-6 py-3 text-muted text-sm">Description</th>
+                <th className="text-left px-6 py-3 text-muted text-sm">HS Code</th>
+                <th className="text-right px-6 py-3 text-muted text-sm">Qty</th>
+                <th className="text-right px-6 py-3 text-muted text-sm">Rate</th>
+                <th className="text-right px-6 py-3 text-muted text-sm">Amount</th>
+                <th className="text-right px-6 py-3 text-muted text-sm">Sales Tax</th>
               </tr>
             </thead>
             <tbody>
               {invoice.items?.map((item: any, index: number) => (
-                <tr key={index} className="border-t border-gray-800">
-                  <td className="px-6 py-4 text-white">{item.description || '—'}</td>
-                  <td className="px-6 py-4 font-mono text-sm text-gray-400">{item.hsCode || '—'}</td>
-                  <td className="px-6 py-4 text-right text-white">{item.quantity}</td>
-                  <td className="px-6 py-4 text-right text-white">PKR {Number(item.rate).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-right text-white">PKR {Number(item.totalAmount).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-right text-green-400">PKR {Number(item.salesTax).toFixed(2)}</td>
+                <tr key={index} className="border-t border-border">
+                  <td className="px-6 py-4 text-heading">{item.description || '—'}</td>
+                  <td className="px-6 py-4 font-mono text-sm text-muted">{item.hsCode || '—'}</td>
+                  <td className="px-6 py-4 text-right text-heading">{item.quantity}</td>
+                  <td className="px-6 py-4 text-right text-heading">PKR {Number(item.rate).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-right text-heading">PKR {Number(item.totalAmount).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-right text-success-text">PKR {Number(item.salesTax).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -372,31 +372,31 @@ const [emailLoading, setEmailLoading] = useState(false)
         </div>
 
         {/* Totals */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 mb-6">
+        <div className="bg-surface rounded-lg p-6 border border-border mb-6">
           <div className="flex flex-col items-end space-y-2">
             <div className="flex justify-between w-64">
-              <span className="text-gray-400">Subtotal</span>
-              <span className="text-white">PKR {Number(invoice.totalAmount).toFixed(2)}</span>
+              <span className="text-muted">Subtotal</span>
+              <span className="text-heading">PKR {Number(invoice.totalAmount).toFixed(2)}</span>
             </div>
             <div className="flex justify-between w-64">
-              <span className="text-gray-400">Sales Tax</span>
-              <span className="text-green-400">PKR {Number(invoice.totalSalesTax).toFixed(2)}</span>
+              <span className="text-muted">Sales Tax</span>
+              <span className="text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</span>
             </div>
             {Number(invoice.totalFed) > 0 && (
               <div className="flex justify-between w-64">
-                <span className="text-gray-400">FED</span>
-                <span className="text-blue-400">PKR {Number(invoice.totalFed).toFixed(2)}</span>
+                <span className="text-muted">FED</span>
+                <span className="text-link">PKR {Number(invoice.totalFed).toFixed(2)}</span>
               </div>
             )}
             {Number(invoice.totalDiscount) > 0 && (
               <div className="flex justify-between w-64">
-                <span className="text-gray-400">Discount</span>
-                <span className="text-red-400">- PKR {Number(invoice.totalDiscount).toFixed(2)}</span>
+                <span className="text-muted">Discount</span>
+                <span className="text-error-text">- PKR {Number(invoice.totalDiscount).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between w-64 border-t border-gray-700 pt-2">
-              <span className="text-white font-bold">Grand Total</span>
-              <span className="text-white font-bold text-lg">PKR {grandTotal.toFixed(2)}</span>
+            <div className="flex justify-between w-64 border-t border-border pt-2">
+              <span className="text-heading font-bold">Grand Total</span>
+              <span className="text-heading font-bold text-lg">PKR {grandTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -407,7 +407,7 @@ const [emailLoading, setEmailLoading] = useState(false)
             <button
               onClick={handleSubmitToFBR}
               disabled={submitLoading}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-green-800 px-6 py-3 rounded-lg font-semibold transition"
+              className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
             >
               {submitLoading ? 'Submitting...' : '🚀 Submit to FBR'}
             </button>
@@ -415,7 +415,7 @@ const [emailLoading, setEmailLoading] = useState(false)
 
           <button
             onClick={handleDownloadPDF}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition"
+            className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
           >
             📄 Download PDF
           </button>
@@ -426,7 +426,7 @@ const [emailLoading, setEmailLoading] = useState(false)
               {!showEmailInput ? (
                 <button
                   onClick={() => setShowEmailInput(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-semibold transition"
+                  className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
                 >
                   📧 Send to Buyer
                 </button>
@@ -438,19 +438,19 @@ const [emailLoading, setEmailLoading] = useState(false)
                     value={emailInput}
                     onChange={e => setEmailInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSendEmail()}
-                    className="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition w-56"
+                    className="bg-surface border border-border text-heading rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-accent transition w-56"
                     autoFocus
                   />
                   <button
                     onClick={handleSendEmail}
                     disabled={emailLoading}
-                    className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 px-4 py-3 rounded-lg font-semibold text-sm transition"
+                    className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-4 py-3 rounded-lg font-semibold text-sm transition"
                   >
                     {emailLoading ? 'Sending...' : 'Send'}
                   </button>
                   <button
                     onClick={() => { setShowEmailInput(false); setEmailInput('') }}
-                    className="bg-gray-800 hover:bg-gray-700 px-4 py-3 rounded-lg text-sm transition"
+                    className="bg-surface border border-border hover:border-heading text-heading px-4 py-3 rounded-lg text-sm transition"
                   >
                     ✕
                   </button>
@@ -461,14 +461,14 @@ const [emailLoading, setEmailLoading] = useState(false)
 
           <button
             onClick={() => router.push('/create')}
-            className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition"
+            className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
           >
             ➕ Create New Invoice
           </button>
 
           <button
             onClick={() => router.push('/invoices')}
-            className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-lg font-semibold transition"
+            className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
           >
             ← Back to List
           </button>

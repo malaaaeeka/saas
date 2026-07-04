@@ -42,48 +42,48 @@ export default function ReferralsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (loading) return <p className="text-gray-400">Loading...</p>
+  if (loading) return <p className="text-muted">Loading...</p>
 
   return (
     <div className="max-w-4xl">
       <h1 className="text-3xl font-bold mb-2">Referrals</h1>
-      <p className="text-gray-400 mb-8">Share your referral link to get clients</p>
+      <p className="text-muted mb-8">Share your referral link to get clients</p>
 
       {/* Referral Code Card */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+      <div className="bg-surface border border-border rounded-lg p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Your Referral Link</h2>
         <div className="flex gap-3">
           <input
             type="text"
             value={referralLink}
             readOnly
-            className="flex-1 bg-gray-800 border border-gray-700 rounded px-4 py-3 text-sm text-gray-300"
+            className="flex-1 bg-surface-alt border border-border rounded px-4 py-3 text-sm text-body"
           />
           <button
             onClick={copyLink}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded font-medium transition"
+            className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded font-medium transition"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <p className="text-gray-500 text-sm mt-3">
+        <p className="text-muted text-sm mt-3">
           Share this link with businesses. When they register using your link, they become your client automatically.
         </p>
       </div>
 
       {/* Referral Code separately */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+      <div className="bg-surface border border-border rounded-lg p-6 mb-6">
         <h2 className="text-xl font-bold mb-2">Your Referral Code</h2>
-        <p className="text-4xl font-mono font-bold text-blue-400 tracking-widest">
+        <p className="text-4xl font-mono font-bold text-link tracking-widest">
           {caProfile?.referralCode || 'N/A'}
         </p>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-muted text-sm mt-2">
           Businesses can also manually enter this code during registration.
         </p>
       </div>
 
       {/* How it works */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-surface border border-border rounded-lg p-6">
         <h2 className="text-xl font-bold mb-4">How It Works</h2>
         <div className="space-y-4">
           {[
@@ -93,10 +93,10 @@ export default function ReferralsPage() {
             { step: '4', text: 'When they create invoices, you earn your commission automatically' },
           ].map((item) => (
             <div key={item.step} className="flex items-center gap-4">
-              <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
+              <span className="bg-btn-dark text-btn-dark-text rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm flex-shrink-0">
                 {item.step}
               </span>
-              <p className="text-gray-300">{item.text}</p>
+              <p className="text-body">{item.text}</p>
             </div>
           ))}
         </div>

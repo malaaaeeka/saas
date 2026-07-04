@@ -44,39 +44,39 @@ export default function CASettingsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-3xl font-bold mb-2">Settings</h1>
-      <p className="text-gray-400 mb-8">Manage your CA profile</p>
+      <p className="text-muted mb-8">Manage your CA profile</p>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 space-y-5">
+      <div className="bg-surface border border-border rounded-lg p-6 space-y-5">
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Email</label>
+          <label className="block text-sm text-muted mb-2">Email</label>
           <input
             type="text"
             value={user?.email || ''}
             readOnly
-            className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-gray-400 cursor-not-allowed"
+            className="w-full bg-surface-alt border border-border rounded px-4 py-3 text-muted cursor-not-allowed"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-2">Firm Name</label>
+          <label className="block text-sm text-muted mb-2">Firm Name</label>
           <input
             type="text"
             value={firmName}
             onChange={(e) => setFirmName(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-surface-alt border border-border rounded px-4 py-3 text-heading focus:outline-none focus:border-accent"
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-400 mb-2">ICAP Number</label>
+          <label className="block text-sm text-muted mb-2">ICAP Number</label>
           <input
             type="text"
             value={icapNumber}
             onChange={(e) => setIcapNumber(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            className="w-full bg-surface-alt border border-border rounded px-4 py-3 text-heading focus:outline-none focus:border-accent"
           />
         </div>
         <button
           onClick={handleSave}
-          className="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded font-medium transition"
+          className="w-full bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text py-3 rounded font-medium transition"
         >
           {saved ? 'Saved!' : 'Save Changes'}
         </button>

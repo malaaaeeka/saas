@@ -50,14 +50,14 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
     }
   }
 
-  if (loading) return <p className="text-gray-400">Loading users...</p>
+  if (loading) return <p className="text-muted">Loading users...</p>
 
   return (
     <div className="max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Users Management</h1>
-          <p className="text-gray-400">Manage all system users</p>
+          <p className="text-muted">Manage all system users</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
             setRoleFilter(e.target.value)
             setPage(1)
           }}
-          className="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2"
+          className="bg-surface-alt border border-border text-heading rounded-lg px-4 py-2"
         >
           <option value="ALL">All Roles</option>
           <option value="SUPER_ADMIN">System Admin</option>
@@ -79,9 +79,9 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
       </div>
 
       {/* Users Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+      <div className="bg-surface border border-border rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-800">
+          <thead className="bg-border-light">
             <tr>
               <th className="px-6 py-3 text-left text-sm font-semibold">Email</th>
               <th className="px-6 py-3 text-left text-sm font-semibold">Role</th>
@@ -92,25 +92,25 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id} className="border-t border-gray-800 hover:bg-gray-800/50">
+              <tr key={user.id} className="border-t border-border hover:bg-border-light/50">
                 <td className="px-6 py-4">{user.email}</td>
                 <td className="px-6 py-4">
-                  <span className="bg-blue-900 text-blue-200 px-3 py-1 rounded text-sm">
+                  <span className="bg-border-light text-link px-3 py-1 rounded text-sm">
                     {user.role}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   {user.isVerified ? (
-                    <span className="text-green-400">✓ Active</span>
+                    <span className="text-success-text">✓ Active</span>
                   ) : (
-                    <span className="text-red-400">✗ Inactive</span>
+                    <span className="text-error-text">✗ Inactive</span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-400">
+                <td className="px-6 py-4 text-sm text-muted">
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">
-                  <button className="text-blue-400 hover:text-blue-300 text-sm">
+                  <button className="text-link hover:opacity-70 text-sm">
                     View
                   </button>
                 </td>
@@ -122,14 +122,14 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
 
       {/* Pagination */}
       <div className="mt-6 flex justify-between items-center">
-        <p className="text-gray-400">
+        <p className="text-muted">
           Showing {users.length} of {total} users
         </p>
         <div className="flex gap-2">
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded"
+            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Previous
           </button>
@@ -137,7 +137,7 @@ setTotal(data.data?.total ?? data.pagination?.total ?? 0)
           <button
             onClick={() => setPage(page + 1)}
             disabled={page * 10 >= total}
-            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 px-4 py-2 rounded"
+            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Next
           </button>
