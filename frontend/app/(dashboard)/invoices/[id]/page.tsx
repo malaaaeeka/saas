@@ -220,9 +220,9 @@ export default function InvoiceDetailPage() {
           </div>
 
          {/* Grand Total — front and center */}
-<div className="bg-surface border-2 border-heading rounded-xl px-6 py-4 text-right shadow-sm">
+<div className="text-right px-6 py-4">
   <p className="text-muted text-xs uppercase tracking-wide mb-1">Grand Total</p>
-  <p className="text-heading font-bold text-2xl tabular-nums">PKR {grandTotal.toFixed(2)}</p>
+  <p className="text-heading font-bold text-3xl tabular-nums">PKR {grandTotal.toFixed(2)}</p>
 </div>
         </div>
 
