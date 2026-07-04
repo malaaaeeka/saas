@@ -315,7 +315,7 @@ const DEFAULT_ITEM = {
   quantity: 1,
   uom: 'KG',
   rate: 0,
-  taxRate: '17%',
+  taxRate: '18%',
   totalAmount: 0,
   salesTax: 0,
   fixedNotifiedValue: 0,
