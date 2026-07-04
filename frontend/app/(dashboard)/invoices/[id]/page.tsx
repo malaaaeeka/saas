@@ -7,6 +7,7 @@ export default function InvoiceDetailPage() {
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailInput, setEmailInput] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   const router = useRouter()
   const params = useParams()
@@ -22,7 +23,6 @@ export default function InvoiceDetailPage() {
     fetchInvoice(token)
   }, [])
 
-  // Tick every minute to keep the countdown live
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 60000)
     return () => clearInterval(interval)
@@ -120,7 +120,6 @@ export default function InvoiceDetailPage() {
     }
   }
 
-  // Calculate hours remaining in 72hr amendment window
   const getAmendmentWindow = () => {
     if (!invoice?.sentAt) return null
     const sent = new Date(invoice.sentAt).getTime()
@@ -134,7 +133,6 @@ export default function InvoiceDetailPage() {
   }
 
   const handleAmendment = (type: 'CREDIT_NOTE' | 'DEBIT_NOTE') => {
-    // Pass original invoice data to create page via URL params
     const urlParams = new URLSearchParams({
       amendmentType: type,
       originalInvoiceId: invoice.id,
@@ -209,20 +207,26 @@ export default function InvoiceDetailPage() {
             >
               ← Back to Invoices
             </button>
-            <h1 className="text-3xl font-bold tracking-tight">Invoice Detail</h1>
-            <p className="text-muted text-sm font-mono mt-1">{invoice.id}</p>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-3xl font-bold tracking-tight">Invoice Detail</h1>
+              <span className={`text-xs font-medium px-3 py-1 rounded-full bg-surface-alt border border-border ${typeInfo.color}`}>
+                {typeInfo.label}
+              </span>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(invoice.status)}`}>
+                {invoice.status}
+              </span>
+            </div>
+            <p className="text-muted text-sm font-mono">{invoice.id}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium px-3 py-1 rounded-full bg-surface-alt border border-border ${typeInfo.color}`}>
-              {typeInfo.label}
-            </span>
-            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${getStatusColor(invoice.status)}`}>
-              {invoice.status}
-            </span>
+
+          {/* Grand Total — front and center */}
+          <div className="bg-heading rounded-xl px-6 py-4 text-right shadow-sm">
+            <p className="text-surface/70 text-xs uppercase tracking-wide mb-1">Grand Total</p>
+            <p className="text-surface font-bold text-2xl tabular-nums">PKR {grandTotal.toFixed(2)}</p>
           </div>
         </div>
 
-        {/* Inline Notification (replaces alert()) */}
+        {/* Inline Notification */}
         {notification && (
           <div className={`px-4 py-3 rounded-xl mb-6 ${
             notification.type === 'success'
@@ -233,7 +237,7 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        {/* Amendment reason (Credit/Debit Notes) */}
+        {/* Amendment reason */}
         {isAmendmentType && invoice.amendmentReason && (
           <div className="bg-surface-alt border border-border rounded-xl p-4 mb-6">
             <p className="text-muted text-sm">
@@ -259,29 +263,20 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        {/* 72-Hour Amendment Window — only on original SALE/PURCHASE invoices */}
+        {/* 72-Hour Amendment Window */}
         {(invoice.status === 'SENT' || invoice.status === 'AMENDED') && amendmentWindow &&
          (invoice.invoiceType === 'SALE' || invoice.invoiceType === 'PURCHASE') && (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl p-5 mb-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
-                  <p className="text-heading font-semibold text-sm">
-                    Amendment Window Open
-                  </p>
-                </div>
-                <p className="text-body text-sm mt-2">
-                  FBR allows amendments within 72 hours of submission —
-                  <span className="text-heading font-semibold ml-1">
-                    {amendmentWindow.hoursLeft}h {amendmentWindow.minutesLeft}m remaining
-                  </span>
-                </p>
-                <p className="text-muted text-xs mt-2">
-                  Raise a Credit Note if the original amount was too high, or a Debit Note if it was too low.
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
+              <p className="text-heading font-semibold text-sm">Amendment Window Open</p>
             </div>
+            <p className="text-body text-sm mt-2">
+              FBR allows amendments within 72 hours of submission —
+              <span className="text-heading font-semibold ml-1">
+                {amendmentWindow.hoursLeft}h {amendmentWindow.minutesLeft}m remaining
+              </span>
+            </p>
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => handleAmendment('CREDIT_NOTE')}
@@ -308,193 +303,182 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        {/* Seller / Buyer / Invoice Summary — mirrors the PDF's three-column block */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
-            <h2 className="text-sm font-semibold px-6 py-4 border-b border-border text-body">Seller Information</h2>
-            <div className="space-y-3 p-6">
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Business Name</span>
-                <span className="text-heading text-right">{invoice.business?.businessName || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Registration No.</span>
-                <span className="text-heading font-mono text-sm">{invoice.business?.ntn || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Province</span>
-                <span className="text-heading">{invoice.business?.province || 'N/A'}</span>
-              </div>
-            </div>
-          </div>
+        {/* Collapsed details toggle */}
+        <div className="bg-surface rounded-xl border border-border shadow-sm mb-6 overflow-hidden">
+          <button
+            onClick={() => setShowDetails(v => !v)}
+            className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-surface-alt transition"
+          >
+            <span className="font-semibold text-heading">
+              {showDetails ? 'Hide Full Details' : 'View Full Details'}
+            </span>
+            <span className={`text-muted transition-transform ${showDetails ? 'rotate-180' : ''}`}>▼</span>
+          </button>
 
-          <div className="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
-            <h2 className="text-sm font-semibold px-6 py-4 border-b border-border text-body">Buyer Information</h2>
-            <div className="space-y-3 p-6">
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Business Name</span>
-                <span className="text-heading text-right">{invoice.buyerName || 'Walk-in Customer'}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Registration No.</span>
-                <span className="text-heading font-mono text-sm">{invoice.buyerNtn || invoice.buyerCnic || 'N/A'}</span>
-              </div>
-              {invoice.originalInvoiceId && (
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted text-sm">Amends Invoice</span>
-                  <button
-                    onClick={() => router.push(`/invoices/${invoice.originalInvoiceId}`)}
-                    className="font-mono text-xs text-link hover:opacity-70 transition"
-                  >
-                    {invoice.originalInvoiceId.slice(0, 12)}...
-                  </button>
+          {showDetails && (
+            <div className="border-t border-border p-6 space-y-6">
+
+              {/* Seller / Buyer / Invoice Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-surface-alt rounded-xl border border-border overflow-hidden">
+                  <h2 className="text-sm font-semibold px-5 py-3 border-b border-border text-body">Seller Information</h2>
+                  <div className="space-y-3 p-5">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Business Name</span>
+                      <span className="text-heading text-right">{invoice.business?.businessName || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Registration No.</span>
+                      <span className="text-heading font-mono text-sm">{invoice.business?.ntn || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Province</span>
+                      <span className="text-heading">{invoice.business?.province || 'N/A'}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
+
+                <div className="bg-surface-alt rounded-xl border border-border overflow-hidden">
+                  <h2 className="text-sm font-semibold px-5 py-3 border-b border-border text-body">Buyer Information</h2>
+                  <div className="space-y-3 p-5">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Business Name</span>
+                      <span className="text-heading text-right">{invoice.buyerName || 'Walk-in Customer'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Registration No.</span>
+                      <span className="text-heading font-mono text-sm">{invoice.buyerNtn || invoice.buyerCnic || 'N/A'}</span>
+                    </div>
+                    {invoice.originalInvoiceId && (
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted text-sm">Amends Invoice</span>
+                        <button
+                          onClick={() => router.push(`/invoices/${invoice.originalInvoiceId}`)}
+                          className="font-mono text-xs text-link hover:opacity-70 transition"
+                        >
+                          {invoice.originalInvoiceId.slice(0, 12)}...
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-surface-alt rounded-xl border border-border overflow-hidden">
+                  <h2 className="text-sm font-semibold px-5 py-3 border-b border-border text-body">Invoice Summary</h2>
+                  <div className="space-y-3 p-5">
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">FBR Invoice No.</span>
+                      <span className="text-heading font-mono text-xs text-right">{invoice.fbrInvoiceNo || 'Not yet submitted'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Invoice Date</span>
+                      <span className="text-heading">{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Sale Type</span>
+                      <span className="text-heading">{invoice.saleType === 'T1000017' ? 'Goods' : 'Services'}</span>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <span className="text-muted text-sm">Created At</span>
+                      <span className="text-heading text-xs">{new Date(invoice.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="bg-surface-alt rounded-xl border border-border overflow-hidden">
+                <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-body">Invoice Items</h2>
+                  <span className="text-xs text-muted">{invoice.items?.length || 0} line item{invoice.items?.length === 1 ? '' : 's'}</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[1400px] text-sm border-collapse">
+                    <thead>
+                      <tr className="bg-surface border-b border-border">
+                        <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sr.</th>
+                        <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">HS Code</th>
+                        <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide max-w-[260px]">Description</th>
+                        <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Product</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Qty</th>
+                        <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">UoM</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Rate</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Value</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sales Tax</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Extra Tax</th>
+                        <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Discount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoice.items?.map((item: any, index: number) => {
+                        const qty        = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
+                        const salesValue = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
+                        const salesTax   = isCreditNote ? Math.abs(Number(item.salesTax))    : Number(item.salesTax)
+
+                        return (
+                          <tr key={index} className="border-b border-border last:border-b-0">
+                            <td className="px-4 py-3 text-muted align-top">{index + 1}</td>
+                            <td className="px-4 py-3 font-mono text-xs text-muted align-top whitespace-nowrap">{item.hsCode || '—'}</td>
+                            <td className="px-4 py-3 text-heading align-top max-w-[260px] truncate" title={item.hsCodeDescription}>
+                              {item.hsCodeDescription || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-heading align-top">{item.description || '—'}</td>
+                            <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{qty}</td>
+                            <td className="px-4 py-3 text-heading align-top whitespace-nowrap">{item.uom || '—'}</td>
+                            <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.rate).toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{salesValue.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right text-success-text align-top tabular-nums whitespace-nowrap">{salesTax.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.extraTax || 0).toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right text-error-text align-top tabular-nums whitespace-nowrap">{Number(item.discount || 0).toFixed(2)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Tax Breakdown */}
+              <div className="bg-surface-alt rounded-xl border border-border p-5">
+                <h2 className="text-sm font-semibold text-body mb-4">Tax Breakdown</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-4">
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Total Amount</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {Number(invoice.totalAmount).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Sales Tax</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {Number(invoice.totalSalesTax).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Extra Tax</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {totalExtraTax.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Further Tax</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {totalFurtherTax.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">FED</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {Number(invoice.totalFed).toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Retail Price</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {totalRetail.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">ST Withheld</p>
+                    <p className="font-semibold text-heading tabular-nums">PKR {totalStWht.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted text-xs uppercase tracking-wide mb-1">Discount</p>
+                    <p className="font-semibold text-error-text tabular-nums">- PKR {Number(invoice.totalDiscount).toFixed(2)}</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          </div>
-
-          <div className="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
-            <h2 className="text-sm font-semibold px-6 py-4 border-b border-border text-body">Invoice Summary</h2>
-            <div className="space-y-3 p-6">
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">FBR Invoice No.</span>
-                <span className="text-heading font-mono text-xs text-right">{invoice.fbrInvoiceNo || 'Not yet submitted'}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Invoice Date</span>
-                <span className="text-heading">{new Date(invoice.invoiceDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Invoice Type</span>
-                <span className={`font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Status</span>
-                <span className="text-heading">{invoice.status}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Sale Type</span>
-                <span className="text-heading">{invoice.saleType === 'T1000017' ? 'Goods' : 'Services'}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted text-sm">Created At</span>
-                <span className="text-heading text-xs">{new Date(invoice.createdAt).toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Items Table — expanded to match every column in the PDF */}
-        <div className="bg-surface rounded-xl border border-border shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Invoice Items</h2>
-            <span className="text-xs text-muted">{invoice.items?.length || 0} line item{invoice.items?.length === 1 ? '' : 's'}</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1500px] text-sm border-collapse">
-              <thead>
-                <tr className="bg-surface-alt border-b border-border">
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sr.</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">HS Code</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide min-w-[220px]">HS Code Description</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide min-w-[160px]">Product Description</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sales Type</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Qty</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">UoM</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Rate</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sales Value</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Retail Price</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Sales Tax</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Extra Tax</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Further Tax</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">FED</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">ST WHT</th>
-                  <th className="text-right px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Discount</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">SRO / Schedule</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">SRO Item Sr.</th>
-                  <th className="text-left px-4 py-3 text-muted text-[11px] font-semibold uppercase tracking-wide">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.items?.map((item: any, index: number) => {
-                  const qty        = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
-                  const salesValue = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
-                  const salesTax   = isCreditNote ? Math.abs(Number(item.salesTax))    : Number(item.salesTax)
-
-                  return (
-                    <tr key={index} className={`border-b border-border last:border-b-0 ${index % 2 === 1 ? 'bg-surface-alt/40' : ''}`}>
-                      <td className="px-4 py-3 text-muted align-top">{index + 1}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-muted align-top whitespace-nowrap">{item.hsCode || '—'}</td>
-                      <td className="px-4 py-3 text-heading align-top">{item.hsCodeDescription || '—'}</td>
-                      <td className="px-4 py-3 text-heading align-top">{item.description || '—'}</td>
-                      <td className="px-4 py-3 text-heading align-top">{invoice.saleType || '—'}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{qty}</td>
-                      <td className="px-4 py-3 text-heading align-top whitespace-nowrap">{item.uom || '—'}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.rate).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{salesValue.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.fixedNotifiedValue || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-success-text align-top tabular-nums whitespace-nowrap">{salesTax.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.extraTax || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.furtherTax || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-link align-top tabular-nums whitespace-nowrap">{Number(item.fed || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-heading align-top tabular-nums whitespace-nowrap">{Number(item.stWithheld || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right text-error-text align-top tabular-nums whitespace-nowrap">{Number(item.discount || 0).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-heading align-top whitespace-nowrap">{item.sroSchedule || '—'}</td>
-                      <td className="px-4 py-3 text-heading align-top whitespace-nowrap">{item.itemSNo || '—'}</td>
-                      <td className="px-4 py-3 text-heading align-top whitespace-nowrap">{invoice.status || '—'}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Totals */}
-        <div className="bg-surface rounded-xl border border-border shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-semibold">Totals</h2>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-5">
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Total Amount</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {Number(invoice.totalAmount).toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Sales Tax</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {Number(invoice.totalSalesTax).toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Extra Tax</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {totalExtraTax.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Further Tax</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {totalFurtherTax.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">FED</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {Number(invoice.totalFed).toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Retail Price</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {totalRetail.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">ST Withheld</p>
-                <p className="text-lg font-semibold text-heading tabular-nums">PKR {totalStWht.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-muted text-xs uppercase tracking-wide mb-1">Discount</p>
-                <p className="text-lg font-semibold text-error-text tabular-nums">- PKR {Number(invoice.totalDiscount).toFixed(2)}</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between px-6 py-4 bg-surface-alt border-t border-border">
-            <span className="text-heading font-semibold">Grand Total</span>
-            <span className="text-heading font-bold text-xl tabular-nums">PKR {grandTotal.toFixed(2)}</span>
-          </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -516,7 +500,6 @@ export default function InvoiceDetailPage() {
             Download PDF
           </button>
 
-          {/* Send Email — only shown if submitted to FBR */}
           {invoice.fbrInvoiceNo && (
             <div className="flex flex-col gap-2">
               {!showEmailInput ? (
