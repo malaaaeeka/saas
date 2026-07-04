@@ -21,10 +21,10 @@ export default function Navbar() {
         }
 
         .nav-bar {
-          position: sticky;
-          top: 0;
-          z-index: 100;
-          background: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: transparent;
           display: flex;
           align-items: center;
           justify-content: space-between;
