@@ -67,6 +67,7 @@ class EmailService {
   }
 
   async sendForgotPassword(email: string, resetToken: string) {
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`
     try {
       await this.transporter.sendMail({
         from: process.env.SMTP_FROM,
@@ -75,12 +76,14 @@ class EmailService {
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #2563eb;">Reset Your Password</h2>
-            <p>You requested a password reset. Copy the code below and paste it into the reset password form.</p>
-            <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 24px 0; text-align: center;">
-              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em;">Your reset code</p>
-              <p style="margin: 0; font-family: monospace; font-size: 14px; color: #111827; word-break: break-all;">${resetToken}</p>
+            <p>You requested a password reset. Click the button below to reset your password.</p>
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${resetUrl}" 
+                 style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                Reset Password
+              </a>
             </div>
-            <p style="color: #6b7280;">This code expires in 1 hour.</p>
+            <p style="color: #6b7280;">This link expires in 1 hour.</p>
             <p style="color: #6b7280;">If you did not request this, ignore this email.</p>
           </div>
         `
