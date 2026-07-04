@@ -219,11 +219,11 @@ export default function InvoiceDetailPage() {
             <p className="text-muted text-sm font-mono">{invoice.id}</p>
           </div>
 
-          {/* Grand Total — front and center */}
-          <div className="bg-heading rounded-xl px-6 py-4 text-right shadow-sm">
-            <p className="text-surface/70 text-xs uppercase tracking-wide mb-1">Grand Total</p>
-            <p className="text-surface font-bold text-2xl tabular-nums">PKR {grandTotal.toFixed(2)}</p>
-          </div>
+         {/* Grand Total — front and center */}
+<div className="bg-surface border-2 border-heading rounded-xl px-6 py-4 text-right shadow-sm">
+  <p className="text-muted text-xs uppercase tracking-wide mb-1">Grand Total</p>
+  <p className="text-heading font-bold text-2xl tabular-nums">PKR {grandTotal.toFixed(2)}</p>
+</div>
         </div>
 
         {/* Inline Notification */}
