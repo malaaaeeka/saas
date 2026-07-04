@@ -15,6 +15,10 @@ export default function InvoicesPage() {
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
 
+  // ---- toaman-style search overlay + filter panel ----
+  const [showSearch, setShowSearch] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
@@ -124,6 +128,26 @@ export default function InvoicesPage() {
   const filtered = applyFilters(tree)
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
+  // ---- counts for the filter panel (based on currently loaded page of invoices) ----
+  const typeOptions = [
+    { value: 'ALL', label: 'All Types' },
+    { value: 'SALE', label: 'Sale' },
+    { value: 'PURCHASE', label: 'Purchase' },
+    { value: 'DEBIT_NOTE', label: 'Debit Note' },
+    { value: 'CREDIT_NOTE', label: 'Credit Note' },
+  ]
+  const statusOptions = [
+    { value: 'ALL', label: 'All Statuses' },
+    { value: 'PENDING', label: 'Pending' },
+    { value: 'SENT', label: 'Sent' },
+    { value: 'FAILED', label: 'Failed' },
+    { value: 'AMENDED', label: 'Amended' },
+  ]
+  const typeCount = (value: string) =>
+    value === 'ALL' ? invoices.length : invoices.filter(i => i.invoiceType === value).length
+  const statusCount = (value: string) =>
+    value === 'ALL' ? invoices.length : invoices.filter(i => i.status === value).length
+
   const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
     const typeInfo = getTypeLabel(invoice.invoiceType)
     return (
@@ -185,49 +209,98 @@ export default function InvoicesPage() {
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Search buyer, FBR no, ID..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition w-64"
-          />
-          <select
-            value={typeFilter}
-            onChange={e => setTypeFilter(e.target.value)}
-            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition"
-          >
-            <option value="ALL">All Types</option>
-            <option value="SALE">Sale</option>
-            <option value="PURCHASE">Purchase</option>
-            <option value="DEBIT_NOTE">Debit Note</option>
-            <option value="CREDIT_NOTE">Credit Note</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="bg-surface border border-border text-heading rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-accent transition"
-          >
-            <option value="ALL">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="SENT">Sent</option>
-            <option value="FAILED">Failed</option>
-            <option value="AMENDED">Amended</option>
-          </select>
-          {(typeFilter !== 'ALL' || statusFilter !== 'ALL' || search !== '') && (
+        {/* Search + Filter & Sort trigger row */}
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-6">
             <button
-              onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }}
-              className="bg-surface border border-border hover:border-heading text-muted hover:text-heading px-4 py-2 rounded-lg text-sm transition"
+              onClick={() => { setShowSearch(v => !v); setShowFilterPanel(false) }}
+              className="flex items-center gap-2 text-sm text-muted hover:text-heading transition"
             >
-              ✕ Clear
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Search
             </button>
-          )}
-          <span className="ml-auto text-muted text-sm self-center">
-            {totalCount} total invoices
-          </span>
+            <button
+              onClick={() => { setShowFilterPanel(v => !v); setShowSearch(false) }}
+              className="flex items-center gap-2 text-sm text-muted hover:text-heading transition"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+                <line x1="11" y1="18" x2="13" y2="18" />
+              </svg>
+              Filter & Sort
+              {(typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
+                <span className="w-1.5 h-1.5 rounded-full bg-link" />
+              )}
+            </button>
+          </div>
+          <span className="text-muted text-sm">{totalCount} total invoices</span>
         </div>
+
+        {/* Search overlay */}
+        {showSearch && (
+          <div className="mb-6 pb-4 border-b border-border">
+            <input
+              autoFocus
+              type="text"
+              placeholder="Search buyer, FBR no, ID..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full bg-transparent text-2xl text-heading placeholder-muted focus:outline-none"
+            />
+          </div>
+        )}
+
+        {/* Filter & Sort panel */}
+        {showFilterPanel && (
+          <div className="mb-6 bg-surface border border-border rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <p className="text-xs text-muted uppercase tracking-wide mb-3">Type</p>
+              <div className="flex flex-col gap-2">
+                {typeOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTypeFilter(opt.value)}
+                    className={`text-left text-sm transition ${
+                      typeFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'
+                    }`}
+                  >
+                    {opt.label} ({typeCount(opt.value)})
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted uppercase tracking-wide mb-3">Status</p>
+              <div className="flex flex-col gap-2">
+                {statusOptions.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setStatusFilter(opt.value)}
+                    className={`text-left text-sm transition ${
+                      statusFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'
+                    }`}
+                  >
+                    {opt.label} ({statusCount(opt.value)})
+                  </button>
+                ))}
+              </div>
+            </div>
+            {(typeFilter !== 'ALL' || statusFilter !== 'ALL' || search !== '') && (
+              <div className="md:col-span-2">
+                <button
+                  onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }}
+                  className="text-sm text-link hover:opacity-70 transition"
+                >
+                  ✕ Clear all filters
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Table */}
         {loading ? (
