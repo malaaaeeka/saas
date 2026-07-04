@@ -200,7 +200,7 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 
     // ===== Footer =====
     doc.fontSize(7).font('Helvetica').fillColor('gray')
-      .text('In the above invoices, "E" denotes that the invoice has been edited, whereas "C" indicates that the invoice has been cancelled.', 30, doc.page.height - 40, { width: pageWidth - 60 })
+      // .text('In the above invoices, "E" denotes that the invoice has been edited, whereas "C" indicates that the invoice has been cancelled.', 30, doc.page.height - 40, { width: pageWidth - 60 })
       .text('This is a computer generated document. Scan QR code to verify authenticity.', 30, doc.page.height - 40, { align: 'right', width: pageWidth })
     doc.fillColor('black')
 
