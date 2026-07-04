@@ -240,17 +240,70 @@ export default function InvoicesPage() {
           <span className="text-muted text-sm">{totalCount} total invoices</span>
         </div>
 
-        {/* Search overlay */}
+        {/* Search overlay — full screen takeover, matching toaman's search UI */}
         {showSearch && (
-          <div className="mb-6 pb-4 border-b border-border">
-            <input
-              autoFocus
-              type="text"
-              placeholder="Search buyer, FBR no, ID..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full bg-transparent text-2xl text-heading placeholder-muted border-b border-border focus:outline-none focus:border-heading pb-2 transition"
-            />
+          <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
+            <div className="max-w-4xl mx-auto px-8 py-12">
+              <div className="flex justify-between items-center mb-8">
+                <span className="text-xs text-muted uppercase tracking-widest">Search Invoices</span>
+                <button
+                  onClick={() => setShowSearch(false)}
+                  className="text-muted hover:text-heading text-2xl leading-none"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <input
+                autoFocus
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search"
+                className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
+              />
+
+              {search === '' ? (
+                <p className="text-muted text-sm mt-4">Start typing to search invoices...</p>
+              ) : (
+                <div className="mt-8">
+                  {invoices.filter(inv =>
+                    inv.buyerName?.toLowerCase().includes(search.toLowerCase()) ||
+                    inv.fbrInvoiceNo?.toLowerCase().includes(search.toLowerCase()) ||
+                    inv.id.toLowerCase().includes(search.toLowerCase())
+                  ).length === 0 ? (
+                    <p className="text-muted text-sm">No invoices match "{search}"</p>
+                  ) : (
+                    invoices
+                      .filter(inv =>
+                        inv.buyerName?.toLowerCase().includes(search.toLowerCase()) ||
+                        inv.fbrInvoiceNo?.toLowerCase().includes(search.toLowerCase()) ||
+                        inv.id.toLowerCase().includes(search.toLowerCase())
+                      )
+                      .map(inv => {
+                        const typeInfo = getTypeLabel(inv.invoiceType)
+                        return (
+                          <div
+                            key={inv.id}
+                            onClick={() => { setShowSearch(false); router.push(`/invoices/${inv.id}`) }}
+                            className="py-5 border-b border-border cursor-pointer hover:bg-border-light transition -mx-4 px-4"
+                          >
+                            <p className="text-xs text-muted uppercase tracking-wide mb-1">
+                              {typeInfo.label} · {inv.status}
+                            </p>
+                            <p className="text-2xl text-heading mb-1">
+                              {inv.buyerName || 'Walk-in Customer'}
+                            </p>
+                            <p className="text-sm text-muted">
+                              {inv.fbrInvoiceNo ? `FBR No: ${inv.fbrInvoiceNo}` : inv.id.slice(0, 12)} · PKR {Number(inv.totalAmount).toFixed(2)}
+                            </p>
+                          </div>
+                        )
+                      })
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
