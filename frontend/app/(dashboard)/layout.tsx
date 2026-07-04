@@ -1,16 +1,14 @@
-import Navbar from '@/components/Navbar'
+import Navbar from '@/components/ui/Navbar'
 
-export default function RootLayout({
+export default function DashboardGroupLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>
-        <Navbar />
-        {children}
-      </body>
-    </html>
+    <>
+      <Navbar />
+      {children}
+    </>
   )
 }
