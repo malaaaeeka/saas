@@ -119,12 +119,9 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
             <li
               key={item.fullEntry}
               onMouseDown={() => handleSelect(item)}
-              className="px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0"
+              className="px-3 py-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-0 text-gray-200"
             >
-              <span className="text-blue-400 font-mono text-xs">{item.code}</span>
-              {item.description && (
-                <span className="text-gray-300 ml-2">{item.description}</span>
-              )}
+              {item.fullEntry}
             </li>
           ))}
         </ul>
