@@ -1,17 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
   const pathname = usePathname();
 
-  const hideOn = ['/dashboard', '/create', '/invoices', '/settings'];
-  if (hideOn.some((path) => pathname.startsWith(path))) {
-    return null;
-  }
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    if (userData && token) {
+      setUser(JSON.parse(userData));
+    } else {
+      setUser(null);
+    }
+  }, [pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    router.push('/login');
+  };
+
+  const loggedInLinks = [
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Create Invoice', path: '/create' },
+    { label: 'Invoices', path: '/invoices' },
+    { label: 'Settings', path: '/settings' },
+  ];
+
+  const isActive = (path: string) => pathname === path;
 
   return (
     <>
@@ -83,6 +106,32 @@ export default function Navbar() {
           color: var(--lime);
         }
 
+        .nav-links button {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.82rem;
+          font-weight: 400;
+          letter-spacing: 0.01em;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0.4rem 0.85rem;
+          border-radius: 6px;
+          transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links button.active {
+          background: #1e2216;
+          color: #f0edd8;
+        }
+
+        .nav-links button:not(.active) {
+          color: var(--text-muted);
+        }
+
+        .nav-links button:not(.active):hover {
+          color: var(--lime);
+        }
+
         /* Right buttons */
         .nav-actions {
           display: flex;
@@ -133,6 +182,46 @@ export default function Navbar() {
           background: #d6f05a;
         }
 
+        .user-chip {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .user-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #1e2216;
+          color: #f0edd8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+
+        .user-email {
+          font-size: 0.78rem;
+          color: var(--text-muted);
+        }
+
+        .btn-logout {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.78rem;
+          font-weight: 500;
+          color: var(--text-muted);
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0.4rem 0.6rem;
+          transition: color 0.15s ease;
+        }
+
+        .btn-logout:hover {
+          color: #b3261e;
+        }
+
         /* Mobile hamburger */
         .hamburger {
           display: none;
@@ -181,18 +270,24 @@ export default function Navbar() {
 
         .mobile-menu.open { display: flex; }
 
-        .mobile-menu a {
+        .mobile-menu a,
+        .mobile-menu button {
           font-family: 'DM Sans', sans-serif;
           font-size: 0.9rem;
           font-weight: 400;
           color: var(--text-muted);
           text-decoration: none;
+          background: transparent;
+          border: none;
+          text-align: left;
           padding: 0.6rem 0.75rem;
           border-radius: 8px;
           transition: color 0.15s ease;
+          cursor: pointer;
         }
 
-        .mobile-menu a:hover { color: var(--lime); }
+        .mobile-menu a:hover,
+        .mobile-menu button:hover { color: var(--lime); }
 
         .mobile-actions {
           display: flex;
@@ -206,22 +301,47 @@ export default function Navbar() {
       <div className="nav-root">
         <nav className="nav-bar">
           {/* Brand */}
-          <Link href="/" className="nav-brand">
+          <Link href={user ? '/dashboard' : '/'} className="nav-brand">
             E-Invoice
           </Link>
 
-          {/* Center nav links */}
+          {/* Center nav links — swap based on login state */}
           <ul className="nav-links">
-            <li><Link href="/">Home</Link></li>
-            <li><Link href="/features">Features</Link></li>
-            <li><Link href="/pricing">Pricing</Link></li>
-            <li><Link href="/contact">Contact</Link></li>
+            {user ? (
+              loggedInLinks.map((item) => (
+                <li key={item.path}>
+                  <button
+                    className={isActive(item.path) ? 'active' : ''}
+                    onClick={() => router.push(item.path)}
+                  >
+                    {item.label}
+                  </button>
+                </li>
+              ))
+            ) : (
+              <>
+                <li><Link href="/">Home</Link></li>
+                <li><Link href="/features">Features</Link></li>
+                <li><Link href="/pricing">Pricing</Link></li>
+                <li><Link href="/contact">Contact</Link></li>
+              </>
+            )}
           </ul>
 
-          {/* Right buttons */}
+          {/* Right side — swap based on login state */}
           <div className="nav-actions">
-            <Link href="/login" className="btn-portal">CA Portal</Link>
-            <Link href="/register" className="btn-register">Register</Link>
+            {user ? (
+              <div className="user-chip">
+                <div className="user-avatar">{user.email?.[0]?.toUpperCase()}</div>
+                <span className="user-email">{user.email}</span>
+                <button className="btn-logout" onClick={handleLogout}>Logout</button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login" className="btn-portal">CA Portal</Link>
+                <Link href="/register" className="btn-register">Register</Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -236,16 +356,36 @@ export default function Navbar() {
           </button>
         </nav>
 
-        {/* Mobile drawer */}
+        {/* Mobile drawer — swap based on login state */}
         <div className={`mobile-menu${menuOpen ? ' open' : ''}`}>
-          <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/features" onClick={() => setMenuOpen(false)}>Features</Link>
-          <Link href="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
-          <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
-          <div className="mobile-actions">
-            <Link href="/login" className="btn-portal" onClick={() => setMenuOpen(false)}>CA Portal</Link>
-            <Link href="/register" className="btn-register" onClick={() => setMenuOpen(false)}>Register</Link>
-          </div>
+          {user ? (
+            <>
+              {loggedInLinks.map((item) => (
+                <button
+                  key={item.path}
+                  onClick={() => { router.push(item.path); setMenuOpen(false); }}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="mobile-actions">
+                <button className="btn-logout" onClick={() => { handleLogout(); setMenuOpen(false); }}>
+                  Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
+              <Link href="/features" onClick={() => setMenuOpen(false)}>Features</Link>
+              <Link href="/pricing" onClick={() => setMenuOpen(false)}>Pricing</Link>
+              <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
+              <div className="mobile-actions">
+                <Link href="/login" className="btn-portal" onClick={() => setMenuOpen(false)}>CA Portal</Link>
+                <Link href="/register" className="btn-register" onClick={() => setMenuOpen(false)}>Register</Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
