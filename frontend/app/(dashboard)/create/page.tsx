@@ -326,6 +326,7 @@ function CreateInvoicePageContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [notWhitelisted, setNotWhitelisted] = useState(false)
 
   const [formData, setFormData] = useState({
     sellerRegNo: '',
@@ -382,7 +383,7 @@ function CreateInvoicePageContent() {
             documentNumber:     item.documentNumber  || '',
             // ===== Col Y: auto-fill invoiceRefNo from the originalFbrNo URL
             // param when prefilling an amendment. The user already saw
-            // originalFbrNo in the yellow banner above, so this just carries
+            // originalFbrNo in the banner above, so this just carries
             // it down to the per-line field where FBR actually needs it.
             // They can still edit it per-line if needed. =====
             invoiceRefNo:       item.invoiceRefNo || originalFbrNo || '',
@@ -402,7 +403,7 @@ function CreateInvoicePageContent() {
       if (data.success && data.data) {
         setBusiness(data.data)
         if (!data.data.isWhitelisted) {
-          setError('⚠️ Your business is not whitelisted with FBR yet. Contact FBR helpline.')
+          setNotWhitelisted(true)
         }
         if (data.data.ntn || data.data.registrationNo) {
           setFormData(prev => ({
@@ -521,7 +522,7 @@ function CreateInvoicePageContent() {
       })
       const data = await res.json()
       if (data.success) {
-        setSuccess('✓ Invoice created and sent to FBR!')
+        setSuccess('Invoice created and sent to FBR')
         setTimeout(() => router.push('/invoices'), 2000)
       } else {
         setError(data.message || 'Failed to create invoice')
@@ -545,8 +546,8 @@ function CreateInvoicePageContent() {
             ← Back
           </button>
           <h1 className="text-3xl font-bold mb-2">
-            {amendmentType === 'CREDIT_NOTE' && '📉 Raise Credit Note'}
-            {amendmentType === 'DEBIT_NOTE'  && '📈 Raise Debit Note'}
+            {amendmentType === 'CREDIT_NOTE' && 'Raise Credit Note'}
+            {amendmentType === 'DEBIT_NOTE'  && 'Raise Debit Note'}
             {!amendmentType && 'Create Invoice'}
           </h1>
           <p className="text-muted">
@@ -555,11 +556,14 @@ function CreateInvoicePageContent() {
         </div>
 
         {amendmentType && (
-          <div className="bg-warning-bg border border-warning-border rounded-lg p-4 mb-6">
-            <p className="text-warning-text font-semibold text-sm">
-              {amendmentType === 'CREDIT_NOTE' ? '📉 Credit Note' : '📈 Debit Note'} — Amendment
-            </p>
-            <p className="text-body text-sm mt-1">
+          <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl p-4 mb-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
+              <p className="text-heading font-semibold text-sm">
+                {amendmentType === 'CREDIT_NOTE' ? 'Credit Note' : 'Debit Note'} — Amendment
+              </p>
+            </div>
+            <p className="text-body text-sm mt-2">
               References original FBR Invoice <span className="font-mono text-heading">{originalFbrNo}</span>.
             </p>
             <p className="text-body text-sm mt-2">
@@ -571,18 +575,36 @@ function CreateInvoicePageContent() {
           </div>
         )}
 
-        {success && <div className="bg-success-bg border border-success-border text-success-text px-4 py-3 rounded-lg mb-6">{success}</div>}
-        {error   && <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-6">{error}</div>}
+        {success && (
+          <div className="bg-surface border border-border border-l-4 border-l-success-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-success-text" />
+            <p className="text-heading text-sm font-medium">{success}</p>
+          </div>
+        )}
+        {error && (
+          <div className="bg-surface border border-border border-l-4 border-l-error-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-error-text" />
+            <p className="text-heading text-sm font-medium">{error}</p>
+          </div>
+        )}
 
         {!business ? (
-          <div className="bg-warning-bg border border-warning-border text-warning-text px-4 py-3 rounded-lg">
-            ⚠️ Please setup your business profile before creating invoices
+          <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
+            <p className="text-heading text-sm font-medium">Please setup your business profile before creating invoices</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
 
+            {notWhitelisted && (
+              <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning-text flex-shrink-0" />
+                <p className="text-heading text-sm font-medium">Your business is not whitelisted with FBR yet. Contact the FBR helpline.</p>
+              </div>
+            )}
+
             {/* Seller & Filing Info */}
-            <div className="bg-surface rounded-lg p-6 border border-border">
+            <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Seller &amp; Filing Info</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -601,7 +623,7 @@ function CreateInvoicePageContent() {
             </div>
 
             {/* Invoice Details */}
-            <div className="bg-surface rounded-lg p-6 border border-border">
+            <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
               <h2 className="text-lg font-semibold mb-4">Invoice Details</h2>
               <div className="grid grid-cols-4 gap-4">
                 <div>
@@ -697,7 +719,7 @@ function CreateInvoicePageContent() {
             </div>
 
             {/* Invoice Items */}
-            <div className="bg-surface rounded-lg p-6 border border-border">
+            <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Invoice Items</h2>
                 <button type="button" onClick={addItem}
@@ -918,7 +940,7 @@ function CreateInvoicePageContent() {
             </div>
 
             {/* Totals */}
-            <div className="bg-surface rounded-lg p-6 border border-border">
+            <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
               <div className="grid grid-cols-8 gap-4 text-center">
                 <div><p className="text-muted text-sm">Total Amount</p><p className="text-xl font-bold text-heading">PKR {totals.totalAmount.toFixed(2)}</p></div>
                 <div><p className="text-muted text-sm">Sales Tax</p><p className="text-xl font-bold text-heading">PKR {totals.totalSalesTax.toFixed(2)}</p></div>
