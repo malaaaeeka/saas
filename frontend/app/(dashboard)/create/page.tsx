@@ -759,16 +759,18 @@ function CreateInvoicePageContent() {
                       )}
                     </div>
 
-                    {/* Row 1: HS Code, Product Description, Qty, Unit Price, Total */}
-                    <div className="grid grid-cols-5 gap-3">
-                      <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          HS Code Description
-                          {item.hsCode && <span className="ml-2 text-blue-400 font-mono">{item.hsCode}</span>}
-                        </label>
-                        <HsCodeAutocomplete value={item.hsCodeDescription}
-                          onSelect={(code, desc, fullEntry) => handleHsCodeSelect(index, code, fullEntry)} />
-                      </div>
+                    {/* Row 1a: HS Code — full width, own row */}
+                    <div className="mb-3">
+                      <label className="block text-xs text-gray-400 mb-1">
+                        HS Code Description
+                        {item.hsCode && <span className="ml-2 text-blue-400 font-mono">{item.hsCode}</span>}
+                      </label>
+                      <HsCodeAutocomplete value={item.hsCodeDescription}
+                        onSelect={(code, desc, fullEntry) => handleHsCodeSelect(index, code, fullEntry)} />
+                    </div>
+
+                    {/* Row 1b: Product Description, Qty, Unit Price, Total */}
+                    <div className="grid grid-cols-4 gap-3">
                       <div>
                         <label className="block text-xs text-gray-400 mb-1">Product Description</label>
                         <input type="text" value={item.description}
@@ -827,10 +829,10 @@ function CreateInvoicePageContent() {
                       </div>
                     )}
 
-                    {/* Points 10–14: Fixed/Notified Value, Extra Tax, Further Tax, PFAD, ST Withheld */}
+                 {/* Points 10–14: Fixed/Notified Value, Extra Tax, Further Tax, PFAD, ST Withheld */}
                     <div className="grid grid-cols-5 gap-3 mt-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Fixed / Notified Value or Retail Price (PKR)</label>
+                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Fixed / Notified Value or Retail Price (PKR)</label>
                         <input type="number" value={item.fixedNotifiedValue}
                           onChange={e => handleItemChange(index, 'fixedNotifiedValue', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
@@ -838,7 +840,7 @@ function CreateInvoicePageContent() {
                         <p className="text-xs text-gray-500 mt-1">Leave 0 if no govt-notified price applies</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Extra Tax (PKR)</label>
+                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Extra Tax (PKR)</label>
                         <input type="number" value={item.extraTax}
                           onChange={e => handleItemChange(index, 'extraTax', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
@@ -846,7 +848,7 @@ function CreateInvoicePageContent() {
                         <p className="text-xs text-gray-500 mt-1">Applies to SIMs, mobile phones, petroleum etc.</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Further Tax (PKR)</label>
+                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Further Tax (PKR)</label>
                         <input type="number" value={item.furtherTax}
                           onChange={e => handleItemChange(index, 'furtherTax', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
@@ -854,7 +856,7 @@ function CreateInvoicePageContent() {
                         <p className="text-xs text-gray-500 mt-1">3% surcharge for sales to unregistered buyers</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Total Value of Sales — PFAD only (PKR)</label>
+                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Total Value of Sales — PFAD only (PKR)</label>
                         <input type="number" value={item.pfadValue}
                           onChange={e => handleItemChange(index, 'pfadValue', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
@@ -862,7 +864,7 @@ function CreateInvoicePageContent() {
                         <p className="text-xs text-gray-500 mt-1">Only for Palm Fatty Acid Distillate supplies</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">ST Withheld at Source (PKR)</label>
+                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">ST Withheld at Source (PKR)</label>
                         <input type="number" value={item.stWithheld}
                           onChange={e => handleItemChange(index, 'stWithheld', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
@@ -870,7 +872,7 @@ function CreateInvoicePageContent() {
                         <p className="text-xs text-gray-500 mt-1">Sales tax withheld by buyer at source</p>
                       </div>
                     </div>
-
+                       
                     {/* Exemption / Zero & Reduced Rate Reference */}
                     <div className="mt-3">
                       <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
