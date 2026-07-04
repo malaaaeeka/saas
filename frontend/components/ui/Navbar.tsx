@@ -2,9 +2,16 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const hideOn = ['/dashboard', '/create', '/invoices', '/settings'];
+  if (hideOn.some((path) => pathname.startsWith(path))) {
+    return null;
+  }
 
   return (
     <>
