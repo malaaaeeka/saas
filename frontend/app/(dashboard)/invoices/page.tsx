@@ -178,7 +178,7 @@ export default function InvoicesPage() {
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED') && (
            <button
   onClick={e => handleSubmitFBR(e, invoice.id)}
-  className="bg-accent hover:opacity-80 text-heading px-3 py-1 rounded text-xs font-semibold transition underline"
+  className="text-link hover:opacity-70 text-xs font-semibold transition underline"
 >
   Submit
 </button>
