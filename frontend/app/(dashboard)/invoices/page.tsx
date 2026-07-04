@@ -249,14 +249,14 @@ export default function InvoicesPage() {
               placeholder="Search buyer, FBR no, ID..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-transparent text-2xl text-heading placeholder-muted focus:outline-none"
+              className="w-full bg-transparent text-2xl text-heading placeholder-muted border-b border-border focus:outline-none focus:border-heading pb-2 transition"
             />
           </div>
         )}
 
         {/* Filter & Sort panel */}
         {showFilterPanel && (
-          <div className="mb-6 bg-surface border border-border rounded-lg p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="mb-6 pb-6 border-b border-border grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <p className="text-xs text-muted uppercase tracking-wide mb-3">Type</p>
               <div className="flex flex-col gap-2">
