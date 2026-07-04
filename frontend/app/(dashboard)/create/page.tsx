@@ -232,20 +232,6 @@ const PETROLEUM_LEVY_OPTIONS: string[] = [
   'Retail Sale'
 ]
 
-const HS_CODE_DESCRIPTIONS: string[] = [
-  '0101:-Horses, asses, mules and hinnies live',
-  '0101.2100:-',
-  '0101.2900:-',
-  '0101.3000:-',
-  '0101.9000:-',
-  '0102:-Bovine animals live',
-  '9853.0000:-Vehicle parking and valet services',
-  '9991:-Textile And Leather Sector 14%',
-  '9992:-Textile And Leather Sector 17%',
-  '9993:-Restaurant sector 7.5%',
-  '9994:-Other POS sectors'
-]
-
 function rateToPercent(rate: string): number | null {
   const match = rate.match(/^(\d+(\.\d+)?)%/)
   if (match) return parseFloat(match[1]) / 100
@@ -279,13 +265,13 @@ function ItemSNoAutocomplete({
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Search Item S. No. (e.g. 1(i)(a))"
-        className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500"
+        className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent"
       />
       {open && matches.length > 0 && (
-        <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-gray-800 border border-gray-600 rounded shadow-lg">
+        <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-surface border border-border rounded shadow-lg">
           {matches.map(m => (
             <div key={m} onClick={() => { onChange(m); setQuery(m); setOpen(false) }}
-              className="px-3 py-1 text-sm text-gray-200 hover:bg-blue-600 cursor-pointer">
+              className="px-3 py-1 text-sm text-body hover:bg-border-light hover:text-heading cursor-pointer">
               {m}
             </div>
           ))}
@@ -551,11 +537,11 @@ function CreateInvoicePageContent() {
   const isAmendment = formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note'
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
+    <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-6xl mx-auto">
 
         <div className="mb-8">
-          <button onClick={() => router.back()} className="text-gray-400 hover:text-white text-sm mb-2 flex items-center gap-1 transition">
+          <button onClick={() => router.back()} className="text-muted hover:text-heading text-sm mb-2 flex items-center gap-1 transition">
             ← Back
           </button>
           <h1 className="text-3xl font-bold mb-2">
@@ -563,20 +549,20 @@ function CreateInvoicePageContent() {
             {amendmentType === 'DEBIT_NOTE'  && '📈 Raise Debit Note'}
             {!amendmentType && 'Create Invoice'}
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted">
             {amendmentType ? `Amendment for FBR Invoice: ${originalFbrNo}` : 'Create invoices for your business'}
           </p>
         </div>
 
         {amendmentType && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6">
-            <p className="text-yellow-400 font-semibold text-sm">
+          <div className="bg-warning-bg border border-warning-border rounded-lg p-4 mb-6">
+            <p className="text-warning-text font-semibold text-sm">
               {amendmentType === 'CREDIT_NOTE' ? '📉 Credit Note' : '📈 Debit Note'} — Amendment
             </p>
-            <p className="text-gray-300 text-sm mt-1">
-              References original FBR Invoice <span className="font-mono text-white">{originalFbrNo}</span>.
+            <p className="text-body text-sm mt-1">
+              References original FBR Invoice <span className="font-mono text-heading">{originalFbrNo}</span>.
             </p>
-            <p className="text-gray-300 text-sm mt-2">
+            <p className="text-body text-sm mt-2">
               The form is pre-filled with the original invoice.
               {amendmentType === 'CREDIT_NOTE'
                 ? ' Reduce the quantities or rates to correct the overcharge.'
@@ -585,43 +571,43 @@ function CreateInvoicePageContent() {
           </div>
         )}
 
-        {success && <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-lg mb-6">{success}</div>}
-        {error   && <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6">{error}</div>}
+        {success && <div className="bg-success-bg border border-success-border text-success-text px-4 py-3 rounded-lg mb-6">{success}</div>}
+        {error   && <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-6">{error}</div>}
 
         {!business ? (
-          <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-4 py-3 rounded-lg">
+          <div className="bg-warning-bg border border-warning-border text-warning-text px-4 py-3 rounded-lg">
             ⚠️ Please setup your business profile before creating invoices
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
 
             {/* Seller & Filing Info */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="bg-surface rounded-lg p-6 border border-border">
               <h2 className="text-lg font-semibold mb-4">Seller &amp; Filing Info</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Seller Registration No. (NTN) *</label>
+                  <label className="block text-sm text-muted mb-2">Seller Registration No. (NTN) *</label>
                   <input type="text" name="sellerRegNo" value={formData.sellerRegNo} onChange={handleInputChange}
                     placeholder="Registration No. or NTN with Check Digit" required
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
-                  <p className="text-xs text-gray-500 mt-1">Provide Registration No. or NTN with Check Digit, per FBR requirement</p>
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+                  <p className="text-xs text-muted mt-1">Provide Registration No. or NTN with Check Digit, per FBR requirement</p>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Tax Period *</label>
+                  <label className="block text-sm text-muted mb-2">Tax Period *</label>
                   <input type="month" name="taxPeriod" value={formData.taxPeriod} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
               </div>
             </div>
 
             {/* Invoice Details */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="bg-surface rounded-lg p-6 border border-border">
               <h2 className="text-lg font-semibold mb-4">Invoice Details</h2>
               <div className="grid grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Invoice Type *</label>
+                  <label className="block text-sm text-muted mb-2">Invoice Type *</label>
                   <select name="invoiceType" value={formData.invoiceType} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     <option value="SALE">Sale</option>
                     <option value="PURCHASE">Purchase</option>
                     <option value="DEBIT_NOTE">Debit Note</option>
@@ -629,21 +615,21 @@ function CreateInvoicePageContent() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Document Type *</label>
+                  <label className="block text-sm text-muted mb-2">Document Type *</label>
                   <select name="documentType" value={formData.documentType} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {DOCUMENT_TYPES.map(dt => <option key={dt} value={dt}>{dt}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Invoice Date *</label>
+                  <label className="block text-sm text-muted mb-2">Invoice Date *</label>
                   <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Sale Type</label>
+                  <label className="block text-sm text-muted mb-2">Sale Type</label>
                   <select name="saleType" value={formData.saleType} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {SALE_TYPES.map(st => <option key={st} value={st}>{st}</option>)}
                   </select>
                 </div>
@@ -651,16 +637,16 @@ function CreateInvoicePageContent() {
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Sale Origination Province of Supplier *</label>
+                  <label className="block text-sm text-muted mb-2">Sale Origination Province of Supplier *</label>
                   <select name="originationProvince" value={formData.originationProvince} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Destination of Supply *</label>
+                  <label className="block text-sm text-muted mb-2">Destination of Supply *</label>
                   <select name="destinationProvince" value={formData.destinationProvince} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
@@ -668,27 +654,27 @@ function CreateInvoicePageContent() {
 
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buyer Name</label>
+                  <label className="block text-sm text-muted mb-2">Buyer Name</label>
                   <input type="text" name="buyerName" value={formData.buyerName} onChange={handleInputChange}
                     placeholder="Customer name (optional)"
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buyer NTN</label>
+                  <label className="block text-sm text-muted mb-2">Buyer NTN</label>
                   <input type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
                     placeholder="7 digit NTN (optional)"
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buyer CNIC</label>
+                  <label className="block text-sm text-muted mb-2">Buyer CNIC</label>
                   <input type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
                     placeholder="13 digit CNIC (optional)"
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500" />
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buyer Type *</label>
+                  <label className="block text-sm text-muted mb-2">Buyer Type *</label>
                   <select name="buyerType" value={formData.buyerType} onChange={handleInputChange}
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
@@ -696,46 +682,46 @@ function CreateInvoicePageContent() {
 
               {amendmentType && (
                 <div className="mt-4">
-                  <label className="block text-sm text-gray-400 mb-2">
-                    Reason for Amendment <span className="text-red-400">*</span>
+                  <label className="block text-sm text-muted mb-2">
+                    Reason for Amendment <span className="text-error-text">*</span>
                   </label>
                   <textarea name="amendmentReason" value={(formData as any).amendmentReason || ''} onChange={handleInputChange}
                     placeholder={amendmentType === 'CREDIT_NOTE'
                       ? 'e.g. Wrong quantity billed, customer returned 20 units'
                       : 'e.g. Additional items delivered, pricing error corrected'}
                     rows={3} required
-                    className="w-full bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500 transition resize-none" />
-                  <p className="text-xs text-gray-500 mt-1">This reason will appear on the amendment document and is required for FBR compliance</p>
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition resize-none" />
+                  <p className="text-xs text-muted mt-1">This reason will appear on the amendment document and is required for FBR compliance</p>
                 </div>
               )}
             </div>
 
             {/* Invoice Items */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="bg-surface rounded-lg p-6 border border-border">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-semibold">Invoice Items</h2>
                 <button type="button" onClick={addItem}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                  className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-4 py-2 rounded-lg text-sm font-semibold transition">
                   + Add Item
                 </button>
               </div>
 
               <div className="space-y-4">
                 {formData.items.map((item, index) => (
-                  <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <div key={index} className="bg-surface-alt rounded-lg p-4 border border-border">
 
                     {/* Document Number (col H) + Invoice Reference No. (col Y) — top of card */}
-                    <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-gray-700">
+                    <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-border">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">
-                          Document Number <span className="text-red-400">*</span>
-                          <span className="ml-1 text-gray-600 font-normal">(FBR col H)</span>
+                        <label className="block text-xs text-muted mb-1">
+                          Document Number <span className="text-error-text">*</span>
+                          <span className="ml-1 text-muted font-normal">(FBR col H)</span>
                         </label>
                         <input type="text" value={item.documentNumber}
                           onChange={e => handleItemChange(index, 'documentNumber', e.target.value)}
                           placeholder="e.g. INV-2025-001 or File-02"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">Your internal invoice / file number for this line. Required.</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">Your internal invoice / file number for this line. Required.</p>
                       </div>
 
                       {/* ===== Col Y: Invoice Reference No. =====
@@ -746,24 +732,24 @@ function CreateInvoicePageContent() {
                       */}
                       {isAmendment && (
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">
-                            Invoice Reference No. <span className="text-red-400">*</span>
-                            <span className="ml-1 text-gray-600 font-normal">(FBR col Y)</span>
+                          <label className="block text-xs text-muted mb-1">
+                            Invoice Reference No. <span className="text-error-text">*</span>
+                            <span className="ml-1 text-muted font-normal">(FBR col Y)</span>
                           </label>
                           <input type="text" value={item.invoiceRefNo}
                             onChange={e => handleItemChange(index, 'invoiceRefNo', e.target.value)}
                             placeholder="FBR invoice no. of the original invoice"
-                            className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                          <p className="text-xs text-gray-500 mt-1">FBR-assigned number of the original invoice this line corrects.</p>
+                            className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                          <p className="text-xs text-muted mt-1">FBR-assigned number of the original invoice this line corrects.</p>
                         </div>
                       )}
                     </div>
 
                     {/* Row 1a: HS Code — full width, own row */}
                     <div className="mb-3">
-                      <label className="block text-xs text-gray-400 mb-1">
+                      <label className="block text-xs text-muted mb-1">
                         HS Code Description
-                        {item.hsCode && <span className="ml-2 text-blue-400 font-mono">{item.hsCode}</span>}
+                        {item.hsCode && <span className="ml-2 text-link font-mono">{item.hsCode}</span>}
                       </label>
                       <HsCodeAutocomplete value={item.hsCodeDescription}
                         onSelect={(code, desc, fullEntry) => handleHsCodeSelect(index, code, fullEntry)} />
@@ -772,46 +758,46 @@ function CreateInvoicePageContent() {
                     {/* Row 1b: Product Description, Qty, Unit Price, Total */}
                     <div className="grid grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Product Description</label>
+                        <label className="block text-xs text-muted mb-1">Product Description</label>
                         <input type="text" value={item.description}
                           onChange={e => handleItemChange(index, 'description', e.target.value)}
                           placeholder="Product name"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Qty</label>
+                        <label className="block text-xs text-muted mb-1">Qty</label>
                         <input type="number" value={item.quantity}
                           onChange={e => handleItemChange(index, 'quantity', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="1"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Unit Price</label>
+                        <label className="block text-xs text-muted mb-1">Unit Price</label>
                         <input type="number" value={item.rate}
                           onChange={e => handleItemChange(index, 'rate', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Total</label>
+                        <label className="block text-xs text-muted mb-1">Total</label>
                         <input type="text" value={Number(item.totalAmount || 0).toFixed(2)} disabled
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm opacity-70" />
+                          className="w-full bg-border-light border border-border text-heading rounded px-3 py-1 text-sm opacity-70" />
                       </div>
                     </div>
 
                     {/* Row 2: UoM, Tax Rate */}
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">UoM</label>
+                        <label className="block text-xs text-muted mb-1">UoM</label>
                         <select value={item.uom} onChange={e => handleItemChange(index, 'uom', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500">
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
                           {UOMS.map(u => <option key={u} value={u}>{u}</option>)}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1">Rate (Tax %) — fixed-charge rates won&apos;t auto-calc sales tax</label>
+                        <label className="block text-xs text-muted mb-1">Rate (Tax %) — fixed-charge rates won&apos;t auto-calc sales tax</label>
                         <select value={item.taxRate} onChange={e => handleItemChange(index, 'taxRate', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500">
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
                           {RATES.map(r => <option key={r} value={r}>{r}</option>)}
                         </select>
                       </div>
@@ -820,77 +806,77 @@ function CreateInvoicePageContent() {
                     {/* Petroleum Levy on — Petroleum Products only */}
                     {formData.saleType === 'Petroleum Products' && (
                       <div className="mt-3">
-                        <label className="block text-xs text-gray-400 mb-1">Petroleum Levy on</label>
+                        <label className="block text-xs text-muted mb-1">Petroleum Levy on</label>
                         <select value={item.petroleumLevyOn} onChange={e => handleItemChange(index, 'petroleumLevyOn', e.target.value)}
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500">
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
                           {PETROLEUM_LEVY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">Whether the levy applies to a direct sale or retail sale</p>
+                        <p className="text-xs text-muted mt-1">Whether the levy applies to a direct sale or retail sale</p>
                       </div>
                     )}
 
                  {/* Points 10–14: Fixed/Notified Value, Extra Tax, Further Tax, PFAD, ST Withheld */}
                     <div className="grid grid-cols-5 gap-3 mt-3">
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Fixed / Notified Value or Retail Price (PKR)</label>
+                        <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Fixed / Notified Value or Retail Price (PKR)</label>
                         <input type="number" value={item.fixedNotifiedValue}
                           onChange={e => handleItemChange(index, 'fixedNotifiedValue', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">Leave 0 if no govt-notified price applies</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">Leave 0 if no govt-notified price applies</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Extra Tax (PKR)</label>
+                        <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Extra Tax (PKR)</label>
                         <input type="number" value={item.extraTax}
                           onChange={e => handleItemChange(index, 'extraTax', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">Applies to SIMs, mobile phones, petroleum etc.</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">Applies to SIMs, mobile phones, petroleum etc.</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Further Tax (PKR)</label>
+                        <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Further Tax (PKR)</label>
                         <input type="number" value={item.furtherTax}
                           onChange={e => handleItemChange(index, 'furtherTax', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">3% surcharge for sales to unregistered buyers</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">3% surcharge for sales to unregistered buyers</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">Total Value of Sales — PFAD only (PKR)</label>
+                        <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Total Value of Sales — PFAD only (PKR)</label>
                         <input type="number" value={item.pfadValue}
                           onChange={e => handleItemChange(index, 'pfadValue', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">Only for Palm Fatty Acid Distillate supplies</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">Only for Palm Fatty Acid Distillate supplies</p>
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-400 mb-1 min-h-[2.5rem]">ST Withheld at Source (PKR)</label>
+                        <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">ST Withheld at Source (PKR)</label>
                         <input type="number" value={item.stWithheld}
                           onChange={e => handleItemChange(index, 'stWithheld', e.target.value ? parseFloat(e.target.value) : 0)}
                           placeholder="0 if not applicable"
-                          className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                        <p className="text-xs text-gray-500 mt-1">Sales tax withheld by buyer at source</p>
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <p className="text-xs text-muted mt-1">Sales tax withheld by buyer at source</p>
                       </div>
                     </div>
-                       
+
                     {/* Exemption / Zero & Reduced Rate Reference */}
                     <div className="mt-3">
-                      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">
+                      <p className="text-xs text-muted font-semibold uppercase tracking-wide mb-2">
                         Exemption / Zero &amp; Reduced Rate Reference
                       </p>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">SRO No. / Schedule No.</label>
+                          <label className="block text-xs text-muted mb-1">SRO No. / Schedule No.</label>
                           <select value={item.sroSchedule} onChange={e => handleItemChange(index, 'sroSchedule', e.target.value)}
-                            className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500">
+                            className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
                             {SRO_SCHEDULES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
-                          <p className="text-xs text-gray-500 mt-1">Required for exempt/zero-rated/reduced-rate items</p>
+                          <p className="text-xs text-muted mt-1">Required for exempt/zero-rated/reduced-rate items</p>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-400 mb-1">Item S. No.</label>
+                          <label className="block text-xs text-muted mb-1">Item S. No.</label>
                           <ItemSNoAutocomplete value={item.itemSNo} onChange={val => handleItemChange(index, 'itemSNo', val)} />
-                          <p className="text-xs text-gray-500 mt-1">Clause number within the selected SRO/Schedule</p>
+                          <p className="text-xs text-muted mt-1">Clause number within the selected SRO/Schedule</p>
                         </div>
                       </div>
                     </div>
@@ -898,23 +884,23 @@ function CreateInvoicePageContent() {
                     {/* Reason / Reason Remarks — Credit Note / Debit Note only */}
                     {isAmendment && (
                       <div className="mt-3">
-                        <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-2">Reason for Amendment</p>
+                        <p className="text-xs text-muted font-semibold uppercase tracking-wide mb-2">Reason for Amendment</p>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">Reason</label>
+                            <label className="block text-xs text-muted mb-1">Reason</label>
                             <select value={item.reason} onChange={e => handleItemChange(index, 'reason', e.target.value)}
-                              className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500">
+                              className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
                               {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">FBR-approved reason code for this line&apos;s adjustment</p>
+                            <p className="text-xs text-muted mt-1">FBR-approved reason code for this line&apos;s adjustment</p>
                           </div>
                           <div>
-                            <label className="block text-xs text-gray-400 mb-1">Reason Remarks</label>
+                            <label className="block text-xs text-muted mb-1">Reason Remarks</label>
                             <input type="text" value={item.reasonRemarks}
                               onChange={e => handleItemChange(index, 'reasonRemarks', e.target.value)}
                               placeholder="e.g. 20 units returned due to damage"
-                              className="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500" />
-                            <p className="text-xs text-gray-500 mt-1">Free-text detail supporting the reason above</p>
+                              className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                            <p className="text-xs text-muted mt-1">Free-text detail supporting the reason above</p>
                           </div>
                         </div>
                       </div>
@@ -922,7 +908,7 @@ function CreateInvoicePageContent() {
 
                     {formData.items.length > 1 && (
                       <button type="button" onClick={() => removeItem(index)}
-                        className="mt-2 text-red-400 hover:text-red-300 text-sm">
+                        className="mt-2 text-error-text hover:opacity-70 text-sm">
                         Remove Item
                       </button>
                     )}
@@ -932,18 +918,18 @@ function CreateInvoicePageContent() {
             </div>
 
             {/* Totals */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="bg-surface rounded-lg p-6 border border-border">
               <div className="grid grid-cols-8 gap-4 text-center">
-                <div><p className="text-gray-400 text-sm">Total Amount</p><p className="text-xl font-bold text-white">PKR {totals.totalAmount.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">Sales Tax</p><p className="text-xl font-bold text-green-400">PKR {totals.totalSalesTax.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">Extra Tax</p><p className="text-xl font-bold text-yellow-400">PKR {totals.totalExtraTax.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">Further Tax</p><p className="text-xl font-bold text-orange-400">PKR {totals.totalFurtherTax.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">FED</p><p className="text-xl font-bold text-blue-400">PKR {totals.totalFed.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">PFAD Value</p><p className="text-xl font-bold text-purple-400">PKR {totals.totalPfad.toFixed(2)}</p></div>
-                <div><p className="text-gray-400 text-sm">ST Withheld</p><p className="text-xl font-bold text-pink-400">PKR {totals.totalStWithheld.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">Total Amount</p><p className="text-xl font-bold text-heading">PKR {totals.totalAmount.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">Sales Tax</p><p className="text-xl font-bold text-heading">PKR {totals.totalSalesTax.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">Extra Tax</p><p className="text-xl font-bold text-heading">PKR {totals.totalExtraTax.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">Further Tax</p><p className="text-xl font-bold text-heading">PKR {totals.totalFurtherTax.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">FED</p><p className="text-xl font-bold text-heading">PKR {totals.totalFed.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">PFAD Value</p><p className="text-xl font-bold text-heading">PKR {totals.totalPfad.toFixed(2)}</p></div>
+                <div><p className="text-muted text-sm">ST Withheld</p><p className="text-xl font-bold text-heading">PKR {totals.totalStWithheld.toFixed(2)}</p></div>
                 <div>
-                  <p className="text-gray-400 text-sm">Grand Total</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-muted text-sm">Grand Total</p>
+                  <p className="text-xl font-bold text-heading bg-accent/25 rounded px-2 py-0.5 inline-block">
                     PKR {(totals.totalAmount + totals.totalSalesTax + totals.totalExtraTax + totals.totalFurtherTax + totals.totalFed - totals.totalDiscount).toFixed(2)}
                   </p>
                 </div>
@@ -953,11 +939,11 @@ function CreateInvoicePageContent() {
             {/* Submit */}
             <div className="flex gap-4">
               <button type="submit" disabled={loading || !business}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold py-3 rounded-lg transition">
+                className="flex-1 bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition">
                 {loading ? 'Creating Invoice...' : 'Create Invoice'}
               </button>
               <button type="button" onClick={() => router.push('/invoices')}
-                className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 rounded-lg transition">
+                className="flex-1 bg-surface border border-border hover:border-heading text-heading font-semibold py-3 rounded-lg transition">
                 Cancel
               </button>
             </div>
@@ -971,7 +957,7 @@ function CreateInvoicePageContent() {
 export default function CreateInvoicePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-heading flex items-center justify-center">
         Loading...
       </div>
     }>

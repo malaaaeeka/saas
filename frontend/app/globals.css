@@ -1,22 +1,81 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* toaman palette */
+  --background: #f9f9f6;
+  --foreground: #1e2216;
+
+  --surface: #ffffff;
+  --surface-alt: #f9f9f4;
+
+  --heading: #1e2216;
+  --body: #4a4a3a;
+  --muted: #9a9a7e;
+  --muted-dark: #6b6b52;
+
+  --border: #e5e5d8;
+  --border-light: #f0efe8;
+
+  --accent: #c8e64c;
+  --link: #4d7c0f;
+
+  --btn-dark: #1e2216;
+  --btn-dark-hover: #2c3020;
+  --btn-dark-text: #f0edd8;
+
+  --warning-bg: #fef9c3;
+  --warning-border: #fde68a;
+  --warning-text: #b45309;
+
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --success-text: #166534;
+
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
+  --error-text: #b91c1c;
 }
+
+/* Toaman is a fixed light theme — intentionally NOT following
+   prefers-color-scheme, so it looks the same for every user
+   regardless of their OS dark-mode setting. */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-muted: var(--muted);
+  --color-muted-dark: var(--muted-dark);
+
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+
+  --color-btn-dark: var(--btn-dark);
+  --color-btn-dark-hover: var(--btn-dark-hover);
+  --color-btn-dark-text: var(--btn-dark-text);
+
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-border: var(--warning-border);
+  --color-warning-text: var(--warning-text);
+
+  --color-success-bg: var(--success-bg);
+  --color-success-border: var(--success-border);
+  --color-success-text: var(--success-text);
+
+  --color-error-bg: var(--error-bg);
+  --color-error-border: var(--error-border);
+  --color-error-text: var(--error-text);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
