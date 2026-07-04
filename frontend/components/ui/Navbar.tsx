@@ -107,30 +107,26 @@ export default function Navbar() {
         }
 
         .nav-links button {
-          font-family: 'DM Sans', sans-serif;
-          font-size: 0.82rem;
-          font-weight: 400;
-          letter-spacing: 0.01em;
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 0.4rem 0.85rem;
-          border-radius: 6px;
-          transition: color 0.2s ease, background 0.2s ease;
-        }
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.4rem 0.85rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
 
-        .nav-links button.active {
-          background: #1e2216;
-          color: #f0edd8;
-        }
+.nav-links button:hover {
+  color: var(--lime);
+}
 
-        .nav-links button:not(.active) {
-          color: var(--text-muted);
-        }
-
-        .nav-links button:not(.active):hover {
-          color: var(--lime);
-        }
+.nav-links button.active {
+  color: var(--lime);
+  font-weight: 500;
+}
 
         /* Right buttons */
         .nav-actions {
