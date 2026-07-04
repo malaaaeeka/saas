@@ -34,16 +34,14 @@ const loggedInLinks = [
   { label: 'Settings', path: '/settings' },
 ];
 
-const isActive = (path: string) => pathname === path;
-
 // CA Portal has its own top bar (CALayout) — don't render this one there
 if (pathname.startsWith('/ca')) {
   return null;
 }
 
-  const isActive = (path: string) => pathname === path;
+const isActive = (path: string) => pathname === path;
 
-  return (
+return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
