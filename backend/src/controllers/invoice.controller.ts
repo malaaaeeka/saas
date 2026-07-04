@@ -82,41 +82,53 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       doc.fillColor('black')
     }
 
-    // ===== Items table =====
+    // ===== Items table (with full grid lines) =====
     let tableTop = colY + 90
-    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
-    tableTop += 6
+    const tableLeft = 30
 
-    // Column definitions — 19 columns matching FBR portal layout
     const cols = [
-      { key: 'sr',          label: 'Sr.',            x: 30,  w: 18  },
-      { key: 'hsCode',      label: 'HS Code',         x: 48,  w: 40  },
-      { key: 'hsDesc',      label: 'HS Code Desc.',   x: 88,  w: 95  },
-      { key: 'prodDesc',    label: 'Product Desc.',   x: 183, w: 75  },
-      { key: 'saleType',    label: 'Sale Type',       x: 258, w: 60  },
-      { key: 'qty',         label: 'Qty',             x: 318, w: 28  },
-      { key: 'uom',         label: 'UoM',             x: 346, w: 26  },
-      { key: 'rate',        label: 'Rate',            x: 372, w: 35  },
-      { key: 'salesValue',  label: 'Sales Value',     x: 407, w: 48  },
-      { key: 'retailPrice', label: 'Retail Price',    x: 455, w: 42  },
-      { key: 'salesTax',    label: 'Sales Tax',       x: 497, w: 40  },
-      { key: 'extraTax',    label: 'Extra Tax',       x: 537, w: 35  },
-      { key: 'furtherTax',  label: 'Further Tax',     x: 572, w: 35  },
-      { key: 'fed',         label: 'FED',             x: 607, w: 26  },
-      { key: 'stWht',       label: 'ST WHT',          x: 633, w: 30  },
-      { key: 'discount',    label: 'Discount',        x: 663, w: 30  },
-      { key: 'sro',         label: 'SRO/Schedule',    x: 693, w: 48  },
-      { key: 'sroItemSr',   label: 'SRO Item Sr.',    x: 741, w: 32  },
-      { key: 'status',      label: 'Status',          x: 773, w: 26  },
+      { key: 'sr',          label: 'Sr. No.',              w: 20  },
+      { key: 'hsCode',      label: 'HS Code',               w: 38  },
+      { key: 'hsDesc',      label: 'HS Code Description',   w: 95  },
+      { key: 'prodDesc',    label: 'Product Description',   w: 75  },
+      { key: 'saleType',    label: 'Sales Type',            w: 58  },
+      { key: 'qty',         label: 'Quantity',              w: 30  },
+      { key: 'uom',         label: 'UoM',                   w: 24  },
+      { key: 'rate',        label: 'Rate',                  w: 26  },
+      { key: 'salesValue',  label: 'Sales Value',           w: 48  },
+      { key: 'retailPrice', label: 'Retail Price',          w: 40  },
+      { key: 'salesTax',    label: 'Sales Tax',             w: 40  },
+      { key: 'extraTax',    label: 'Extra Tax',             w: 34  },
+      { key: 'furtherTax',  label: 'Further Tax',           w: 34  },
+      { key: 'fed',         label: 'FED',                   w: 24  },
+      { key: 'stWht',       label: 'ST WHT',                w: 28  },
+      { key: 'discount',    label: 'Discount',              w: 30  },
+      { key: 'sro',         label: 'SRO / Schedule No.',    w: 46  },
+      { key: 'sroItemSr',   label: 'SRO Item Sr. No.',      w: 32  },
+      { key: 'status',      label: 'Status',                w: 26  },
     ]
 
-    doc.fontSize(6.5).font('Helvetica-Bold')
-    cols.forEach(c => doc.text(c.label, c.x, tableTop, { width: c.w }))
-    tableTop += 12
-    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
-    tableTop += 5
+    let runningX = tableLeft
+    const colX: number[] = []
+    cols.forEach(c => { colX.push(runningX); runningX += c.w })
+    const tableWidth = runningX - tableLeft
 
+    // ---- Header row ----
+    const headerHeight = 22
+    doc.rect(tableLeft, tableTop, tableWidth, headerHeight).stroke()
+    doc.fontSize(6.5).font('Helvetica-Bold')
+    cols.forEach((c, i) => {
+      doc.text(c.label, colX[i] + 2, tableTop + 4, { width: c.w - 4 })
+      doc.moveTo(colX[i], tableTop).lineTo(colX[i], tableTop + headerHeight).stroke()
+    })
+    doc.moveTo(tableLeft + tableWidth, tableTop).lineTo(tableLeft + tableWidth, tableTop + headerHeight).stroke()
+
+    tableTop += headerHeight
+
+    // ---- Item rows ----
     doc.font('Helvetica').fontSize(6.5)
+    const rowTops: number[] = [tableTop]
+
     invoice.items.forEach((item: any, i: number) => {
       const qty          = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
       const salesValue   = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
@@ -128,50 +140,57 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       const retailPrice  = Number(item.fixedNotifiedValue || 0)
       const stWht        = Number(item.stWithheld || 0)
 
-      const rowY = tableTop
-      doc.text(String(i + 1),                          30,  rowY, { width: 18 })
-      doc.text(item.hsCode || '—',                      48,  rowY, { width: 40 })
-      doc.text(item.hsCodeDescription || '—',           88,  rowY, { width: 95 })
-      doc.text(item.description || '—',                 183, rowY, { width: 75 })
-      doc.text(invoice.saleType || '—',                 258, rowY, { width: 60 })
-      doc.text(String(qty),                             318, rowY, { width: 28 })
-      doc.text(item.uom || '—',                         346, rowY, { width: 26 })
-      doc.text(Number(item.rate).toFixed(2),            372, rowY, { width: 35 })
-      doc.text(salesValue.toFixed(2),                   407, rowY, { width: 48 })
-      doc.text(retailPrice.toFixed(2),                  455, rowY, { width: 42 })
-      doc.text(salesTax.toFixed(2),                     497, rowY, { width: 40 })
-      doc.text(extraTax.toFixed(2),                     537, rowY, { width: 35 })
-      doc.text(furtherTax.toFixed(2),                   572, rowY, { width: 35 })
-      doc.text(fed.toFixed(2),                          607, rowY, { width: 26 })
-      doc.text(stWht.toFixed(2),                        633, rowY, { width: 30 })
-      doc.text(discount.toFixed(2),                     663, rowY, { width: 30 })
-      doc.text(item.sroSchedule || '—',                 693, rowY, { width: 48 })
-      doc.text(item.itemSNo || '—',                     741, rowY, { width: 32 })
-      doc.text(invoice.status || '—',                   773, rowY, { width: 26 })
+      const hsDescHeight   = doc.heightOfString(item.hsCodeDescription || '—', { width: cols[2].w - 4 })
+      const prodDescHeight = doc.heightOfString(item.description || '—', { width: cols[3].w - 4 })
+      const rowHeight = Math.max(hsDescHeight, prodDescHeight, 10) + 8
 
-      // advance row by the tallest wrapped cell (HS Code Desc or Product Desc usually tallest)
-      const hsDescHeight   = doc.heightOfString(item.hsCodeDescription || '—', { width: 95 })
-      const prodDescHeight = doc.heightOfString(item.description || '—', { width: 75 })
-      const tallest = Math.max(hsDescHeight, prodDescHeight, 10)
-      tableTop += tallest + 5
+      const rowY = tableTop
+      const values = [
+        String(i + 1), item.hsCode || '—', item.hsCodeDescription || '—',
+        item.description || '—', invoice.saleType || '—', String(qty),
+        item.uom || '—', Number(item.rate).toFixed(2), salesValue.toFixed(2),
+        retailPrice.toFixed(2), salesTax.toFixed(2), extraTax.toFixed(2),
+        furtherTax.toFixed(2), fed.toFixed(2), stWht.toFixed(2),
+        discount.toFixed(2), item.sroSchedule || '—', item.itemSNo || '—',
+        invoice.status || '—'
+      ]
+
+      values.forEach((val, ci) => {
+        doc.text(val, colX[ci] + 2, rowY + 4, { width: cols[ci].w - 4 })
+      })
+
+      tableTop += rowHeight
+      rowTops.push(tableTop)
     })
 
-    doc.moveTo(30, tableTop).lineTo(doc.page.width - 30, tableTop).stroke()
-    tableTop += 10
+    const tableBottom = tableTop
+    colX.forEach(x => doc.moveTo(x, rowTops[0] - headerHeight).lineTo(x, tableBottom).stroke())
+    doc.moveTo(tableLeft + tableWidth, rowTops[0] - headerHeight).lineTo(tableLeft + tableWidth, tableBottom).stroke()
+    rowTops.forEach(y => doc.moveTo(tableLeft, y).lineTo(tableLeft + tableWidth, y).stroke())
 
-    // ===== Totals row =====
-    const subtotal   = isCreditNote ? Math.abs(Number(invoice.totalAmount))   : Number(invoice.totalAmount)
-    const salesTaxTotal = isCreditNote ? Math.abs(Number(invoice.totalSalesTax)) : Number(invoice.totalSalesTax)
-    const fedTotal   = isCreditNote ? Math.abs(Number(invoice.totalFed))     : Number(invoice.totalFed)
-    const discountTotal = Number(invoice.totalDiscount)
-    const grandTotal = subtotal + salesTaxTotal + fedTotal - discountTotal
+    // ---- Totals row (inside grid) ----
+    const totalRowHeight = 16
+    doc.rect(tableLeft, tableBottom, tableWidth, totalRowHeight).stroke()
+    colX.forEach(x => doc.moveTo(x, tableBottom).lineTo(x, tableBottom + totalRowHeight).stroke())
+
+    const subtotal       = isCreditNote ? Math.abs(Number(invoice.totalAmount))   : Number(invoice.totalAmount)
+    const salesTaxTotal  = isCreditNote ? Math.abs(Number(invoice.totalSalesTax)) : Number(invoice.totalSalesTax)
+    const fedTotal       = isCreditNote ? Math.abs(Number(invoice.totalFed))     : Number(invoice.totalFed)
+    const discountTotal  = Number(invoice.totalDiscount)
+    const grandTotal     = subtotal + salesTaxTotal + fedTotal - discountTotal
+
+    doc.fontSize(6.5).font('Helvetica-Bold')
+    doc.text('Total:', colX[7] + 2, tableBottom + 4, { width: cols[7].w - 4, align: 'right' })
+    doc.text(subtotal.toFixed(2),      colX[8] + 2, tableBottom + 4, { width: cols[8].w - 4 })
+    doc.text(salesTaxTotal.toFixed(2), colX[10] + 2, tableBottom + 4, { width: cols[10].w - 4 })
+    doc.text(fedTotal.toFixed(2),      colX[13] + 2, tableBottom + 4, { width: cols[13].w - 4 })
+
+    tableTop = tableBottom + totalRowHeight + 15
 
     doc.fontSize(9).font('Helvetica-Bold')
-      .text(`Total Sales Value: PKR ${subtotal.toFixed(2)}`,     500, tableTop)
-      .text(`Total Sales Tax: PKR ${salesTaxTotal.toFixed(2)}`,  500, tableTop + 14)
-      .text(`Grand Total: PKR ${grandTotal.toFixed(2)}`,         500, tableTop + 32)
+      .text(`Grand Total: PKR ${grandTotal.toFixed(2)}`, 500, tableTop)
 
-    tableTop += 60
+    tableTop += 25
 
     if (isAmendment) {
       doc.fontSize(8).font('Helvetica-Bold')
