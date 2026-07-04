@@ -245,9 +245,12 @@ export default function InvoiceDetailPage() {
 
         {/* FBR Submission Info */}
         {invoice.fbrInvoiceNo && (
-          <div className="bg-success-bg border border-success-border rounded-xl p-4 mb-6">
-            <p className="text-success-text font-semibold">Submitted to FBR</p>
-            <p className="text-heading font-mono mt-1">FBR Invoice No: {invoice.fbrInvoiceNo}</p>
+          <div className="bg-surface border border-border border-l-4 border-l-success-border rounded-xl p-4 mb-6 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-success-text" />
+              <p className="text-heading font-semibold text-sm">Submitted to FBR</p>
+            </div>
+            <p className="text-heading font-mono text-sm mt-2">FBR Invoice No: {invoice.fbrInvoiceNo}</p>
             {invoice.sentAt && (
               <p className="text-muted text-xs mt-1">
                 Submitted on {new Date(invoice.sentAt).toLocaleString()}
@@ -259,15 +262,18 @@ export default function InvoiceDetailPage() {
         {/* 72-Hour Amendment Window — only on original SALE/PURCHASE invoices */}
         {(invoice.status === 'SENT' || invoice.status === 'AMENDED') && amendmentWindow &&
          (invoice.invoiceType === 'SALE' || invoice.invoiceType === 'PURCHASE') && (
-          <div className="bg-warning-bg border border-warning-border rounded-xl p-5 mb-6">
+          <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl p-5 mb-6 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-warning-text font-semibold text-sm">
-                  Amendment Window Open
-                </p>
-                <p className="text-body text-sm mt-1">
-                  FBR allows amendments within 72 hours of submission.
-                  <span className="text-warning-text font-semibold ml-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
+                  <p className="text-heading font-semibold text-sm">
+                    Amendment Window Open
+                  </p>
+                </div>
+                <p className="text-body text-sm mt-2">
+                  FBR allows amendments within 72 hours of submission —
+                  <span className="text-heading font-semibold ml-1">
                     {amendmentWindow.hoursLeft}h {amendmentWindow.minutesLeft}m remaining
                   </span>
                 </p>
@@ -279,13 +285,13 @@ export default function InvoiceDetailPage() {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => handleAmendment('CREDIT_NOTE')}
-                className="bg-error-bg hover:opacity-80 border border-error-border text-error-text text-sm font-semibold px-5 py-2 rounded-lg transition"
+                className="bg-surface hover:bg-surface-alt border border-border text-heading text-sm font-semibold px-5 py-2 rounded-lg transition"
               >
                 Raise Credit Note
               </button>
               <button
                 onClick={() => handleAmendment('DEBIT_NOTE')}
-                className="bg-warning-bg hover:opacity-80 border border-warning-border text-warning-text text-sm font-semibold px-5 py-2 rounded-lg transition"
+                className="bg-surface hover:bg-surface-alt border border-border text-heading text-sm font-semibold px-5 py-2 rounded-lg transition"
               >
                 Raise Debit Note
               </button>
@@ -295,7 +301,7 @@ export default function InvoiceDetailPage() {
 
         {/* Amendment window expired notice */}
         {invoice.status === 'SENT' && !amendmentWindow && invoice.sentAt && (
-          <div className="bg-surface-alt border border-border rounded-xl p-4 mb-6">
+          <div className="bg-surface border border-border rounded-xl p-4 mb-6">
             <p className="text-muted text-sm">
               Amendment window has expired (72 hours passed since submission)
             </p>
