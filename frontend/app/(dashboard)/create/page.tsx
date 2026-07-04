@@ -733,7 +733,7 @@ function CreateInvoicePageContent() {
                   <div key={index} className="bg-surface rounded-xl p-4 border border-border shadow-sm">
 
                     {/* Document Number (col H) + Invoice Reference No. (col Y) — top of card */}
-                    <div className="grid grid-cols-2 gap-3 mb-3 pb-3 border-b border-border">
+                    <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <label className="block text-xs text-muted mb-1">
                           Document Number <span className="text-error-text">*</span>
