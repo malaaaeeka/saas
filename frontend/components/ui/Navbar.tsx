@@ -27,12 +27,19 @@ export default function Navbar() {
     router.push('/login');
   };
 
-  const loggedInLinks = [
-    { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Create Invoice', path: '/create' },
-    { label: 'Invoices', path: '/invoices' },
-    { label: 'Settings', path: '/settings' },
-  ];
+const loggedInLinks = [
+  { label: 'Dashboard', path: '/dashboard' },
+  { label: 'Create Invoice', path: '/create' },
+  { label: 'Invoices', path: '/invoices' },
+  { label: 'Settings', path: '/settings' },
+];
+
+const isActive = (path: string) => pathname === path;
+
+// CA Portal has its own top bar (CALayout) — don't render this one there
+if (pathname.startsWith('/ca')) {
+  return null;
+}
 
   const isActive = (path: string) => pathname === path;
 

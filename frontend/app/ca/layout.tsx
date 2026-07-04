@@ -1,50 +1,62 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 export default function CALayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleLogout = () => {
     localStorage.removeItem('token')
     router.push('/login')
   }
 
+  const navItems = [
+    { label: 'Dashboard', path: '/ca' },
+    { label: 'My Clients', path: '/ca/clients' },
+    { label: 'Commission', path: '/ca/commission' },
+    { label: 'Referrals', path: '/ca/referrals' },
+    { label: 'Settings', path: '/ca/settings' },
+  ]
+
+  const isActive = (path: string) => pathname === path
+
   return (
     <div className="min-h-screen bg-background text-heading">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 w-64 h-screen bg-surface border-r border-border p-6">
-        <h2 className="text-2xl font-bold mb-8">CA Portal</h2>
 
-        <nav className="space-y-4 mb-8">
-          <Link href="/ca" className="block hover:text-link transition">
-             Dashboard
-          </Link>
-          <Link href="/ca/clients" className="block hover:text-link transition">
-             My Clients
-          </Link>
-          <Link href="/ca/commission" className="block hover:text-link transition">
-             Commission
-          </Link>
-          <Link href="/ca/referrals" className="block hover:text-link transition">
-             Referrals
-          </Link>
-          <Link href="/ca/settings" className="block hover:text-link transition">
-             Settings
-          </Link>
-        </nav>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
+        <div className="flex items-center gap-8">
+          <h2 className="text-lg font-bold">CA Portal</h2>
+
+          <nav className="flex items-center gap-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`px-3 py-1.5 rounded-lg transition text-sm font-medium ${
+                  isActive(item.path)
+                    ? 'text-link font-semibold'
+                    : 'text-muted hover:text-heading'
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
         <button
           onClick={handleLogout}
-          className="w-full bg-error-bg hover:bg-error-bg/70 border border-error-border text-error-text px-4 py-2 rounded-lg transition"
+          className="text-sm font-medium text-muted hover:text-error-text transition"
         >
           Logout
         </button>
       </div>
 
       {/* Main Content */}
-      <div className="ml-64 p-8">
+      <div className="p-8">
         {children}
       </div>
     </div>
