@@ -309,7 +309,7 @@ export default function InvoicesPage() {
 
         {/* Filter & Sort panel */}
         {showFilterPanel && (
-          <div className="mb-6 pb-6 border-b border-border grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <p className="text-xs text-muted uppercase tracking-wide mb-3">Type</p>
               <div className="flex flex-col gap-2">
