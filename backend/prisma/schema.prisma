@@ -44,21 +44,30 @@ model CAProfile {
   clients Business[]
 }
 
-model Business {
-  id             String   @id @default(cuid())
-  userId         String   @unique
-  caId           String?
-  businessName   String
-  ntn            String   @unique
-  strn           String   @unique
-  address        String
-  city           String
-  phone          String
-  businessType   String
-  securityToken  String?
-  posId          String?
-  isWhitelisted  Boolean  @default(false)
-  createdAt      DateTime @default(now())
+items: {
+          createMany: {
+            data: items.map((item: any) => ({
+              hsCode: item.hsCode,
+              hsCodeDescription: item.hsCodeDescription || null,
+              productCode: item.productCode,
+              description: item.description,
+              quantity: item.quantity,
+              uom: item.uom,
+              rate: item.rate,
+              totalAmount: item.totalAmount,
+              salesTax: item.salesTax,
+              sroSchedule: item.sroSchedule,
+              itemSNo: item.itemSNo || null,
+              fed: item.fed || 0,
+              extraTax: item.extraTax || 0,
+              furtherTax: item.furtherTax || 0,
+              fixedNotifiedValue: item.fixedNotifiedValue || 0,
+              stWithheld: item.stWithheld || 0,
+              withholdingTax: item.withholdingTax || 0,
+              discount: item.discount || 0
+            }))
+          }
+        }
 
   user         User          @relation(fields: [userId], references: [id])
   ca           CAProfile?    @relation(fields: [caId], references: [id])

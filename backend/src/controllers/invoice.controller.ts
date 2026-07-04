@@ -11,169 +11,155 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
   const qrBuffer = await generateQRCode(qrData)
 
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 50 })
+    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' })
     const chunks: Buffer[] = []
 
     doc.on('data', (chunk) => chunks.push(chunk))
     doc.on('end', () => resolve(Buffer.concat(chunks)))
     doc.on('error', reject)
 
-    const isAmendment = invoice.invoiceType === 'CREDIT_NOTE' || invoice.invoiceType === 'DEBIT_NOTE'
+    const isAmendment  = invoice.invoiceType === 'CREDIT_NOTE' || invoice.invoiceType === 'DEBIT_NOTE'
     const isCreditNote = invoice.invoiceType === 'CREDIT_NOTE'
 
     const titleMap: Record<string, string> = {
-      SALE: 'TAX INVOICE', PURCHASE: 'PURCHASE INVOICE',
-      CREDIT_NOTE: 'CREDIT NOTE', DEBIT_NOTE: 'DEBIT NOTE'
+      SALE: 'Sale Invoice', PURCHASE: 'Purchase Invoice',
+      CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
     }
-    const titleColor: Record<string, string> = {
-      SALE: 'black', PURCHASE: 'black',
-      CREDIT_NOTE: '#cc0000', DEBIT_NOTE: '#cc6600'
-    }
-    const title  = titleMap[invoice.invoiceType]  || 'TAX INVOICE'
-    const tColor = titleColor[invoice.invoiceType] || 'black'
+    const title = titleMap[invoice.invoiceType] || 'Sale Invoice'
 
-    doc.fontSize(22).font('Helvetica-Bold').fillColor(tColor).text(title, { align: 'center' })
-    doc.fillColor('black')
-    doc.fontSize(10).font('Helvetica').text('Federal Board of Revenue - e-Invoice System', { align: 'center' })
-    doc.moveDown(0.5)
+    const pageWidth = doc.page.width - 80 // usable width inside 40pt margins
 
-    if (isAmendment && invoice.originalInvoice) {
-      doc.fontSize(9).font('Helvetica-Bold').fillColor(tColor)
-        .text(`This ${title} amends FBR Invoice No: ${invoice.originalInvoice.fbrInvoiceNo || invoice.originalInvoiceId}`, { align: 'center' })
-      doc.fillColor('black')
-      if (invoice.amendmentReason) {
-        doc.fontSize(9).font('Helvetica').fillColor('#555555')
-          .text(`Reason: ${invoice.amendmentReason}`, { align: 'center' })
-        doc.fillColor('black')
-      }
-      doc.moveDown(0.5)
-    }
-
-    if (invoice.fbrInvoiceNo) {
-      doc.fontSize(11).font('Helvetica-Bold').fillColor('green')
-        .text(`FBR Invoice No: ${invoice.fbrInvoiceNo}`, { align: 'center' })
-      doc.fillColor('black')
-      doc.moveDown(0.5)
-    }
-
-    doc.image(qrBuffer, 450, 50, { width: 90, height: 90 })
-    doc.fontSize(7).fillColor('gray').text('Scan to verify', 450, 142, { width: 90, align: 'center' })
+    // ===== Header: Business name (left) + logo/QR block (right) =====
+    doc.fontSize(16).font('Helvetica-Bold').text(invoice.business.businessName || 'N/A', 40, 40)
+    doc.image(qrBuffer, doc.page.width - 130, 35, { width: 80, height: 80 })
+    doc.fontSize(7).fillColor('gray')
+      .text('Scan to verify', doc.page.width - 130, 117, { width: 80, align: 'center' })
     doc.fillColor('black')
 
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown()
+    doc.moveDown(2)
+    doc.moveTo(40, 130).lineTo(doc.page.width - 40, 130).stroke()
 
-    const topY = doc.y
-    doc.fontSize(10).font('Helvetica-Bold').text('SELLER', 50, topY)
+    // ===== Three-column info block: Seller | Buyer | Invoice Summary =====
+    const colY = 145
+    const col1 = 40
+    const col2 = 300
+    const col3 = 560
+
+    doc.fontSize(10).font('Helvetica-Bold').text('Seller Information', col1, colY)
     doc.fontSize(9).font('Helvetica')
-      .text(invoice.business.businessName || 'N/A', 50, topY + 15)
-      .text(`NTN: ${invoice.business.ntn || 'N/A'}`, 50, topY + 28)
-      .text(`STRN: ${invoice.business.strn || 'N/A'}`, 50, topY + 41)
+      .text('Business Name:', col1, colY + 16, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.business.businessName || 'N/A'}`)
+    doc.font('Helvetica')
+      .text('Registration No.:', col1, colY + 30, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.business.ntn || 'N/A'}`)
+    doc.font('Helvetica')
+      .text('Province:', col1, colY + 44, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.business.province || 'N/A'}`)
 
-    doc.fontSize(10).font('Helvetica-Bold').text('BUYER', 300, topY)
+    doc.font('Helvetica-Bold').fontSize(10).text('Buyer Information', col2, colY)
     doc.fontSize(9).font('Helvetica')
-      .text(invoice.buyerName || 'Walk-in Customer', 300, topY + 15)
-      .text(`NTN: ${invoice.buyerNtn || 'N/A'}`, 300, topY + 28)
-      .text(`CNIC: ${invoice.buyerCnic || 'N/A'}`, 300, topY + 41)
+      .text('Business Name:', col2, colY + 16, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.buyerName || 'Walk-in Customer'}`)
+    doc.font('Helvetica')
+      .text('Registration No.:', col2, colY + 30, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.buyerNtn || invoice.buyerCnic || 'N/A'}`)
 
-    doc.moveDown(5)
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown()
-
+    doc.font('Helvetica-Bold').fontSize(10).text('Invoice Summary', col3, colY)
     doc.fontSize(9).font('Helvetica')
-      .text(`Invoice Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`, 50)
-      .text(`Type: ${title}`, 50)
-      .text(`Sale Type: ${invoice.saleType}`, 50)
-      .text(`Status: ${invoice.status}`, 50)
+      .text('FBR Invoice No.:', col3, colY + 16, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.fbrInvoiceNo || 'Not yet submitted'}`)
+    doc.font('Helvetica')
+      .text('Invoice Date:', col3, colY + 30, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${new Date(invoice.invoiceDate).toLocaleDateString()}`)
+    doc.font('Helvetica')
+      .text('Invoice Type:', col3, colY + 44, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${title}`)
+    doc.font('Helvetica')
+      .text('Status:', col3, colY + 58, { continued: true }).font('Helvetica-Bold')
+      .text(`  ${invoice.status}`)
 
-    if (invoice.fbrInvoiceNo) {
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('green')
-        .text(`FBR Invoice No: ${invoice.fbrInvoiceNo}`, 50)
+    if (isAmendment && invoice.amendmentReason) {
+      doc.font('Helvetica').fontSize(8).fillColor('#555555')
+        .text(`Amendment Reason: ${invoice.amendmentReason}`, col1, colY + 60)
       doc.fillColor('black')
     }
-    if (isAmendment && invoice.originalInvoice?.fbrInvoiceNo) {
-      doc.fontSize(9).font('Helvetica-Bold').fillColor(tColor)
-        .text(`Amends FBR Invoice: ${invoice.originalInvoice.fbrInvoiceNo}`, 50)
-      doc.fillColor('black')
-    }
-    if (invoice.amendmentReason) {
-      doc.fontSize(9).font('Helvetica').fillColor('#555555')
-        .text(`Amendment Reason: ${invoice.amendmentReason}`, 50)
-      doc.fillColor('black')
-    }
 
-    doc.moveDown()
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown()
+    // ===== Items table =====
+    let tableTop = colY + 90
+    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
+    tableTop += 8
 
-    doc.fontSize(9).font('Helvetica-Bold')
-    doc.text('Description', 50, doc.y, { width: 160 })
-    doc.text('HS Code',     210, doc.y - 9, { width: 80 })
-    doc.text('Qty',         290, doc.y - 9, { width: 40 })
-    doc.text('Rate',        330, doc.y - 9, { width: 70 })
-    doc.text('Amount',      400, doc.y - 9, { width: 70 })
-    doc.text('Sales Tax',   470, doc.y - 9, { width: 70 })
-    doc.moveDown(0.5)
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown(0.5)
+    // Column layout (landscape gives ~760pt usable width)
+    const cols = [
+      { key: 'sr',       label: 'Sr.',           x: 40,  w: 25  },
+      { key: 'hsCode',    label: 'HS Code',       x: 65,  w: 55  },
+      { key: 'desc',      label: 'Description',   x: 120, w: 160 },
+      { key: 'saleType',  label: 'Sale Type',     x: 280, w: 90  },
+      { key: 'qty',       label: 'Qty',           x: 370, w: 45  },
+      { key: 'uom',       label: 'UoM',           x: 415, w: 40  },
+      { key: 'rate',      label: 'Rate',          x: 455, w: 55  },
+      { key: 'value',     label: 'Sales Value',   x: 510, w: 70  },
+      { key: 'tax',       label: 'Sales Tax',     x: 580, w: 65  },
+      { key: 'fed',       label: 'FED',           x: 645, w: 45  },
+      { key: 'discount',  label: 'Discount',      x: 690, w: 55  },
+      { key: 'sro',       label: 'SRO/Schedule',  x: 745, w: 90  },
+    ]
 
-    doc.font('Helvetica').fontSize(8)
-    invoice.items.forEach((item: any) => {
-      const rowY  = doc.y
+    doc.fontSize(8).font('Helvetica-Bold')
+    cols.forEach(c => doc.text(c.label, c.x, tableTop, { width: c.w }))
+    tableTop += 14
+    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
+    tableTop += 6
+
+    doc.font('Helvetica').fontSize(7.5)
+    invoice.items.forEach((item: any, i: number) => {
       const qty    = isCreditNote ? Math.abs(Number(item.quantity))    : Number(item.quantity)
       const amount = isCreditNote ? Math.abs(Number(item.totalAmount)) : Number(item.totalAmount)
       const tax    = isCreditNote ? Math.abs(Number(item.salesTax))    : Number(item.salesTax)
+      const fed    = Number(item.fed || 0)
+      const discount = Number(item.discount || 0)
 
-      doc.text(item.description || '—',               50,  rowY, { width: 160 })
-      doc.text(item.hsCode || '—',                    210, rowY, { width: 80 })
-      doc.text(String(qty),                           290, rowY, { width: 40 })
-      doc.text(`PKR ${Number(item.rate).toFixed(2)}`, 330, rowY, { width: 70 })
-      doc.text(`PKR ${amount.toFixed(2)}`,            400, rowY, { width: 70 })
-      doc.text(`PKR ${tax.toFixed(2)}`,               470, rowY, { width: 70 })
-      doc.moveDown(1.2)
+      const rowY = tableTop
+      doc.text(String(i + 1),                          40,  rowY, { width: 25 })
+      doc.text(item.hsCode || '—',                      65,  rowY, { width: 55 })
+      doc.text(item.description || '—',                 120, rowY, { width: 160 })
+      doc.text(invoice.saleType || '—',                 280, rowY, { width: 90 })
+      doc.text(String(qty),                             370, rowY, { width: 45 })
+      doc.text(item.uom || '—',                         415, rowY, { width: 40 })
+      doc.text(Number(item.rate).toFixed(2),            455, rowY, { width: 55 })
+      doc.text(amount.toFixed(2),                       510, rowY, { width: 70 })
+      doc.text(tax.toFixed(2),                          580, rowY, { width: 65 })
+      doc.text(fed.toFixed(2),                          645, rowY, { width: 45 })
+      doc.text(discount.toFixed(2),                     690, rowY, { width: 55 })
+      doc.text(item.sroSchedule || '—',                 745, rowY, { width: 90 })
+
+      // advance tableTop by the tallest wrapped cell (description is usually tallest)
+      const descHeight = doc.heightOfString(item.description || '—', { width: 160 })
+      tableTop += Math.max(descHeight, 12) + 6
     })
 
-    doc.moveDown()
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown()
+    doc.moveTo(40, tableTop).lineTo(doc.page.width - 40, tableTop).stroke()
+    tableTop += 10
 
+    // ===== Totals row =====
     const subtotal   = isCreditNote ? Math.abs(Number(invoice.totalAmount))   : Number(invoice.totalAmount)
     const salesTax   = isCreditNote ? Math.abs(Number(invoice.totalSalesTax)) : Number(invoice.totalSalesTax)
-    const fed        = isCreditNote ? Math.abs(Number(invoice.totalFed))       : Number(invoice.totalFed)
-    const discount   = Number(invoice.totalDiscount)
-    const grandTotal = subtotal + salesTax + fed - discount
+    const fedTotal   = isCreditNote ? Math.abs(Number(invoice.totalFed))     : Number(invoice.totalFed)
+    const discountTotal = Number(invoice.totalDiscount)
+    const grandTotal = subtotal + salesTax + fedTotal - discountTotal
 
-    doc.fontSize(9).font('Helvetica')
-      .text(`Subtotal:`,  380).moveUp().text(`PKR ${subtotal.toFixed(2)}`,  470)
-      .text(`Sales Tax:`, 380).moveUp().text(`PKR ${salesTax.toFixed(2)}`,  470)
-    if (fed > 0) {
-      doc.text(`FED:`, 380).moveUp().text(`PKR ${fed.toFixed(2)}`, 470)
-    }
-    if (discount > 0) {
-      doc.text(`Discount:`, 380).moveUp().text(`- PKR ${discount.toFixed(2)}`, 470)
-    }
-    doc.fontSize(10).font('Helvetica-Bold')
-      .text(`Grand Total:`, 380).moveUp()
-      .text(`PKR ${grandTotal.toFixed(2)}`, 470)
+    doc.fontSize(9).font('Helvetica-Bold')
+      .text(`Total Sales Value: PKR ${subtotal.toFixed(2)}`,   500, tableTop)
+      .text(`Total Sales Tax: PKR ${salesTax.toFixed(2)}`,     500, tableTop + 14)
+      .text(`Grand Total: PKR ${grandTotal.toFixed(2)}`,       500, tableTop + 32)
 
-    doc.moveDown(2)
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke()
-    doc.moveDown()
-
-    if (isAmendment) {
-      doc.fontSize(8).font('Helvetica-Bold').fillColor(tColor)
-        .text(`This is a ${title}. It supersedes and corrects the original invoice referenced above.`, { align: 'center' })
-      doc.fillColor('black')
-      doc.moveDown(0.3)
-    }
-
-    doc.fontSize(8).font('Helvetica').fillColor('gray')
-      .text('This is a computer generated document. Scan QR code to verify authenticity.', { align: 'center' })
+    doc.fontSize(7).font('Helvetica').fillColor('gray')
+      .text('This is a computer generated document. Scan QR code to verify authenticity.', 40, doc.page.height - 50, { align: 'center', width: pageWidth })
     doc.fillColor('black')
+
     doc.end()
   })
 }
-
 export const createInvoice = async (req: any, res: Response): Promise<void> => {
   try {
     const { invoiceType, invoiceDate, buyerNtn, buyerCnic, buyerName, saleType, branchId, items, originalInvoiceId, amendmentReason } = req.body
