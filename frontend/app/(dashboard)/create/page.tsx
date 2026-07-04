@@ -951,7 +951,7 @@ function CreateInvoicePageContent() {
                 <div><p className="text-muted text-sm">ST Withheld</p><p className="text-xl font-bold text-heading">PKR {totals.totalStWithheld.toFixed(2)}</p></div>
                 <div>
                   <p className="text-muted text-sm">Grand Total</p>
-                  <p className="text-xl font-bold text-heading bg-accent/25 rounded px-2 py-0.5 inline-block">
+                  <p className="text-xl font-bold bg-heading text-surface rounded px-2 py-0.5 inline-block">
                     PKR {(totals.totalAmount + totals.totalSalesTax + totals.totalExtraTax + totals.totalFurtherTax + totals.totalFed - totals.totalDiscount).toFixed(2)}
                   </p>
                 </div>
