@@ -11,14 +11,14 @@ export default function Navbar() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
 
-        .nav-root {
-          --bg: #1e2216;
-          --lime: #c8e64c;
-          --text: #f0edd8;
-          --text-muted: #9a9a7e;
-          --border: rgba(200,230,76,0.15);
-          font-family: 'DM Sans', sans-serif;
-        }
+       .nav-root {
+  --bg: #1e2216;
+  --lime: #6b8e23;
+  --text: #1e2216;
+  --text-muted: #5a5a45;
+  --border: rgba(30,34,22,0.15);
+  font-family: 'DM Sans', sans-serif;
+}
 
         .nav-bar {
           position: sticky;
