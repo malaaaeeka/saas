@@ -1,4 +1,4 @@
- generator client {
+generator client {
   provider = "prisma-client-js"
 }
 
@@ -44,30 +44,22 @@ model CAProfile {
   clients Business[]
 }
 
-items: {
-          createMany: {
-            data: items.map((item: any) => ({
-              hsCode: item.hsCode,
-              hsCodeDescription: item.hsCodeDescription || null,
-              productCode: item.productCode,
-              description: item.description,
-              quantity: item.quantity,
-              uom: item.uom,
-              rate: item.rate,
-              totalAmount: item.totalAmount,
-              salesTax: item.salesTax,
-              sroSchedule: item.sroSchedule,
-              itemSNo: item.itemSNo || null,
-              fed: item.fed || 0,
-              extraTax: item.extraTax || 0,
-              furtherTax: item.furtherTax || 0,
-              fixedNotifiedValue: item.fixedNotifiedValue || 0,
-              stWithheld: item.stWithheld || 0,
-              withholdingTax: item.withholdingTax || 0,
-              discount: item.discount || 0
-            }))
-          }
-        }
+model Business {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  caId           String?
+  businessName   String
+  ntn            String   @unique
+  strn           String   @unique
+  address        String
+  city           String
+  province       String   @default("PUNJAB")
+  phone          String
+  businessType   String
+  securityToken  String?
+  posId          String?
+  isWhitelisted  Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   user         User          @relation(fields: [userId], references: [id])
   ca           CAProfile?    @relation(fields: [caId], references: [id])
@@ -138,20 +130,26 @@ enum InvoiceStatus {
 }
 
 model InvoiceItem {
-  id             String  @id @default(cuid())
-  invoiceId      String
-  hsCode         String
-  productCode    String?
-  description    String
-  quantity       Decimal
-  uom            String
-  rate           Decimal
-  totalAmount    Decimal
-  salesTax       Decimal
-  sroSchedule    String
-  fed            Decimal @default(0)
-  withholdingTax Decimal @default(0)
-  discount       Decimal @default(0)
+  id                 String  @id @default(cuid())
+  invoiceId          String
+  hsCode             String
+  hsCodeDescription  String?
+  productCode        String?
+  description        String
+  quantity           Decimal
+  uom                String
+  rate               Decimal
+  totalAmount        Decimal
+  salesTax           Decimal
+  sroSchedule        String
+  itemSNo            String?
+  fed                Decimal @default(0)
+  extraTax           Decimal @default(0)
+  furtherTax         Decimal @default(0)
+  fixedNotifiedValue Decimal @default(0)
+  stWithheld         Decimal @default(0)
+  withholdingTax     Decimal @default(0)
+  discount           Decimal @default(0)
 
   invoice Invoice @relation(fields: [invoiceId], references: [id])
 }
@@ -201,7 +199,7 @@ model AuditLog {
   ipAddress String?
   createdAt DateTime @default(now())
 }
-// Add to your existing schema
+
 model Permission {
   id    String @id @default(cuid())
   name  String @unique
@@ -214,10 +212,6 @@ model RolePermission {
   permissionId String
   createdAt    DateTime @default(now())
 }
-
-// Update AuditLog (you already have it, just make sure it has these fields)
-// Your AuditLog looks good, keep it as is
-
 
 model HsCode {
   id          String @id @default(cuid())

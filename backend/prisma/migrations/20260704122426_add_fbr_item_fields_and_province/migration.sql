@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE "Business" ADD COLUMN     "province" TEXT NOT NULL DEFAULT 'PUNJAB';
+
+-- AlterTable
+ALTER TABLE "InvoiceItem" ADD COLUMN     "extraTax" DECIMAL(65,30) NOT NULL DEFAULT 0,
+ADD COLUMN     "fixedNotifiedValue" DECIMAL(65,30) NOT NULL DEFAULT 0,
+ADD COLUMN     "furtherTax" DECIMAL(65,30) NOT NULL DEFAULT 0,
+ADD COLUMN     "hsCodeDescription" TEXT,
+ADD COLUMN     "itemSNo" TEXT,
+ADD COLUMN     "stWithheld" DECIMAL(65,30) NOT NULL DEFAULT 0;
