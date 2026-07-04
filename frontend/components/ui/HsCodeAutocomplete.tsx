@@ -88,7 +88,7 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
           onChange={handleChange}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Type HS code or keyword to search..."
-          className="w-full bg-surface-alt border border-border text-heading rounded px-3 py-1 pr-8 text-sm focus:outline-none focus:border-accent"
+          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 pr-8 text-sm focus:outline-none focus:border-accent"
         />
         {query && (
           <button
@@ -119,7 +119,7 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
             <li
               key={item.fullEntry}
               onMouseDown={() => handleSelect(item)}
-              className="px-3 py-2 hover:bg-border-light cursor-pointer border-b border-border last:border-0 text-body whitespace-nowrap overflow-x-auto"
+              className="px-3 py-2 hover:bg-border-light cursor-pointer border-b border-border last:border-0 text-body"
             >
               {item.fullEntry}
             </li>

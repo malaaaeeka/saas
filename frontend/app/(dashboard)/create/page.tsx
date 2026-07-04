@@ -737,7 +737,7 @@ function CreateInvoicePageContent() {
                       <div>
                         <label className="block text-xs text-muted mb-1">
                           Document Number <span className="text-error-text">*</span>
-                          <span className="ml-1 text-muted font-normal">(FBR col H)</span>
+                          <span className="ml-1 text-muted font-normal"></span>
                         </label>
                         <input type="text" value={item.documentNumber}
                           onChange={e => handleItemChange(index, 'documentNumber', e.target.value)}
