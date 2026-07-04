@@ -23,86 +23,34 @@ function AuthForms() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // ---- Forgot / reset password modal state ----
-  const [showResetModal, setShowResetModal] = useState(false)
-  const [resetStep, setResetStep] = useState<'request' | 'code' | 'done'>('request')
-  const [resetEmail, setResetEmail] = useState('')
-  const [resetCode, setResetCode] = useState('')
-  const [resetNewPassword, setResetNewPassword] = useState('')
-  const [resetConfirmPassword, setResetConfirmPassword] = useState('')
-  const [resetError, setResetError] = useState('')
-  const [resetLoading, setResetLoading] = useState(false)
+  // ---- Forgot password (inline, no modal) ----
+  const [forgotSent, setForgotSent] = useState(false)
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [forgotError, setForgotError] = useState('')
 
-  const openResetModal = () => {
-    setResetEmail(loginEmail) // reuse whatever was typed on the login side
-    setResetStep('request')
-    setResetError('')
-    setShowResetModal(true)
-  }
-
-  const closeResetModal = () => {
-    setShowResetModal(false)
-    setResetCode('')
-    setResetNewPassword('')
-    setResetConfirmPassword('')
-    setResetError('')
-  }
-
-  const handleSendResetCode = async () => {
-    setResetError('')
-    if (!resetEmail) {
-      setResetError('Enter your email address')
+  const handleForgotPassword = async () => {
+    setForgotError('')
+    if (!loginEmail) {
+      setForgotError('Enter your email address above first')
       return
     }
-    setResetLoading(true)
+    setForgotLoading(true)
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail })
+        body: JSON.stringify({ email: loginEmail })
       })
       const data = await res.json()
       if (data.success) {
-        setResetStep('code')
+        setForgotSent(true)
       } else {
-        setResetError(data.message || 'Could not send reset code')
+        setForgotError(data.message || 'Could not send reset email')
       }
     } catch {
-      setResetError('Cannot connect to server')
+      setForgotError('Cannot connect to server')
     } finally {
-      setResetLoading(false)
-    }
-  }
-
-  const handleConfirmReset = async () => {
-    setResetError('')
-    if (resetNewPassword !== resetConfirmPassword) {
-      setResetError('Passwords do not match')
-      return
-    }
-    if (resetNewPassword.length < 8) {
-      setResetError('Password must be at least 8 characters')
-      return
-    }
-    setResetLoading(true)
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: resetCode, newPassword: resetNewPassword })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setResetStep('done')
-        setLoginEmail(resetEmail)
-        setTimeout(() => closeResetModal(), 2000)
-      } else {
-        setResetError(data.message || 'Reset failed')
-      }
-    } catch {
-      setResetError('Cannot connect to server')
-    } finally {
-      setResetLoading(false)
+      setForgotLoading(false)
     }
   }
 
@@ -212,6 +160,18 @@ function AuthForms() {
             </div>
           )}
 
+          {forgotSent && (
+            <div className="bg-success-bg border border-success-border text-success-text px-4 py-3 rounded-lg mb-4 text-sm">
+              Check your email for a link to reset your password.
+            </div>
+          )}
+
+          {forgotError && (
+            <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
+              {forgotError}
+            </div>
+          )}
+
           <div className="mb-4">
             <label className="block text-sm text-muted mb-2">Email Address</label>
             <input
@@ -228,10 +188,11 @@ function AuthForms() {
               <label className="block text-sm text-muted">Password</label>
               <button
                 type="button"
-                onClick={openResetModal}
-                className="text-sm text-link hover:opacity-70"
+                onClick={handleForgotPassword}
+                disabled={forgotLoading}
+                className="text-sm text-link hover:opacity-70 disabled:opacity-50"
               >
-                Forgot?
+                {forgotLoading ? 'Sending...' : 'Forgot?'}
               </button>
             </div>
             <input
@@ -347,126 +308,6 @@ function AuthForms() {
         </div>
       </div>
 
-      {/* Forgot / reset password modal */}
-      {showResetModal && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center px-4 z-50"
-          onClick={closeResetModal}
-        >
-          <div
-            className="w-full max-w-md bg-surface border border-border rounded-2xl p-8"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-1">
-              <h3 className="text-xl font-semibold text-heading">
-                {resetStep === 'done' ? 'Password Reset!' : 'Reset Password'}
-              </h3>
-              <button
-                type="button"
-                onClick={closeResetModal}
-                className="text-muted hover:text-heading text-lg leading-none"
-              >
-                ✕
-              </button>
-            </div>
-
-            {resetStep === 'request' && (
-              <>
-                <p className="text-muted text-sm mb-6">
-                  We'll send a reset code to this email.
-                </p>
-                {resetError && (
-                  <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
-                    {resetError}
-                  </div>
-                )}
-                <div className="mb-6">
-                  <label className="block text-sm text-muted mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-                  />
-                </div>
-                <button
-                  onClick={handleSendResetCode}
-                  disabled={resetLoading}
-                  className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition"
-                >
-                  {resetLoading ? 'Sending...' : 'Send Reset Code'}
-                </button>
-              </>
-            )}
-
-            {resetStep === 'code' && (
-              <>
-                <p className="text-muted text-sm mb-6">
-                  Check <span className="text-heading">{resetEmail}</span> for a reset code, paste it below, and choose a new password.
-                </p>
-                {resetError && (
-                  <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
-                    {resetError}
-                  </div>
-                )}
-                <div className="mb-4">
-                  <label className="block text-sm text-muted mb-2">Reset Code</label>
-                  <input
-                    type="text"
-                    value={resetCode}
-                    onChange={(e) => setResetCode(e.target.value)}
-                    placeholder="Paste the code from your email"
-                    className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition font-mono text-xs"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm text-muted mb-2">New Password</label>
-                  <input
-                    type="password"
-                    value={resetNewPassword}
-                    onChange={(e) => setResetNewPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-                  />
-                </div>
-                <div className="mb-6">
-                  <label className="block text-sm text-muted mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={resetConfirmPassword}
-                    onChange={(e) => setResetConfirmPassword(e.target.value)}
-                    placeholder="Repeat password"
-                    className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-                  />
-                </div>
-                <button
-                  onClick={handleConfirmReset}
-                  disabled={resetLoading}
-                  className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition"
-                >
-                  {resetLoading ? 'Resetting...' : 'Reset Password'}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendResetCode}
-                  disabled={resetLoading}
-                  className="w-full text-muted hover:text-heading text-sm mt-4"
-                >
-                  Resend code
-                </button>
-              </>
-            )}
-
-            {resetStep === 'done' && (
-              <div className="text-center pt-4">
-                <div className="text-success-text text-5xl mb-4">✓</div>
-                <p className="text-muted">Your password has been reset. You can now sign in.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
