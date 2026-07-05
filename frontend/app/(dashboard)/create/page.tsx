@@ -489,7 +489,7 @@ function CreateInvoicePageContent() {
     }
     const missingDocNum = formData.items.findIndex(i => !i.documentNumber.trim())
     if (missingDocNum !== -1) {
-      setError(`Item ${missingDocNum + 1}: Document Number is required (FBR col H)`)
+      setError(`Item ${missingDocNum + 1}: Document Number is required`)
       setLoading(false)
       return
     }
@@ -959,13 +959,13 @@ function CreateInvoicePageContent() {
             </div>
 
             {/* Submit */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 justify-start">
               <button type="submit" disabled={loading || !business}
-                className="flex-1 bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition">
+                className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 px-8 rounded-lg transition">
                 {loading ? 'Creating Invoice...' : 'Create Invoice'}
               </button>
               <button type="button" onClick={() => router.push('/invoices')}
-                className="flex-1 bg-surface border border-border hover:border-heading text-heading font-semibold py-3 rounded-lg transition">
+                className="bg-surface border border-border hover:border-heading text-heading font-semibold py-3 px-8 rounded-lg transition">
                 Cancel
               </button>
             </div>
