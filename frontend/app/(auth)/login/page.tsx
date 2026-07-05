@@ -8,6 +8,9 @@ function AuthForms() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // ---- Which panel is the "active" full form ----
+  const [mode, setMode] = useState<'login' | 'register'>('login')
+
   // ---- Login state ----
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -58,6 +61,8 @@ function AuthForms() {
     // Auto-fill referral code from URL ?ref=ABC123
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref)
+    // Land directly on the register panel if ?mode=register or a ref code is present
+    if (searchParams.get('mode') === 'register' || ref) setMode('register')
   }, [searchParams])
 
   const handleLogin = async () => {
@@ -145,169 +150,226 @@ function AuthForms() {
     }
   }
 
+  const isLogin = mode === 'login'
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-[1fr_1px_1fr] gap-8 md:gap-0">
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-[1fr_1px_1fr] gap-12 md:gap-0">
 
-        {/* ── LEFT: Login ── */}
-        <div className="bg-surface rounded-2xl md:rounded-r-none p-8 border border-border">
-          <h2 className="text-xl font-semibold text-heading mb-1">Sign in to your account</h2>
-          <p className="text-muted text-sm mb-6">Welcome back — enter your details below.</p>
+        {/* ── LEFT ── */}
+        <div className="p-8 md:pr-12">
+          {isLogin ? (
+            <>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">Welcome Back</p>
+              <h2 className="text-4xl font-bold text-heading mb-2">Log In</h2>
+              <p className="text-muted text-sm mb-8">Sign in to your account to manage your invoices.</p>
 
-          {loginError && (
-            <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
-              {loginError}
-            </div>
-          )}
+              {loginError && (
+                <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
+                  {loginError}
+                </div>
+              )}
+              {forgotSent && (
+                <div className="bg-success-bg border border-success-border text-success-text px-4 py-3 rounded-lg mb-4 text-sm">
+                  Check your email for a link to reset your password.
+                </div>
+              )}
+              {forgotError && (
+                <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
+                  {forgotError}
+                </div>
+              )}
 
-          {forgotSent && (
-            <div className="bg-success-bg border border-success-border text-success-text px-4 py-3 rounded-lg mb-4 text-sm">
-              Check your email for a link to reset your password.
-            </div>
-          )}
+              <div className="mb-5">
+                <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                  Email Address <span className="text-error-text">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                />
+              </div>
 
-          {forgotError && (
-            <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
-              {forgotError}
-            </div>
-          )}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted">
+                    Password <span className="text-error-text">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={forgotLoading}
+                    className="text-sm text-muted hover:text-heading underline underline-offset-2 disabled:opacity-50 transition"
+                  >
+                    {forgotLoading ? 'Sending...' : 'Forgot password?'}
+                  </button>
+                </div>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                  onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                />
+              </div>
 
-          <div className="mb-4">
-            <label className="block text-sm text-muted mb-2">Email Address</label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-            />
-          </div>
-
-          <div className="mb-6">
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm text-muted">Password</label>
               <button
-                type="button"
-                onClick={handleForgotPassword}
-                disabled={forgotLoading}
-                className="text-sm text-link hover:opacity-70 disabled:opacity-50"
+                onClick={handleLogin}
+                disabled={loginLoading}
+                className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-4 rounded-lg transition"
               >
-                {forgotLoading ? 'Sending...' : 'Forgot?'}
+                {loginLoading ? 'Signing in...' : 'Log In'}
+              </button>
+
+              <p className="text-center text-sm text-muted mt-6">
+                No account?{' '}
+                <button onClick={() => setMode('register')} className="text-heading underline underline-offset-2">
+                  Sign up free
+                </button>
+              </p>
+            </>
+          ) : (
+            <div className="flex flex-col justify-center h-full">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">Already Registered</p>
+              <h2 className="text-4xl font-bold text-heading mb-4">Log In</h2>
+              <p className="text-muted text-sm mb-8 leading-relaxed">
+                Sign back in to access your dashboard, manage invoices, and stay on top of your FBR filings.
+              </p>
+              <button
+                onClick={() => setMode('login')}
+                className="bg-surface border border-border hover:border-heading text-heading font-semibold py-4 rounded-lg transition"
+              >
+                Log In
               </button>
             </div>
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            />
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={loginLoading}
-            className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition"
-          >
-            {loginLoading ? 'Signing in...' : 'Sign In'}
-          </button>
+          )}
         </div>
 
         {/* Vertical divider */}
         <div className="hidden md:block bg-border" />
 
-        {/* ── RIGHT: Register ── */}
-        <div className="bg-surface rounded-2xl md:rounded-l-none p-8 border border-border">
-          <h2 className="text-xl font-semibold text-heading mb-1">Create your account</h2>
-          <p className="text-muted text-sm mb-6">Get started in just a few steps.</p>
-
-          {error && (
-            <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
-              {error}
+        {/* ── RIGHT ── */}
+        <div className="p-8 md:pl-12">
+          {isLogin ? (
+            <div className="flex flex-col justify-center h-full">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">New Here</p>
+              <h2 className="text-4xl font-bold text-heading mb-4">Register</h2>
+              <p className="text-muted text-sm mb-8 leading-relaxed">
+                Create an account today to start creating FBR-compliant invoices for your business, in minutes.
+              </p>
+              <button
+                onClick={() => setMode('register')}
+                className="bg-surface border border-border hover:border-heading text-heading font-semibold py-4 rounded-lg transition"
+              >
+                Create an Account
+              </button>
             </div>
-          )}
+          ) : (
+            <>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">New Here</p>
+              <h2 className="text-4xl font-bold text-heading mb-2">Register</h2>
+              <p className="text-muted text-sm mb-8">Get started in just a few steps.</p>
 
-          <div className="mb-4">
-            <label className="block text-sm text-muted mb-2">Email Address</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm text-muted mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min 8 characters"
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm text-muted mb-2">Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm your password"
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-sm text-muted mb-2">Account Type</label>
-            <select
-              value={role}
-              onChange={(e) => {
-                setRole(e.target.value)
-                // Clear referral code if switching to CA
-                if (e.target.value === 'CA_PARTNER') setReferralCode('')
-              }}
-              className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition"
-            >
-              <option value="BUSINESS">Business Owner</option>
-              <option value="CA_PARTNER">Chartered Accountant</option>
-            </select>
-          </div>
-
-          {/* Referral Code field — only show for Business */}
-          {role === 'BUSINESS' && (
-            <div className="mb-6">
-              <label className="block text-sm text-muted mb-2">
-                Referral Code <span className="text-muted-dark">(optional)</span>
-              </label>
-              <input
-                type="text"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                placeholder="e.g. ABC123"
-                className="w-full bg-surface-alt border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-accent transition font-mono tracking-widest"
-              />
-              {referralCode && (
-                <p className="text-success-text text-xs mt-1">
-                  ✓ You will be linked to a CA partner
-                </p>
+              {error && (
+                <div className="bg-error-bg border border-error-border text-error-text px-4 py-3 rounded-lg mb-4 text-sm">
+                  {error}
+                </div>
               )}
-            </div>
-          )}
 
-          <button
-            onClick={handleRegister}
-            disabled={loading}
-            className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 rounded-lg transition"
-          >
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
+              <div className="mb-5">
+                <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                  Email Address <span className="text-error-text">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                />
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                  Password <span className="text-error-text">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min 8 characters"
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                />
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                  Confirm Password <span className="text-error-text">*</span>
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                />
+              </div>
+
+              <div className="mb-5">
+                <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                  Account Type <span className="text-error-text">*</span>
+                </label>
+                <select
+                  value={role}
+                  onChange={(e) => {
+                    setRole(e.target.value)
+                    if (e.target.value === 'CA_PARTNER') setReferralCode('')
+                  }}
+                  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition"
+                >
+                  <option value="BUSINESS">Business Owner</option>
+                  <option value="CA_PARTNER">Chartered Accountant</option>
+                </select>
+              </div>
+
+              {role === 'BUSINESS' && (
+                <div className="mb-6">
+                  <label className="block text-xs font-medium uppercase tracking-wider text-muted mb-2">
+                    Referral Code <span className="normal-case text-muted-dark">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    placeholder="e.g. ABC123"
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-3 focus:outline-none focus:border-heading transition font-mono tracking-widest"
+                  />
+                  {referralCode && (
+                    <p className="text-success-text text-xs mt-1">
+                      You will be linked to a CA partner
+                    </p>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-4 rounded-lg transition"
+              >
+                {loading ? 'Creating account...' : 'Create Account'}
+              </button>
+
+              <p className="text-center text-sm text-muted mt-6">
+                Already have an account?{' '}
+                <button onClick={() => setMode('login')} className="text-heading underline underline-offset-2">
+                  Log In
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
-
     </div>
   )
 }
