@@ -19,6 +19,7 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState('ALL')
 
   const [filterOpen, setFilterOpen] = useState(false)
+  const [sortBy, setSortBy] = useState('newest')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -69,9 +70,24 @@ export default function UsersPage() {
     ? users.filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase()))
     : []
 
-  const visibleUsers = searchQuery.trim()
+  const filteredUsers = searchQuery.trim()
     ? users.filter(u => u.email.toLowerCase().includes(searchQuery.toLowerCase()))
     : users
+
+  const visibleUsers = [...filteredUsers].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'email-asc':
+        return a.email.localeCompare(b.email)
+      case 'email-desc':
+        return b.email.localeCompare(a.email)
+      default:
+        return 0
+    }
+  })
 
   if (loading) return <p className="text-muted">Loading users...</p>
 
@@ -108,31 +124,56 @@ export default function UsersPage() {
   </div>
 </div>
 
-      {/* Filter panel — replaces the old <select> dropdown */}
+      {/* Filter & Sort panel */}
       {filterOpen && (
-        <div className="mb-8 pb-6 border-b border-border">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Role</p>
-          <div className="flex flex-col gap-1">
-            {ROLE_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => { setRoleFilter(opt.value); setPage(1) }}
-                className={`text-left text-sm py-1 w-fit transition ${
-                  roleFilter === opt.value
-                    ? 'text-heading font-medium underline underline-offset-4'
-                    : 'text-muted hover:text-heading'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+        <div className="mb-8 pb-6 border-b border-border flex gap-16">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Role</p>
+            <div className="flex flex-col gap-1">
+              {ROLE_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setRoleFilter(opt.value); setPage(1) }}
+                  className={`text-left text-sm py-1 w-fit transition ${
+                    roleFilter === opt.value
+                      ? 'text-heading font-medium underline underline-offset-4'
+                      : 'text-muted hover:text-heading'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Sort by</p>
+            <div className="flex flex-col gap-1">
+              {[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'oldest', label: 'Oldest First' },
+                { value: 'email-asc', label: 'Email (A-Z)' },
+                { value: 'email-desc', label: 'Email (Z-A)' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSortBy(opt.value)}
+                  className={`text-left text-sm py-1 w-fit transition ${
+                    sortBy === opt.value
+                      ? 'text-heading font-medium underline underline-offset-4'
+                      : 'text-muted hover:text-heading'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-surface z-50 flex flex-col">
+        <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-y-auto">
           <div className="flex items-center justify-between px-8 pt-6">
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Search users</span>
             <button
@@ -149,8 +190,8 @@ export default function UsersPage() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by email…"
-              className="w-full bg-transparent text-3xl font-light text-heading outline-none pb-3"
+              placeholder="Search"
+              className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
             />
           </div>
           <div className="px-8 pt-6 overflow-y-auto flex-1">

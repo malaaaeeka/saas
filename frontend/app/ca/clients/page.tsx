@@ -148,7 +148,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
 
       {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-x-0 top-16 bottom-0 bg-surface z-[100] flex flex-col">
+        <div className="fixed inset-x-0 top-16 bottom-0 bg-background z-[100] flex flex-col">
           <div className="flex items-center justify-between px-8 pt-6">
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Search clients</span>
             <button
@@ -165,8 +165,8 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by business name or NTN…"
-              className="w-full bg-transparent text-3xl font-light text-heading outline-none pb-3"
+              placeholder="Search"
+              className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
             />
           </div>
           <div className="px-8 pt-6 overflow-y-auto flex-1">
