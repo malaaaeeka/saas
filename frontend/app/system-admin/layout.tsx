@@ -37,12 +37,11 @@ export default function SystemAdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-background text-heading">
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-transparent">
-        <div className="flex items-center gap-8">
-          <h2 className="text-2xl font-serif italic">E-Invoice</h2>
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
+  <h2 className="text-2xl font-serif italic">E-Invoice</h2>
 
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => (
+  <nav className="flex items-center gap-1">
+    {navItems.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
@@ -55,8 +54,7 @@ export default function SystemAdminLayout({ children }: { children: React.ReactN
                 {item.label}
               </Link>
             ))}
-          </nav>
-        </div>
+    </nav>
 
         <div className="flex items-center gap-3">
           {user && (
