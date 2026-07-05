@@ -18,11 +18,13 @@ export default function InvoicesPage() {
   // ---- toaman-style search overlay + filter panel ----
   const [showSearch, setShowSearch] = useState(false)
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [invoiceCounts, setInvoiceCounts] = useState<{ total: number, byType: Record<string, number>, byStatus: Record<string, number> }>({ total: 0, byType: {}, byStatus: {} })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
     fetchInvoices(token, page)
+    fetchInvoiceCounts(token)
   }, [page])
 
   const fetchInvoices = async (token: string, currentPage: number) => {
@@ -48,6 +50,24 @@ export default function InvoicesPage() {
     setPage(newPage)
     const token = localStorage.getItem('token')
     if (token) fetchInvoices(token, newPage)
+  }
+
+  // Fetches accurate Type/Status counts directly from the database via a
+  // dedicated backend endpoint — scales correctly no matter how many
+  // invoices exist, unlike fetching a large page and counting client-side.
+  const fetchInvoiceCounts = async (token: string) => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/counts`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      )
+      const data = await res.json()
+      if (data.success) {
+        setInvoiceCounts(data.data)
+      }
+    } catch (err) {
+      console.log('Failed to fetch invoice counts')
+    }
   }
 
   // Reset to page 1 when filters change
@@ -144,9 +164,9 @@ export default function InvoicesPage() {
     { value: 'AMENDED', label: 'Amended' },
   ]
   const typeCount = (value: string) =>
-    value === 'ALL' ? invoices.length : invoices.filter(i => i.invoiceType === value).length
+    value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byType[value] || 0)
   const statusCount = (value: string) =>
-    value === 'ALL' ? invoices.length : invoices.filter(i => i.status === value).length
+    value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byStatus[value] || 0)
 
   const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
     const typeInfo = getTypeLabel(invoice.invoiceType)

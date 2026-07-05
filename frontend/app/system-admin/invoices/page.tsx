@@ -23,7 +23,7 @@ export default function InvoicesPage() {
   const [sortBy, setSortBy] = useState('newest')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [allInvoicesForCounts, setAllInvoicesForCounts] = useState<any[]>([])
+  const [adminInvoiceCounts, setAdminInvoiceCounts] = useState<{ total: number, byStatus: Record<string, number> }>({ total: 0, byStatus: {} })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -41,7 +41,7 @@ export default function InvoicesPage() {
     }
 
     fetchInvoices(token, page, statusFilter)
-    fetchAllInvoicesForCounts(token)
+    fetchAdminInvoiceCounts(token)
   }, [page, statusFilter])
 
   const fetchInvoices = async (token: string, pageNum: number, status: string) => {
@@ -65,17 +65,16 @@ export default function InvoicesPage() {
     }
   }
 
-  // Separate unfiltered fetch used only to compute accurate status counts —
-  // otherwise counts would only reflect whichever status filter is currently
-  // applied to `invoices`, since that array gets replaced by fetchInvoices above.
-  const fetchAllInvoicesForCounts = async (token: string) => {
+  // Fetches accurate status counts directly from the database via a
+  // dedicated backend endpoint — scales correctly regardless of invoice count.
+  const fetchAdminInvoiceCounts = async (token: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=1&limit=1000`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices/counts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
       if (data.success) {
-        setAllInvoicesForCounts(Array.isArray(data.data) ? data.data : data.data?.data ?? [])
+        setAdminInvoiceCounts(data.data)
       }
     } catch (err) {
       console.error('Failed to fetch invoice counts')
@@ -126,11 +125,8 @@ export default function InvoicesPage() {
     }
   })
 
-  // counts based on a separate unfiltered snapshot, not the currently
-  // status-filtered `invoices` array, so they stay accurate regardless of
-  // which status filter is selected
   const statusCount = (value: string) =>
-    value === 'ALL' ? allInvoicesForCounts.length : allInvoicesForCounts.filter(inv => inv.status === value).length
+    value === 'ALL' ? adminInvoiceCounts.total : (adminInvoiceCounts.byStatus[value] || 0)
 
   if (loading) return <p className="text-muted">Loading invoices...</p>
 

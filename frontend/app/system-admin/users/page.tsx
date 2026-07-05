@@ -22,7 +22,7 @@ export default function UsersPage() {
   const [sortBy, setSortBy] = useState('newest')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [allUsersForCounts, setAllUsersForCounts] = useState<any[]>([])
+  const [userCounts, setUserCounts] = useState<{ total: number, byRole: Record<string, number> }>({ total: 0, byRole: {} })
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -40,7 +40,7 @@ export default function UsersPage() {
     }
 
     fetchUsers(token, page, roleFilter)
-    fetchAllUsersForCounts(token)
+    fetchUserCounts(token)
   }, [page, roleFilter])
 
   const fetchUsers = async (token: string, pageNum: number, role: string) => {
@@ -64,17 +64,16 @@ export default function UsersPage() {
     }
   }
 
-  // Separate unfiltered fetch used only to compute accurate role counts —
-  // otherwise counts would only reflect whichever role filter is currently
-  // applied to `users`, since that array gets replaced by fetchUsers above.
-  const fetchAllUsersForCounts = async (token: string) => {
+  // Fetches accurate role counts directly from the database via a
+  // dedicated backend endpoint — scales correctly regardless of user count.
+  const fetchUserCounts = async (token: string) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users?page=1&limit=1000`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/counts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
       if (data.success) {
-        setAllUsersForCounts(data.data?.users ?? data.data ?? [])
+        setUserCounts(data.data)
       }
     } catch (err) {
       console.error('Failed to fetch user counts')
@@ -108,11 +107,8 @@ export default function UsersPage() {
     }
   })
 
-  // counts based on a separate unfiltered snapshot, not the currently
-  // role-filtered `users` array, so they stay accurate regardless of
-  // which role filter is selected
   const roleCount = (value: string) =>
-    value === 'ALL' ? allUsersForCounts.length : allUsersForCounts.filter(u => u.role === value).length
+    value === 'ALL' ? userCounts.total : (userCounts.byRole[value] || 0)
 
   if (loading) return <p className="text-muted">Loading users...</p>
 
