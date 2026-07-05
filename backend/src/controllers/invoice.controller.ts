@@ -278,6 +278,40 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
   
 }
 
+export const getInvoiceCounts = async (req: any, res: Response): Promise<void> => {
+  try {
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business not found', 404)
+      return
+    }
+
+    const [typeCounts, statusCounts, total] = await Promise.all([
+      prisma.invoice.groupBy({
+        by: ['invoiceType'],
+        where: { businessId: business.id },
+        _count: { _all: true }
+      }),
+      prisma.invoice.groupBy({
+        by: ['status'],
+        where: { businessId: business.id },
+        _count: { _all: true }
+      }),
+      prisma.invoice.count({ where: { businessId: business.id } })
+    ])
+
+    const byType: Record<string, number> = {}
+    typeCounts.forEach(t => { byType[t.invoiceType] = t._count._all })
+
+    const byStatus: Record<string, number> = {}
+    statusCounts.forEach(s => { byStatus[s.status] = s._count._all })
+
+    sendSuccess(res, { total, byType, byStatus })
+  } catch (error) {
+    sendError(res, 'Failed to fetch invoice counts', 500)
+  }
+}
+
 export const getInvoices = async (req: any, res: Response): Promise<void> => {
   try {
     const { page = 1, limit = 10 } = req.query

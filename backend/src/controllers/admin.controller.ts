@@ -222,6 +222,47 @@ export const getRevenue = async (req: AuthRequest, res: Response): Promise<void>
   }
 }
 
+// GET /api/admin/users/counts
+export const getUserCounts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const [roleCounts, total] = await Promise.all([
+      prisma.user.groupBy({
+        by: ['role'],
+        _count: { _all: true }
+      }),
+      prisma.user.count()
+    ])
+
+    const byRole: Record<string, number> = {}
+    roleCounts.forEach(r => { byRole[r.role] = r._count._all })
+
+    sendSuccess(res, { total, byRole }, 'User counts retrieved')
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}
+
+// GET /api/admin/invoices/counts
+export const getAdminInvoiceCounts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const [statusCounts, total] = await Promise.all([
+      prisma.invoice.groupBy({
+        by: ['status'],
+        _count: { _all: true }
+      }),
+      prisma.invoice.count()
+    ])
+
+    const byStatus: Record<string, number> = {}
+    statusCounts.forEach(s => { byStatus[s.status] = s._count._all })
+
+    sendSuccess(res, { total, byStatus }, 'Invoice counts retrieved')
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}
+
+
 // GET /api/admin/invoices
 export const getInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

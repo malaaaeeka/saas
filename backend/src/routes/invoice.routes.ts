@@ -4,6 +4,7 @@ import {
   createInvoice,
   getInvoices,
   getInvoiceById,
+  getInvoiceCounts,
   getStats,
   downloadInvoicePdf,
   submitToFBR,
@@ -16,6 +17,7 @@ const router = Router()
 
 router.post('/', authenticate, createInvoice)
 router.get('/', authenticate, getInvoices)
+router.get('/counts', authenticate, getInvoiceCounts)
 router.get('/stats', authenticate, getStats)
 router.get('/:id', authenticate, getInvoiceById)
 router.get('/:id/pdf', authenticate, downloadInvoicePdf)
