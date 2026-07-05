@@ -1,84 +1,117 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default function CALayout({ children }: { children: React.ReactNode }) {
+export default function AdminDashboard() {
   const router = useRouter()
-  const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const [dashboard, setDashboard] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
-    if (userData) {
-      try { setUser(JSON.parse(userData)) } catch { /* ignore */ }
+    const token = localStorage.getItem('token')
+    if (!token) {
+      router.push('/login')
+      return
     }
+    fetchDashboard(token)
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    router.push('/login')
+  const fetchDashboard = async (token: string) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/dashboard`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setDashboard(data.data)
+      }
+    } catch (err) {
+      console.error('Failed to fetch dashboard')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const navItems = [
-    { label: 'Dashboard', path: '/ca' },
-    { label: 'My Clients', path: '/ca/clients' },
-    { label: 'Commission', path: '/ca/commission' },
-    { label: 'Referrals', path: '/ca/referrals' },
-    { label: 'Settings', path: '/ca/settings' },
-  ]
-
-  const isActive = (path: string) => pathname === path
-
-  const initial = (user?.email || user?.name || 'A').charAt(0).toUpperCase()
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen">
+      <p className="text-muted">Loading...</p>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-background text-heading">
+    <div className="max-w-7xl">
+      <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+      <p className="text-muted mb-8">System overview and analytics</p>
 
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
-        <div className="flex items-center gap-8">
-          <h2 className="text-2xl font-serif italic">E-Invoice</h2>
-
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className={`px-3 py-1.5 rounded-lg transition text-sm font-medium ${
-                  isActive(item.path)
-                    ? 'text-accent font-semibold'
-                    : 'text-muted hover:text-heading'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="bg-surface rounded-lg p-6 border border-border">
+          <p className="text-muted text-sm mb-1">Total Users</p>
+          <p className="text-4xl font-bold">{dashboard?.totalUsers || 0}</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {user && (
-            <div className="flex items-center gap-2">
-              <span className="w-7 h-7 rounded-full bg-heading text-surface text-xs font-semibold flex items-center justify-center">
-                {initial}
-              </span>
-              <span className="text-sm text-body">{user.email}</span>
-            </div>
-          )}
-          <button
-            onClick={handleLogout}
-            className="text-sm font-medium text-muted hover:text-error-text transition"
-          >
-            Logout
-          </button>
+        <div className="bg-surface rounded-lg p-6 border border-border">
+          <p className="text-muted text-sm mb-1">Total Invoices</p>
+          <p className="text-4xl font-bold">{dashboard?.totalInvoices || 0}</p>
+        </div>
+
+        <div className="bg-surface rounded-lg p-6 border border-border">
+          <p className="text-muted text-sm mb-1">CA Partners</p>
+          <p className="text-4xl font-bold text-success-text">{dashboard?.totalCAs || 0}</p>
+        </div>
+
+        <div className="bg-surface rounded-lg p-6 border border-border">
+          <p className="text-muted text-sm mb-1">This Month</p>
+          <p className="text-3xl font-bold text-link">
+            PKR {(dashboard?.revenueThisMonth || 0).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="bg-surface rounded-lg p-6 border border-border lg:col-span-2">
+          <p className="text-muted text-sm mb-1">Total Revenue</p>
+          <p className="text-5xl font-bold">
+            PKR {(dashboard?.totalRevenue || 0).toLocaleString()}
+          </p>
+        </div>
+
+        <div className="bg-surface rounded-lg p-6 border border-border lg:col-span-2">
+          <p className="text-muted text-sm mb-1">Total Tax Collected</p>
+          <p className="text-5xl font-bold text-warning-text">
+            PKR {(dashboard?.totalTax || 0).toLocaleString()}
+          </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="p-8">
-        {children}
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-4">
+        <button
+          onClick={() => router.push('/system-admin/users')}
+          className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Manage Users
+        </button>
+
+        <button
+          onClick={() => router.push('/system-admin/ca-partners')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          View CA Partners
+        </button>
+
+        <button
+          onClick={() => router.push('/system-admin/invoices')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          View Invoices
+        </button>
+
+        <button
+          onClick={() => router.push('/system-admin/revenue')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Revenue Report
+        </button>
       </div>
     </div>
   )

@@ -34,11 +34,10 @@ const loggedInLinks = [
   { label: 'Settings', path: '/settings' },
 ];
 
-// CA Portal has its own top bar (CALayout) — don't render this one there
-if (pathname.startsWith('/ca')) {
+// CA Portal and System Admin have their own top bars — don't render this one there
+if (pathname.startsWith('/ca') || pathname.startsWith('/system-admin')) {
   return null;
 }
-
 const isActive = (path: string) => pathname === path;
 
 return (
