@@ -1,13 +1,18 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
-
-
 
 export default function CALayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user')
+    if (userData) setUser(JSON.parse(userData))
+  }, [])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -106,29 +111,30 @@ export default function CALayout({ children }: { children: React.ReactNode }) {
         .ca-btn-logout:hover {
           color: #b3261e;
         }
-          .ca-user-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
 
-.ca-user-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #1e2216;
-  color: #f0edd8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
+        .ca-user-chip {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
 
-.ca-user-email {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
+        .ca-user-avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #1e2216;
+          color: #f0edd8;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 700;
+        }
+
+        .ca-user-email {
+          font-size: 0.78rem;
+          color: var(--text-muted);
+        }
       `}</style>
 
       <div className="ca-nav-root">
@@ -148,7 +154,7 @@ export default function CALayout({ children }: { children: React.ReactNode }) {
                 </button>
               </li>
             ))}
-          </ul>F
+          </ul>
 
           <div className="ca-user-chip">
             <div className="ca-user-avatar">{user?.email?.[0]?.toUpperCase()}</div>
