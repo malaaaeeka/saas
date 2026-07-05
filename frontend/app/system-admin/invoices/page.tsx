@@ -3,6 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+const STATUS_OPTIONS = [
+  { value: 'ALL', label: 'All Status' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'SENT', label: 'Sent' },
+  { value: 'FAILED', label: 'Failed' },
+  { value: 'RETRY', label: 'Retry' },
+]
+
 export default function InvoicesPage() {
   const router = useRouter()
   const [invoices, setInvoices] = useState<any[]>([])
@@ -11,10 +19,14 @@ export default function InvoicesPage() {
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState('ALL')
 
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     const user = localStorage.getItem('user')
-    
+
     if (!token || !user) {
       router.push('/login')
       return
@@ -34,14 +46,14 @@ export default function InvoicesPage() {
       const url = status === 'ALL'
         ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10`
         : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10&status=${status}`
-      
+
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
       if (data.success) {
-       setInvoices(Array.isArray(data.data) ? data.data : data.data?.data ?? [])
-setTotal(data.pagination?.total ?? data.data?.total ?? 0)
+        setInvoices(Array.isArray(data.data) ? data.data : data.data?.data ?? [])
+        setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       }
     } catch (err) {
       console.error('Failed to fetch invoices')
@@ -49,8 +61,6 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       setLoading(false)
     }
   }
-
-  if (loading) return <p className="text-muted">Loading invoices...</p>
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -62,32 +72,126 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
     }
   }
 
+  // NOTE: same caveat as Users page — this only searches invoices already
+  // loaded on the current page (10 at a time), since /api/admin/invoices
+  // paginates server-side. For true cross-database search, add a `?search=`
+  // param on that route (matching business name or invoice id) and call it
+  // here instead of filtering client-side.
+  const searchMatches = searchQuery.trim()
+    ? invoices.filter(inv =>
+        inv.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.business?.businessName || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : []
+
+  const visibleInvoices = searchQuery.trim()
+    ? invoices.filter(inv =>
+        inv.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.business?.businessName || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : invoices
+
+  if (loading) return <p className="text-muted">Loading invoices...</p>
+
   return (
     <div className="max-w-7xl">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2">Invoices Overview</h1>
           <p className="text-muted">All system invoices</p>
         </div>
+
+        <div className="flex items-center gap-5 pt-1">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="text-muted hover:text-heading transition"
+            aria-label="Search invoices"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+          <button
+            onClick={() => setFilterOpen(o => !o)}
+            className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted hover:text-heading transition"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="6" y1="12" x2="18" y2="12" />
+              <line x1="9" y1="18" x2="15" y2="18" />
+            </svg>
+            Filter
+          </button>
+        </div>
       </div>
 
-      {/* Filter */}
-      <div className="mb-6 flex gap-4">
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value)
-            setPage(1)
-          }}
-          className="bg-surface-alt border border-border text-heading rounded-lg px-4 py-2"
-        >
-          <option value="ALL">All Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="SENT">Sent</option>
-          <option value="FAILED">Failed</option>
-          <option value="RETRY">Retry</option>
-        </select>
-      </div>
+      {/* Filter panel — replaces the old <select> dropdown */}
+      {filterOpen && (
+        <div className="mb-8 pb-6 border-b border-border">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Status</p>
+          <div className="flex flex-col gap-1">
+            {STATUS_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => { setStatusFilter(opt.value); setPage(1) }}
+                className={`text-left text-sm py-1 w-fit transition ${
+                  statusFilter === opt.value
+                    ? 'text-heading font-medium underline underline-offset-4'
+                    : 'text-muted hover:text-heading'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search overlay */}
+      {searchOpen && (
+        <div className="fixed inset-0 bg-surface z-50 flex flex-col">
+          <div className="flex items-center justify-between px-8 pt-6">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted">Search invoices</span>
+            <button
+              onClick={() => { setSearchOpen(false); setSearchQuery('') }}
+              className="text-muted hover:text-heading transition text-lg"
+              aria-label="Close search"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="px-8 pt-3 border-b border-border">
+            <input
+              autoFocus
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by invoice ID or business name…"
+              className="w-full bg-transparent text-3xl font-light text-heading outline-none pb-3"
+            />
+          </div>
+          <div className="px-8 pt-6 overflow-y-auto flex-1">
+            {searchQuery.trim() === '' ? (
+              <p className="text-muted text-sm">Start typing to search the current page of invoices…</p>
+            ) : searchMatches.length === 0 ? (
+              <p className="text-muted text-sm">No matches on this page for "{searchQuery}"</p>
+            ) : (
+              searchMatches.map(inv => (
+                <div
+                  key={inv.id}
+                  onClick={() => setSearchOpen(false)}
+                  className="py-3 border-b border-border cursor-pointer hover:opacity-70 transition"
+                >
+                  <p className="text-heading text-sm font-mono">{inv.id.substring(0, 8)}...</p>
+                  <p className="text-muted text-xs mt-0.5">
+                    {inv.business?.businessName || 'N/A'} — PKR {Number(inv.totalAmount).toLocaleString()}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Invoices Table */}
       <div className="bg-surface border border-border rounded-lg overflow-hidden">
@@ -103,8 +207,8 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
             </tr>
           </thead>
           <tbody>
-            {invoices.length > 0 ? (
-              invoices.map((inv) => (
+            {visibleInvoices.length > 0 ? (
+              visibleInvoices.map((inv) => (
                 <tr key={inv.id} className="border-t border-border hover:bg-border-light/50">
                   <td className="px-6 py-4 text-sm font-mono">{inv.id.substring(0, 8)}...</td>
                   <td className="px-6 py-4">{inv.business?.businessName || 'N/A'}</td>
@@ -140,7 +244,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       {/* Pagination */}
       <div className="mt-6 flex justify-between items-center">
         <p className="text-muted">
-          Showing {invoices.length} of {total} invoices
+          Showing {visibleInvoices.length} of {total} invoices
         </p>
         <div className="flex gap-2">
           <button
