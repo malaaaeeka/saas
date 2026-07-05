@@ -231,10 +231,7 @@ export default function InvoicesPage() {
                 <line x1="8" y1="12" x2="16" y2="12" />
                 <line x1="11" y1="18" x2="13" y2="18" />
               </svg>
-              Filter & Sort
-              {(typeFilter !== 'ALL' || statusFilter !== 'ALL') && (
-                <span className="w-1.5 h-1.5 rounded-full bg-link" />
-              )}
+             Filter & Sort
             </button>
           </div>
           <span className="text-muted text-sm">{totalCount} total invoices</span>
@@ -342,16 +339,7 @@ export default function InvoicesPage() {
                 ))}
               </div>
             </div>
-            {(typeFilter !== 'ALL' || statusFilter !== 'ALL' || search !== '') && (
-              <div className="md:col-span-2">
-                <button
-                  onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }}
-                  className="text-sm text-link hover:opacity-70 transition"
-                >
-                  ✕ Clear all filters
-                </button>
-              </div>
-            )}
+           
           </div>
         )}
 
