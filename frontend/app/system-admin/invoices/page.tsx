@@ -150,7 +150,7 @@ export default function InvoicesPage() {
 
       {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-surface z-50 flex flex-col">
+        <div className="fixed inset-x-0 top-16 bottom-0 bg-background z-50 flex flex-col overflow-y-auto">
           <div className="flex items-center justify-between px-8 pt-6">
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Search invoices</span>
             <button
@@ -161,14 +161,14 @@ export default function InvoicesPage() {
               ✕
             </button>
           </div>
-          <div className="px-8 pt-3 border-b border-border">
+          <div className="px-8 pt-3">
             <input
               autoFocus
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by invoice ID or business name…"
-              className="w-full bg-transparent text-3xl font-light text-heading outline-none pb-3"
+              placeholder="Search"
+              className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
             />
           </div>
           <div className="px-8 pt-6 overflow-y-auto flex-1">

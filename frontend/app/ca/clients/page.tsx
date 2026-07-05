@@ -159,7 +159,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
               ✕
             </button>
           </div>
-          <div className="px-8 pt-3 border-b border-border">
+          <div className="px-8 pt-3">
             <input
               autoFocus
               type="text"

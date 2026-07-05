@@ -173,7 +173,7 @@ export default function UsersPage() {
 
       {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-y-auto">
+        <div className="fixed inset-x-0 top-16 bottom-0 bg-background z-50 flex flex-col overflow-y-auto">
           <div className="flex items-center justify-between px-8 pt-6">
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Search users</span>
             <button
@@ -184,7 +184,7 @@ export default function UsersPage() {
               ✕
             </button>
           </div>
-          <div className="px-8 pt-3 border-b border-border">
+          <div className="px-8 pt-3">
             <input
               autoFocus
               type="text"
