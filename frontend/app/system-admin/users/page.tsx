@@ -144,7 +144,7 @@ export default function UsersPage() {
                       : 'text-muted hover:text-heading'
                   }`}
                 >
-                  {opt.label}
+                  {opt.label} ({roleCount(opt.value)})
                 </button>
               ))}
             </div>
