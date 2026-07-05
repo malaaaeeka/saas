@@ -161,7 +161,7 @@ function AuthForms() {
           {isLogin ? (
             <>
               <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">Welcome Back</p>
-              <h2 className="text-4xl font-bold text-heading mb-2">Log In</h2>
+              <h2 className="text-4xl font-serif font-semibold text-heading mb-2">Log In</h2>
               <p className="text-muted text-sm mb-8">Sign in to your account to manage your invoices.</p>
 
               {loginError && (
@@ -233,7 +233,7 @@ function AuthForms() {
           ) : (
             <div className="flex flex-col justify-center h-full">
               <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">Already Registered</p>
-              <h2 className="text-4xl font-bold text-heading mb-4">Log In</h2>
+              <h2 className="text-4xl font-serif font-semibold text-heading mb-4">Log In</h2>
               <p className="text-muted text-sm mb-8 leading-relaxed">
                 Sign back in to access your dashboard, manage invoices, and stay on top of your FBR filings.
               </p>
@@ -255,7 +255,7 @@ function AuthForms() {
           {isLogin ? (
             <div className="flex flex-col justify-center h-full">
               <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">New Here</p>
-              <h2 className="text-4xl font-bold text-heading mb-4">Register</h2>
+              <h2 className="text-4xl font-serif font-semibold text-heading mb-4">Register</h2>
               <p className="text-muted text-sm mb-8 leading-relaxed">
                 Create an account today to start creating FBR-compliant invoices for your business, in minutes.
               </p>
@@ -269,7 +269,7 @@ function AuthForms() {
           ) : (
             <>
               <p className="text-xs font-medium uppercase tracking-wider text-muted mb-3">New Here</p>
-              <h2 className="text-4xl font-bold text-heading mb-2">Register</h2>
+              <h2 className="text-4xl font-serif font-semibold text-heading mb-2">Register</h2>
               <p className="text-muted text-sm mb-8">Get started in just a few steps.</p>
 
               {error && (
