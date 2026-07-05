@@ -12,6 +12,8 @@ export default function ClientsPage() {
   const [total, setTotal] = useState(0)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortOpen, setSortOpen] = useState(false)
+  const [sortBy, setSortBy] = useState('name-asc')
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -60,12 +62,27 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       )
     : []
 
-  const visibleClients = searchQuery.trim()
+  const filteredClients = searchQuery.trim()
     ? clients.filter(c =>
         (c.businessName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.ntn || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : clients
+
+  const visibleClients = [...filteredClients].sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return (a.businessName || '').localeCompare(b.businessName || '')
+      case 'name-desc':
+        return (b.businessName || '').localeCompare(a.businessName || '')
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      default:
+        return 0
+    }
+  })
 
   if (loading) return <p className="text-muted">Loading clients...</p>
 
@@ -86,14 +103,52 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
               </svg>
               Search
             </button>
+            <button
+              onClick={() => setSortOpen(o => !o)}
+              className="flex items-center gap-2 text-sm text-muted hover:text-heading transition"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="6" y1="12" x2="18" y2="12" />
+                <line x1="9" y1="18" x2="15" y2="18" />
+              </svg>
+              Sort
+            </button>
           </div>
           <span className="text-sm text-muted">{total} total clients</span>
         </div>
       </div>
 
+      {/* Sort panel */}
+      {sortOpen && (
+        <div className="mb-8 pb-6 border-b border-border">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Sort by</p>
+          <div className="flex flex-col gap-1">
+            {[
+              { value: 'name-asc', label: 'Business Name (A-Z)' },
+              { value: 'name-desc', label: 'Business Name (Z-A)' },
+              { value: 'newest', label: 'Newest First' },
+              { value: 'oldest', label: 'Oldest First' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setSortBy(opt.value)}
+                className={`text-left text-sm py-1 w-fit transition ${
+                  sortBy === opt.value
+                    ? 'text-heading font-medium underline underline-offset-4'
+                    : 'text-muted hover:text-heading'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Search overlay */}
       {searchOpen && (
-        <div className="fixed inset-0 bg-surface z-50 flex flex-col">
+        <div className="fixed inset-x-0 top-16 bottom-0 bg-surface z-[100] flex flex-col">
           <div className="flex items-center justify-between px-8 pt-6">
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Search clients</span>
             <button
