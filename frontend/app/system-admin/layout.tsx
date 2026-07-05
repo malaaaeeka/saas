@@ -48,8 +48,8 @@ export default function SystemAdminLayout({ children }: { children: React.ReactN
                 href={item.path}
                 className={`px-3 py-1.5 rounded-lg transition text-sm font-medium ${
                   isActive(item.path)
-                    ? 'text-accent font-semibold'
-                    : 'text-muted hover:text-heading'
+  ? 'text-[#6b8e23] font-semibold'
+  : 'text-muted hover:text-heading'
                 }`}
               >
                 {item.label}

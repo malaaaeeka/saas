@@ -205,7 +205,7 @@ export default function InvoicesPage() {
             onClick={() => router.push('/create')}
             className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
           >
-            + New Invoice
+             New Invoice
           </button>
         </div>
 
