@@ -20,6 +20,7 @@ export default function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
 
   const [filterOpen, setFilterOpen] = useState(false)
+  const [sortBy, setSortBy] = useState('newest')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -84,12 +85,31 @@ export default function InvoicesPage() {
       )
     : []
 
-  const visibleInvoices = searchQuery.trim()
+  const filteredInvoices = searchQuery.trim()
     ? invoices.filter(inv =>
         inv.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (inv.business?.businessName || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : invoices
+
+  const visibleInvoices = [...filteredInvoices].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      case 'amount-high':
+        return Number(b.totalAmount) - Number(a.totalAmount)
+      case 'amount-low':
+        return Number(a.totalAmount) - Number(b.totalAmount)
+      default:
+        return 0
+    }
+  })
+
+  // counts for the filter panel (based on currently loaded page of invoices)
+  const statusCount = (value: string) =>
+    value === 'ALL' ? invoices.length : invoices.filter(inv => inv.status === value).length
 
   if (loading) return <p className="text-muted">Loading invoices...</p>
 
@@ -126,24 +146,49 @@ export default function InvoicesPage() {
   </div>
 </div>
 
-      {/* Filter panel — replaces the old <select> dropdown */}
+      {/* Filter & Sort panel */}
       {filterOpen && (
-        <div className="mb-8 pb-6 border-b border-border">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Status</p>
-          <div className="flex flex-col gap-1">
-            {STATUS_OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => { setStatusFilter(opt.value); setPage(1) }}
-                className={`text-left text-sm py-1 w-fit transition ${
-                  statusFilter === opt.value
-                    ? 'text-heading font-medium underline underline-offset-4'
-                    : 'text-muted hover:text-heading'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
+        <div className="mb-8 pb-6 border-b border-border grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Status</p>
+            <div className="flex flex-col gap-1">
+              {STATUS_OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setStatusFilter(opt.value); setPage(1) }}
+                  className={`text-left text-sm py-1 w-fit transition ${
+                    statusFilter === opt.value
+                      ? 'text-heading font-medium underline underline-offset-4'
+                      : 'text-muted hover:text-heading'
+                  }`}
+                >
+                  {opt.label} ({statusCount(opt.value)})
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Sort by</p>
+            <div className="flex flex-col gap-1">
+              {[
+                { value: 'newest', label: 'Newest First' },
+                { value: 'oldest', label: 'Oldest First' },
+                { value: 'amount-high', label: 'Amount (High-Low)' },
+                { value: 'amount-low', label: 'Amount (Low-High)' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSortBy(opt.value)}
+                  className={`text-left text-sm py-1 w-fit transition ${
+                    sortBy === opt.value
+                      ? 'text-heading font-medium underline underline-offset-4'
+                      : 'text-muted hover:text-heading'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}

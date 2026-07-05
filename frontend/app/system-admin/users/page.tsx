@@ -89,6 +89,10 @@ export default function UsersPage() {
     }
   })
 
+  // counts for the filter panel (based on currently loaded page of users)
+  const roleCount = (value: string) =>
+    value === 'ALL' ? users.length : users.filter(u => u.role === value).length
+
   if (loading) return <p className="text-muted">Loading users...</p>
 
   return (
@@ -126,7 +130,7 @@ export default function UsersPage() {
 
       {/* Filter & Sort panel */}
       {filterOpen && (
-        <div className="mb-8 pb-6 border-b border-border flex gap-16">
+        <div className="mb-8 pb-6 border-b border-border grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-muted mb-3">Role</p>
             <div className="flex flex-col gap-1">
