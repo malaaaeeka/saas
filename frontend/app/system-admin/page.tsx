@@ -24,8 +24,8 @@ export default function AdminDashboard() {
       })
       const data = await res.json()
       if (data.success) {
-  setDashboard(data.data)
-}
+        setDashboard(data.data)
+      }
     } catch (err) {
       console.error('Failed to fetch dashboard')
     } finally {
@@ -82,34 +82,37 @@ export default function AdminDashboard() {
           </p>
         </div>
       </div>
-       <button
-  onClick={() => window.location.href = '/system-admin/users'}
-  className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
->
-  Manage Users
-</button>
 
-<button
-  onClick={() => window.location.href = '/system-admin/ca-partners'}
-  className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
->
-  View CA Partners
-</button>
+      {/* Quick Actions */}
+      <div className="flex flex-wrap gap-4">
+        <button
+          onClick={() => router.push('/system-admin/users')}
+          className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Manage Users
+        </button>
 
-<button
-  onClick={() => window.location.href = '/system-admin/invoices'}
-  className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
->
-  View Invoices
-</button>
+        <button
+          onClick={() => router.push('/system-admin/ca-partners')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          View CA Partners
+        </button>
 
-<button
-  onClick={() => window.location.href = '/system-admin/revenue'}
-  className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
->
-  Revenue Report
-</button>
+        <button
+          onClick={() => router.push('/system-admin/invoices')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          View Invoices
+        </button>
+
+        <button
+          onClick={() => router.push('/system-admin/revenue')}
+          className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+        >
+          Revenue Report
+        </button>
       </div>
-   
+    </div>
   )
 }
