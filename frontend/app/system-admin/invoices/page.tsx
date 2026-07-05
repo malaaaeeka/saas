@@ -95,35 +95,36 @@ export default function InvoicesPage() {
 
   return (
     <div className="max-w-7xl">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Invoices Overview</h1>
-          <p className="text-muted">All system invoices</p>
-        </div>
+     <div className="mb-8">
+  <h1 className="text-3xl font-bold mb-2">Invoices Overview</h1>
+  <p className="text-muted mb-6">All system invoices</p>
 
-        <div className="flex items-center gap-5 pt-1">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="text-muted hover:text-heading transition"
-            aria-label="Search invoices"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-          <button
-            onClick={() => setFilterOpen(o => !o)}
-            className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted hover:text-heading transition"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="6" y1="12" x2="18" y2="12" />
-              <line x1="9" y1="18" x2="15" y2="18" />
-            </svg>
-            Filter
-          </button>
-        </div>
-      </div>
+  <div className="flex justify-between items-center pb-4 border-b border-border">
+    <div className="flex items-center gap-6">
+      <button
+        onClick={() => setSearchOpen(true)}
+        className="flex items-center gap-2 text-sm text-muted hover:text-heading transition"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        Search
+      </button>
+      <button
+        onClick={() => setFilterOpen(o => !o)}
+        className="flex items-center gap-2 text-sm text-muted hover:text-heading transition"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="6" y1="12" x2="18" y2="12" />
+          <line x1="9" y1="18" x2="15" y2="18" />
+        </svg>
+        Filter &amp; Sort
+      </button>
+    </div>
+    <span className="text-sm text-muted">{total} total invoices</span>
+  </div>
+</div>
 
       {/* Filter panel — replaces the old <select> dropdown */}
       {filterOpen && (
