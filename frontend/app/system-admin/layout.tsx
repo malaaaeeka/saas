@@ -37,7 +37,7 @@ export default function SystemAdminLayout({ children }: { children: React.ReactN
     <div className="min-h-screen bg-background text-heading">
 
       {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-surface">
+      <div className="flex items-center justify-between px-6 py-3 bg-transparent">
         <div className="flex items-center gap-8">
           <h2 className="text-2xl font-serif italic">E-Invoice</h2>
 
