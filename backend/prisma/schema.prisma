@@ -65,6 +65,7 @@ model Business {
   ca           CAProfile?    @relation(fields: [caId], references: [id])
   branches     Branch[]
   invoices     Invoice[]
+  buyers       Buyer[]
   subscription Subscription?
 }
 
@@ -91,6 +92,7 @@ model Invoice {
   branchId      String?
   invoiceType   InvoiceType
   invoiceDate   DateTime
+  buyerId       String?
   buyerNtn      String?
   buyerCnic     String?
   buyerName     String?
@@ -100,7 +102,7 @@ model Invoice {
   totalFed      Decimal       @default(0)
   totalDiscount Decimal       @default(0)
   fbrInvoiceNo  String?
-  status        InvoiceStatus @default(PENDING)
+  status        InvoiceStatus @default(DRAFT)
   errorMessage  String?
   retryCount    Int           @default(0)
   pdfUrl        String?
@@ -111,6 +113,7 @@ model Invoice {
 
   business Business     @relation(fields: [businessId], references: [id])
   branch   Branch?      @relation(fields: [branchId], references: [id])
+  buyer    Buyer?       @relation(fields: [buyerId], references: [id])
   items    InvoiceItem[]
 }
 
@@ -122,6 +125,7 @@ enum InvoiceType {
 }
 
 enum InvoiceStatus {
+  DRAFT
   PENDING
   SENT
   FAILED
@@ -151,7 +155,26 @@ model InvoiceItem {
   withholdingTax     Decimal @default(0)
   discount           Decimal @default(0)
 
-  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+invoice Invoice @relation(fields: [invoiceId], references: [id])
+}
+
+model Buyer {
+  id           String   @id @default(cuid())
+  businessId   String
+  buyerName    String
+  buyerNtn     String?
+  buyerCnic    String?
+  address      String?
+  phone        String?
+  email        String?
+  createdAt    DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id])
+  invoices Invoice[]
+
+  @@index([businessId, buyerName])
+  @@unique([businessId, buyerNtn])
 }
 
 model Subscription {
@@ -222,3 +245,4 @@ model HsCode {
   @@index([code])
   @@index([description])
 }
+

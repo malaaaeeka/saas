@@ -209,12 +209,51 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 }
 export const createInvoice = async (req: any, res: Response): Promise<void> => {
   try {
-    const { invoiceType, invoiceDate, buyerNtn, buyerCnic, buyerName, saleType, branchId, items, originalInvoiceId, amendmentReason } = req.body
+    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, saleType, branchId, items, originalInvoiceId, amendmentReason, status } = req.body
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
       sendError(res, 'Business profile not found. Please set up your profile first.', 404)
       return
     }
+    // If a buyerId was provided, snapshot that buyer's current details onto the invoice
+    let resolvedBuyerName = buyerName
+    let resolvedBuyerNtn = buyerNtn
+    let resolvedBuyerCnic = buyerCnic
+
+    let finalBuyerId = buyerId || null
+
+    if (buyerId) {
+      const buyer = await prisma.buyer.findUnique({ where: { id: buyerId } })
+      if (!buyer || buyer.businessId !== business.id) {
+        sendError(res, 'Buyer not found', 404)
+        return
+      }
+      resolvedBuyerName = buyer.buyerName
+      resolvedBuyerNtn = buyer.buyerNtn
+      resolvedBuyerCnic = buyer.buyerCnic
+    } else if (buyerName && buyerName.trim()) {
+      // No existing buyer was selected, but a name was typed — save it
+      // as a new Buyer so it's searchable on future invoices.
+      // Reuse an existing buyer with the same NTN if one exists, to avoid duplicates.
+      const existing = buyerNtn
+        ? await prisma.buyer.findUnique({
+            where: { businessId_buyerNtn: { businessId: business.id, buyerNtn } }
+          })
+        : null
+
+      if (existing) {
+        finalBuyerId = existing.id
+        resolvedBuyerName = existing.buyerName
+        resolvedBuyerNtn = existing.buyerNtn
+        resolvedBuyerCnic = existing.buyerCnic
+      } else {
+        const newBuyer = await prisma.buyer.create({
+          data: { businessId: business.id, buyerName, buyerNtn: buyerNtn || null, buyerCnic: buyerCnic || null }
+        })
+        finalBuyerId = newBuyer.id
+      }
+    }
+
     const totalAmount = items.reduce((sum: number, item: any) => sum + Number(item.totalAmount), 0)
     const totalSalesTax = items.reduce((sum: number, item: any) => sum + Number(item.salesTax), 0)
     const totalFed = items.reduce((sum: number, item: any) => sum + Number(item.fed || 0), 0)
@@ -227,15 +266,16 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         invoiceDate: new Date(invoiceDate),
         originalInvoiceId: originalInvoiceId || null,
         amendmentReason: amendmentReason || null,
-        buyerNtn,
-        buyerCnic,
-        buyerName,
+        buyerId: finalBuyerId,
+        buyerNtn: resolvedBuyerNtn,
+        buyerCnic: resolvedBuyerCnic,
+        buyerName: resolvedBuyerName,
         saleType,
         totalAmount,
         totalSalesTax,
         totalFed,
         totalDiscount,
-        status: 'PENDING',
+        status: status === 'DRAFT' ? 'DRAFT' : 'PENDING',
         items: {
           createMany: {
             data: items.map((item: any) => ({
