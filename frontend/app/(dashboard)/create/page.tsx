@@ -707,7 +707,11 @@ function CreateInvoicePageContent() {
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Name</label>
-                  <ClientAutocomplete value={formData.buyerName} onSelect={handleBuyerSelect} />
+                  <ClientAutocomplete
+                    value={formData.buyerName}
+                    onSelect={handleBuyerSelect}
+                    onTextChange={(text) => setFormData(prev => ({ ...prev, buyerName: text }))}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer NTN</label>

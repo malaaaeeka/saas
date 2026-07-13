@@ -15,9 +15,10 @@ interface BuyerResult {
 interface Props {
   value: string
   onSelect: (buyer: BuyerResult | null) => void
+  onTextChange?: (text: string) => void
 }
 
-export default function ClientAutocomplete({ value, onSelect }: Props) {
+export default function ClientAutocomplete({ value, onSelect, onTextChange }: Props) {
   const [query, setQuery]       = useState(value || '')
   const [results, setResults]   = useState<BuyerResult[]>([])
   const [open, setOpen]         = useState(false)
@@ -66,6 +67,7 @@ export default function ClientAutocomplete({ value, onSelect }: Props) {
     const val = e.target.value
     setQuery(val)
     onSelect(null) // clear any previously selected buyer once user edits the text
+    onTextChange?.(val)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => search(val), 300)
   }
@@ -81,6 +83,7 @@ export default function ClientAutocomplete({ value, onSelect }: Props) {
     setResults([])
     setOpen(false)
     onSelect(null)
+    onTextChange?.('')
   }
 
   return (
