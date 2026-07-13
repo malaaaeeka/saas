@@ -483,7 +483,7 @@ export default function InvoiceDetailPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-start gap-3">
-          {(invoice.status === 'PENDING' || invoice.status === 'FAILED') && (
+          {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
             <button
               onClick={handleSubmitToFBR}
               disabled={submitLoading}
