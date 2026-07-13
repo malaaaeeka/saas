@@ -1,8 +1,13 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
+import ClientAutocomplete from '@/components/ui/ClientAutocomplete'
 import { useRouter, useSearchParams } from 'next/navigation'
+
+
+
+
 
 const PROVINCES = [
   'AZAD JAMMU AND KASHMIR',
@@ -327,6 +332,7 @@ function CreateInvoicePageContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [notWhitelisted, setNotWhitelisted] = useState(false)
+  const saveAsDraftRef = useRef(false)
 
   const [formData, setFormData] = useState({
     sellerRegNo: '',
@@ -335,6 +341,7 @@ function CreateInvoicePageContent() {
     invoiceDate: new Date().toISOString().split('T')[0],
     originationProvince: 'PUNJAB',
     destinationProvince: 'PUNJAB',
+    buyerId: '' as string | null,
     buyerNtn: '',
     buyerCnic: '',
     buyerName: '',
@@ -443,6 +450,27 @@ function CreateInvoicePageContent() {
     setFormData(prev => ({ ...prev, items: newItems }))
   }
 
+  const handleBuyerSelect = (buyer: {
+    id: string
+    buyerName: string
+    buyerNtn: string | null
+    buyerCnic: string | null
+    address: string | null
+  } | null) => {
+    if (!buyer) {
+      // user is typing a fresh name — clear the linked buyerId so it saves as new
+      setFormData(prev => ({ ...prev, buyerId: null }))
+      return
+    }
+    setFormData(prev => ({
+      ...prev,
+      buyerId: buyer.id,
+      buyerName: buyer.buyerName,
+      buyerNtn: buyer.buyerNtn || '',
+      buyerCnic: buyer.buyerCnic || ''
+    }))
+  }
+
   const addItem = () => {
     setFormData(prev => ({
       ...prev,
@@ -516,13 +544,15 @@ function CreateInvoicePageContent() {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           ...formData,
+          buyerId: formData.buyerId || undefined,
           originalInvoiceId: originalInvoiceId || undefined,
-          amendmentReason: (formData as any).amendmentReason || undefined
+          amendmentReason: (formData as any).amendmentReason || undefined,
+          status: saveAsDraftRef.current ? 'DRAFT' : undefined
         })
       })
       const data = await res.json()
       if (data.success) {
-        setSuccess('Invoice created and sent to FBR')
+        setSuccess(saveAsDraftRef.current ? 'Invoice saved as draft' : 'Invoice created and sent to FBR')
         setTimeout(() => router.push('/invoices'), 2000)
       } else {
         setError(data.message || 'Failed to create invoice')
@@ -677,9 +707,7 @@ function CreateInvoicePageContent() {
               <div className="grid grid-cols-4 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Name</label>
-                  <input type="text" name="buyerName" value={formData.buyerName} onChange={handleInputChange}
-                    placeholder="Customer name (optional)"
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+                  <ClientAutocomplete value={formData.buyerName} onSelect={handleBuyerSelect} />
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer NTN</label>
@@ -961,8 +989,14 @@ function CreateInvoicePageContent() {
             {/* Submit */}
             <div className="flex gap-4 justify-start">
               <button type="submit" disabled={loading || !business}
+                onClick={() => { saveAsDraftRef.current = false }}
                 className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 px-8 rounded-lg transition">
                 {loading ? 'Creating Invoice...' : 'Create Invoice'}
+              </button>
+              <button type="submit" disabled={loading || !business}
+                onClick={() => { saveAsDraftRef.current = true }}
+                className="bg-surface border border-border hover:border-heading text-heading font-semibold py-3 px-8 rounded-lg transition">
+                {loading ? 'Saving...' : 'Save as Draft'}
               </button>
               <button type="button" onClick={() => router.push('/invoices')}
                 className="bg-surface border border-border hover:border-heading text-heading font-semibold py-3 px-8 rounded-lg transition">
