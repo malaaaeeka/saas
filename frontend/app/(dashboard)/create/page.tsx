@@ -412,12 +412,11 @@ function CreateInvoicePageContent() {
         if (!data.data.isWhitelisted) {
           setNotWhitelisted(true)
         }
-        if (data.data.ntn || data.data.registrationNo) {
-          setFormData(prev => ({
-            ...prev,
-            sellerRegNo: data.data.ntn || data.data.registrationNo || prev.sellerRegNo
-          }))
-        }
+        setFormData(prev => ({
+          ...prev,
+          sellerRegNo: data.data.ntn || data.data.registrationNo || prev.sellerRegNo,
+          originationProvince: data.data.province || prev.originationProvince
+        }))
       } else {
         setError('Please setup your business profile first')
       }
@@ -455,6 +454,7 @@ function CreateInvoicePageContent() {
     buyerName: string
     buyerNtn: string | null
     buyerCnic: string | null
+    buyerType: string | null
     address: string | null
   } | null) => {
     if (!buyer) {
@@ -467,7 +467,8 @@ function CreateInvoicePageContent() {
       buyerId: buyer.id,
       buyerName: buyer.buyerName,
       buyerNtn: buyer.buyerNtn || '',
-      buyerCnic: buyer.buyerCnic || ''
+      buyerCnic: buyer.buyerCnic || '',
+      buyerType: buyer.buyerType || 'Unregistered'
     }))
   }
 

@@ -7,6 +7,7 @@ interface BuyerResult {
   buyerName: string
   buyerNtn: string | null
   buyerCnic: string | null
+  buyerType: string | null
   address: string | null
   phone: string | null
   email: string | null
