@@ -40,7 +40,7 @@ export const searchBuyers = async (req: AuthRequest, res: Response): Promise<voi
 export const createBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.business?.id
-    const { buyerName, buyerNtn, buyerCnic, address, phone, email } = req.body
+    const { buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email } = req.body
 
     if (!businessId) {
       sendError(res, 'No business profile found for this user', 401)
@@ -53,7 +53,7 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
     }
 
     const buyer = await prisma.buyer.create({
-      data: { businessId, buyerName, buyerNtn, buyerCnic, address, phone, email }
+      data: { businessId, buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email }
     })
 
     sendSuccess(res, buyer)

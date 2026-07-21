@@ -165,6 +165,7 @@ model Buyer {
   buyerName    String
   buyerNtn     String?
   buyerCnic    String?
+  buyerType    String   @default("Unregistered") 
   address      String?
   phone        String?
   email        String?

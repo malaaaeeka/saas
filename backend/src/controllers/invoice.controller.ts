@@ -209,7 +209,7 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 }
 export const createInvoice = async (req: any, res: Response): Promise<void> => {
   try {
-    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, saleType, branchId, items, originalInvoiceId, amendmentReason, status } = req.body
+    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, originalInvoiceId, amendmentReason, status } = req.body
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
       sendError(res, 'Business profile not found. Please set up your profile first.', 404)
@@ -247,10 +247,10 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         resolvedBuyerNtn = existing.buyerNtn
         resolvedBuyerCnic = existing.buyerCnic
       } else {
-        const newBuyer = await prisma.buyer.create({
-          data: { businessId: business.id, buyerName, buyerNtn: buyerNtn || null, buyerCnic: buyerCnic || null }
-        })
-        finalBuyerId = newBuyer.id
+       const newBuyer = await prisma.buyer.create({
+        data: { businessId: business.id, buyerName, buyerNtn: buyerNtn || null, buyerCnic: buyerCnic || null, buyerType: buyerType || 'Unregistered' }
+      })
+      finalBuyerId = newBuyer.id
       }
     }
 
