@@ -205,25 +205,25 @@ export default function InvoicesPage() {
         onClick={() => router.push(`/invoices/${invoice.id}`)}
         className={`border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
       >
-        <td className="px-6 py-4">
+        <td className="px-4 py-4 break-all">
           <div className="flex items-center gap-2">
             {isAmendment && <span className="text-muted text-lg leading-none">└─</span>}
             <span className="font-mono text-xs text-muted">{invoice.id.slice(0, 12)}...</span>
           </div>
         </td>
-        <td className="px-6 py-4 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
-        <td className="px-6 py-4 text-sm">
+        <td className="px-4 py-4 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+        <td className="px-4 py-4 text-sm">
           <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
         </td>
-        <td className="px-6 py-4 text-sm">{invoice.buyerName || 'Walk-in Customer'}</td>
-        <td className="px-6 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
-        <td className="px-6 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-4 text-sm break-words">{invoice.buyerName || 'Walk-in Customer'}</td>
+        <td className="px-4 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
+        <td className="px-4 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
+        <td className="px-4 py-4">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)}`}>
             {invoice.status}
           </span>
         </td>
-        <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
+        <td className="px-4 py-4 font-mono text-xs text-link break-all">{invoice.fbrInvoiceNo || '—'}</td>
         <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
   <div className="flex items-center gap-2 flex-wrap">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
@@ -449,19 +449,19 @@ export default function InvoicesPage() {
         ) : (
           <>
             <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
-  <table className="w-full">
+  <table className="w-full table-fixed">
                 <thead className="bg-border-light">
-                  <tr>
-                   
-                    <th className="text-left px-4 py-4 text-muted text-sm">Invoice ID</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Type</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm">Buyer</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm">Amount</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm">Tax</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm">Status</th>
-                   <th className="text-left px-4 py-4 text-muted text-sm">FBR No.</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm">Action</th>
-                  </tr>
+                 <tr>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Invoice ID</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Date</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Type</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Buyer</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Amount</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Tax</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Status</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">FBR No.</th>
+  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
+</tr>
                 </thead>
                 <tbody>
                   {filtered.map(parent => (
