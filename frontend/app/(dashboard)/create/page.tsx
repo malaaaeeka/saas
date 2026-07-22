@@ -903,8 +903,10 @@ setTimeout(() => {
                 <div>
                   <label className="block text-sm text-muted mb-2">Seller Registration No. (NTN) *</label>
                 <input ref={sellerRegNoRef} type="text" name="sellerRegNo" value={formData.sellerRegNo} onChange={handleInputChange}
-  placeholder="Registration No. or NTN with Check Digit" required
-  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+  placeholder="Registration No. or NTN with Check Digit"
+  className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
+    !formData.sellerRegNo.trim() && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+  }`} />
                   <p className="text-xs text-muted mt-1">Provide Registration No. or NTN with Check Digit, per FBR requirement</p>
                 </div>
                 <div>
@@ -1002,8 +1004,9 @@ setTimeout(() => {
 </label>
                   <input ref={buyerNtnRef} type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
                     placeholder="7 digit NTN"
-                    required={formData.buyerType === 'Registered'}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+                    className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
+                      !formData.buyerNtn.trim() && formData.buyerType === 'Registered' && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`} />
                 </div>
                 <div>
                  <label className="block text-sm text-muted mb-2">
@@ -1011,8 +1014,9 @@ setTimeout(() => {
 </label>
                   <input ref={buyerCnicRef} type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
                     placeholder="13 digit CNIC"
-                    required={formData.buyerType !== 'Registered'}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+                    className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
+                      !formData.buyerCnic.trim() && formData.buyerType !== 'Registered' && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`} />
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
