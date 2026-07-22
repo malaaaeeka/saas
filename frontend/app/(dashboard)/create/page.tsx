@@ -967,9 +967,7 @@ setTimeout(() => {
               {amendmentType && (
                 <div className="mt-4">
                   <label className="block text-sm text-muted mb-2">
-                    <select name="buyerType" value={formData.buyerType} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-bordReason for Amendment *er text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    Reason for Amendment *
                   </label>
                   <textarea name="amendmentReason" value={(formData as any).amendmentReason || ''} onChange={handleInputChange}
                     placeholder={amendmentType === 'CREDIT_NOTE'
