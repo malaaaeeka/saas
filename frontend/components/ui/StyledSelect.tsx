@@ -37,9 +37,9 @@ export default function StyledSelect<IsMulti extends boolean = false>(
               ? 'bg-border-light text-heading'
               : 'text-body'
           }`,
-        indicatorSeparator: () => 'hidden',
-        dropdownIndicator: () => 'text-muted px-2',
-        clearIndicator: () => 'text-heading/50 hover:text-heading px-1 cursor-pointer transition-colors',
+       indicatorSeparator: () => 'w-px bg-border my-1.5',
+        dropdownIndicator: () => 'text-muted/70 px-2',
+        clearIndicator: () => 'text-muted/70 hover:text-heading px-1 cursor-pointer transition-colors',
       }}
       {...props}
     />

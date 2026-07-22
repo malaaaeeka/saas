@@ -902,12 +902,13 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Document Type *</label>
-                        <StyledSelect
-          options={toOptions(DOCUMENT_TYPES)}
-          value={{ value: formData.documentType, label: formData.documentType }}
-          onChange={opt => handleSelectChange('documentType', opt?.value || '')}
-          placeholder="Select document type"
-        />
+                       <StyledSelect
+  options={toOptions(DOCUMENT_TYPES)}
+  value={formData.documentType ? { value: formData.documentType, label: formData.documentType } : null}
+  onChange={opt => handleSelectChange('documentType', opt?.value || '')}
+  placeholder="Select document type"
+/>
+        
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Date *</label>
@@ -916,9 +917,9 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Sale Type</label>
-                  <StyledSelect
+                 <StyledSelect
   options={toOptions(SALE_TYPES)}
-  value={{ value: formData.saleType, label: formData.saleType }}
+  value={formData.saleType ? { value: formData.saleType, label: formData.saleType } : null}
   onChange={opt => handleSelectChange('saleType', opt?.value || '')}
   placeholder="Select sale type"
 />
@@ -930,7 +931,7 @@ setTimeout(() => {
                   <label className="block text-sm text-muted mb-2">Sale Origination Province of Supplier *</label>
                  <StyledSelect
   options={toOptions(PROVINCES)}
-  value={{ value: formData.originationProvince, label: formData.originationProvince }}
+  value={formData.originationProvince ? { value: formData.originationProvince, label: formData.originationProvince } : null}
   onChange={opt => handleSelectChange('originationProvince', opt?.value || '')}
   placeholder="Select origination province"
 />
@@ -939,7 +940,7 @@ setTimeout(() => {
                   <label className="block text-sm text-muted mb-2">Destination of Supply *</label>
                   <StyledSelect
   options={toOptions(PROVINCES)}
-  value={{ value: formData.destinationProvince, label: formData.destinationProvince }}
+  value={formData.destinationProvince ? { value: formData.destinationProvince, label: formData.destinationProvince } : null}
   onChange={opt => handleSelectChange('destinationProvince', opt?.value || '')}
   placeholder="Select destination province"
 />
@@ -975,11 +976,11 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
-                 <StyledSelect
+                <StyledSelect
   options={toOptions(BUYER_TYPES)}
-  value={{ value: formData.buyerType, label: formData.buyerType }}
+  value={formData.buyerType ? { value: formData.buyerType, label: formData.buyerType } : null}
   onChange={opt => handleSelectChange('buyerType', opt?.value || '')}
-   placeholder="Select buyer type"
+  placeholder="Select buyer type"
 />
                 </div>
               </div>
