@@ -356,6 +356,7 @@ function CreateInvoicePageContent() {
   const amendmentType = searchParams.get('amendmentType')
   const originalFbrNo = searchParams.get('originalFbrNo')
   const originalInvoiceId = searchParams.get('originalInvoiceId')
+  const editInvoiceId = searchParams.get('edit')
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
@@ -363,6 +364,41 @@ function CreateInvoicePageContent() {
     if (!userData || !token) { router.push('/login'); return }
     setUser(JSON.parse(userData))
     fetchBusinessProfile(token)
+    if (editInvoiceId) {
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${editInvoiceId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const inv = data.data
+            setFormData(prev => ({
+              ...prev,
+              ...inv,
+              items: inv.items.map((item: any) => ({
+                ...DEFAULT_ITEM,
+                ...item,
+                quantity:           Number(item.quantity           || 0),
+                rate:               Number(item.rate               || 0),
+                totalAmount:        Number(item.totalAmount        || 0),
+                salesTax:           Number(item.salesTax           || 0),
+                fed:                Number(item.fed                || 0),
+                discount:           Number(item.discount           || 0),
+                fixedNotifiedValue: Number(item.fixedNotifiedValue || 0),
+                extraTax:           Number(item.extraTax           || 0),
+                furtherTax:         Number(item.furtherTax         || 0),
+                pfadValue:          Number(item.pfadValue          || 0),
+                stWithheld:         Number(item.stWithheld         || 0),
+              }))
+            }))
+          } else {
+            setError('Could not load invoice for editing')
+          }
+        })
+        .catch(() => setError('Failed to load invoice'))
+      return // skip prefill logic entirely when editing
+    }
+
     const prefill = searchParams.get('prefill')
     if (prefill) {
       try {
@@ -371,17 +407,17 @@ function CreateInvoicePageContent() {
           parsed.items = parsed.items.map((item: any) => ({
             ...DEFAULT_ITEM,
             ...item,
-            quantity:           Number(item.quantity           || 0),
-            rate:               Number(item.rate               || 0),
-            totalAmount:        Number(item.totalAmount        || 0),
-            salesTax:           Number(item.salesTax           || 0),
-            fed:                Number(item.fed                || 0),
-            discount:           Number(item.discount           || 0),
-            fixedNotifiedValue: Number(item.fixedNotifiedValue || 0),
-            extraTax:           Number(item.extraTax           || 0),
-            furtherTax:         Number(item.furtherTax         || 0),
-            pfadValue:          Number(item.pfadValue          || 0),
-            stWithheld:         Number(item.stWithheld         || 0),
+             quantity:           Number(item.quantity           || 0),
+              rate:               Number(item.rate               || 0),
+              totalAmount:        Number(item.totalAmount        || 0),
+              salesTax:           Number(item.salesTax           || 0),
+              fed:                Number(item.fed                || 0),
+              discount:           Number(item.discount           || 0),
+              fixedNotifiedValue: Number(item.fixedNotifiedValue || 0),
+              extraTax:           Number(item.extraTax           || 0),
+              furtherTax:         Number(item.furtherTax         || 0),
+              pfadValue:          Number(item.pfadValue          || 0),
+              stWithheld:         Number(item.stWithheld         || 0),
             sroSchedule:        item.sroSchedule     || SRO_SCHEDULES[0],
             itemSNo:            item.itemSNo         || ITEM_SR_NOS[0],
             reason:             item.reason          || REASONS[0],
@@ -540,20 +576,32 @@ function CreateInvoicePageContent() {
 
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          ...formData,
-          buyerId: formData.buyerId || undefined,
-          originalInvoiceId: originalInvoiceId || undefined,
-          amendmentReason: (formData as any).amendmentReason || undefined,
-          status: saveAsDraftRef.current ? 'DRAFT' : undefined
-        })
-      })
+      const url = editInvoiceId
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${editInvoiceId}`
+  : `${process.env.NEXT_PUBLIC_API_URL}/api/invoices`
+const method = editInvoiceId ? 'PUT' : 'POST'
+
+const res = await fetch(url, {
+  method,
+  headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+  body: JSON.stringify({
+    ...formData,
+    buyerId: formData.buyerId || undefined,
+    originalInvoiceId: originalInvoiceId || undefined,
+    amendmentReason: (formData as any).amendmentReason || undefined,
+    status: saveAsDraftRef.current ? 'DRAFT' : undefined
+  })
+})
+    
       const data = await res.json()
       if (data.success) {
-        setSuccess(saveAsDraftRef.current ? 'Invoice saved as draft' : 'Invoice created and sent to FBR')
+        setSuccess(
+  saveAsDraftRef.current
+    ? 'Invoice saved as draft'
+    : editInvoiceId
+      ? 'Invoice updated successfully'
+      : 'Invoice created and sent to FBR'
+)
         setTimeout(() => router.push('/invoices'), 2000)
       } else {
         setError(data.message || 'Failed to create invoice')
@@ -577,10 +625,11 @@ function CreateInvoicePageContent() {
             ← Back
           </button>
           <h1 className="text-3xl font-bold mb-2">
-            {amendmentType === 'CREDIT_NOTE' && 'Raise Credit Note'}
-            {amendmentType === 'DEBIT_NOTE'  && 'Raise Debit Note'}
-            {!amendmentType && 'Create Invoice'}
-          </h1>
+  {amendmentType === 'CREDIT_NOTE' && 'Raise Credit Note'}
+  {amendmentType === 'DEBIT_NOTE'  && 'Raise Debit Note'}
+  {editInvoiceId && !amendmentType && 'Edit Invoice'}
+  {!amendmentType && !editInvoiceId && 'Create Invoice'}
+</h1>
           <p className="text-muted">
             {amendmentType ? `Amendment for FBR Invoice: ${originalFbrNo}` : 'Create invoices for your business'}
           </p>
@@ -996,7 +1045,7 @@ function CreateInvoicePageContent() {
               <button type="submit" disabled={loading || !business}
                 onClick={() => { saveAsDraftRef.current = false }}
                 className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text font-semibold py-3 px-8 rounded-lg transition">
-                {loading ? 'Creating Invoice...' : 'Create Invoice'}
+                {loading ? (editInvoiceId ? 'Saving Changes...' : 'Creating Invoice...') : (editInvoiceId ? 'Save Changes' : 'Create Invoice')}
               </button>
               <button type="submit" disabled={loading || !business}
                 onClick={() => { saveAsDraftRef.current = true }}
