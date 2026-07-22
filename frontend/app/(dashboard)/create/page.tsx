@@ -325,6 +325,51 @@ const DEFAULT_ITEM = {
   discount: 0
 }
 
+
+type FormError = {
+  message: string
+  scrollTarget: 'errorBox' | 'sellerRegNo' | 'buyerNtn' | 'buyerCnic' | { item: number }
+}
+
+function validateForm(formData: any, amendmentType: string | null): FormError | null {
+  if (formData.items.length === 0) {
+    return { message: 'Add at least one item to the invoice', scrollTarget: 'errorBox' }
+  }
+
+  if (!formData.sellerRegNo.trim()) {
+    return { message: 'Seller Registration No. is required', scrollTarget: 'sellerRegNo' }
+  }
+
+  if (formData.buyerType === 'Registered' && !formData.buyerNtn.trim()) {
+    return { message: 'Buyer NTN is required for Registered buyers', scrollTarget: 'buyerNtn' }
+  }
+  if (formData.buyerType !== 'Registered' && !formData.buyerCnic.trim()) {
+    return { message: 'Buyer CNIC is required', scrollTarget: 'buyerCnic' }
+  }
+
+  const missingDocNum = formData.items.findIndex((i: any) => !i.documentNumber.trim())
+  if (missingDocNum !== -1) {
+    return { message: `Item ${missingDocNum + 1}: Document Number is required`, scrollTarget: { item: missingDocNum } }
+  }
+
+  const isAmendment = formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note'
+  if (isAmendment) {
+    const missingRef = formData.items.findIndex((i: any) => !i.invoiceRefNo.trim())
+    if (missingRef !== -1) {
+      return {
+        message: `Item ${missingRef + 1}: Invoice Reference No. is required for ${formData.documentType} (FBR col Y)`,
+        scrollTarget: { item: missingRef }
+      }
+    }
+  }
+
+  if (amendmentType && !(formData as any).amendmentReason?.trim()) {
+    return { message: 'Please provide a reason for this amendment', scrollTarget: 'errorBox' }
+  }
+
+  return null
+}
+
 function CreateInvoicePageContent() {
   const router = useRouter()
   const [user, setUser] = useState<any>(null)
@@ -336,6 +381,8 @@ function CreateInvoicePageContent() {
   const saveAsDraftRef = useRef(false)
   const errorBoxRef = useRef<HTMLDivElement>(null)
   const sellerRegNoRef = useRef<HTMLInputElement>(null)
+const buyerNtnRef = useRef<HTMLInputElement>(null)
+const buyerCnicRef = useRef<HTMLInputElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -637,54 +684,17 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('')
     setSuccess('')
 
-   if (formData.items.length === 0) {
-  setError('Add at least one item to the invoice')
-  setLoading(false)
-  setTimeout(() => errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
-  return
-}
-if (!formData.sellerRegNo.trim()) {
-  setError('Seller Registration No. is required')
-  setLoading(false)
-  setTimeout(() => sellerRegNoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
-  sellerRegNoRef.current?.focus()
-  return
-}
-const missingDocNum = formData.items.findIndex(i => !i.documentNumber.trim())
-if (missingDocNum !== -1) {
-  setError(`Item ${missingDocNum + 1}: Document Number is required`)
-  setLoading(false)
-  setTimeout(() => itemRefs.current[missingDocNum]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
-  return
-}
-if (formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note') {
-  const missingRef = formData.items.findIndex(i => !i.invoiceRefNo.trim())
-  if (missingRef !== -1) {
-    setError(`Item ${missingRef + 1}: Invoice Reference No. is required for ${formData.documentType} (FBR col Y)`)
-    setLoading(false)
-    setTimeout(() => itemRefs.current[missingRef]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
-    return
-  }
-}
-if (amendmentType && !(formData as any).amendmentReason?.trim()) {
-  setError('Please provide a reason for this amendment')
-  setLoading(false)
-  setTimeout(() => errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
-  return
-}
-    // ===== Col Y validation: Invoice Reference No. is required on every line
-    // of a Credit Note or Debit Note =====
-    if (formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note') {
-      const missingRef = formData.items.findIndex(i => !i.invoiceRefNo.trim())
-      if (missingRef !== -1) {
-        setError(`Item ${missingRef + 1}: Invoice Reference No. is required for ${formData.documentType} (FBR col Y)`)
-        setLoading(false)
-        return
-      }
-    }
-    if (amendmentType && !(formData as any).amendmentReason?.trim()) {
-      setError('Please provide a reason for this amendment')
+   const formError = validateForm(formData, amendmentType)
+    if (formError) {
+      setError(formError.message)
       setLoading(false)
+      setTimeout(() => {
+        if (formError.scrollTarget === 'errorBox') errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'sellerRegNo') { sellerRegNoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); sellerRegNoRef.current?.focus() }
+        else if (formError.scrollTarget === 'buyerNtn') { buyerNtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerNtnRef.current?.focus() }
+        else if (formError.scrollTarget === 'buyerCnic') { buyerCnicRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerCnicRef.current?.focus() }
+        else itemRefs.current[formError.scrollTarget.item]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 50)
       return
     }
 
