@@ -225,46 +225,48 @@ export default function InvoicesPage() {
         </td>
         <td className="px-4 py-4 font-mono text-xs text-link break-all">{invoice.fbrInvoiceNo || '—'}</td>
         <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
-  <div className="flex items-center gap-2 flex-wrap">
-          {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
-           <button
-  onClick={e => handleSubmitFBR(e, invoice.id)}
-  className="text-link hover:opacity-70 text-xs font-semibold transition underline"
->
-  Submit
-</button>
-          )}
-          {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
-          {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
-          {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-3">
+              {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
+                <button
+                  onClick={e => handleSubmitFBR(e, invoice.id)}
+                  className="text-link hover:opacity-70 text-xs font-semibold transition underline"
+                >
+                  Submit
+                </button>
+              )}
+              {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
+              {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
+              {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
 
-   {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
-  confirmDeleteId === invoice.id ? (
-    <span className="flex items-center gap-2 shrink-0">
-      <span className="text-xs text-muted">Sure?</span>
-      <button
-        onClick={e => handleDeleteInvoice(e, invoice.id)}
-        disabled={deletingId === invoice.id}
-        className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {deletingId === invoice.id ? '...' : 'Yes'}
-      </button>
-      <button
-        onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
-        className="text-muted hover:text-heading text-xs font-semibold transition underline"
-      >
-        No
-      </button>
-    </span>
-  ) : (
-    <button
-      onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
-      className="text-muted hover:text-error-text text-xs font-semibold transition underline"
-    >
-      Delete
-    </button>
-  )
-)}
+              {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && confirmDeleteId !== invoice.id && (
+                <button
+                  onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
+                  className="text-muted hover:text-error-text text-xs font-semibold transition underline"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+
+            {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && confirmDeleteId === invoice.id && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted">Sure?</span>
+                <button
+                  onClick={e => handleDeleteInvoice(e, invoice.id)}
+                  disabled={deletingId === invoice.id}
+                  className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {deletingId === invoice.id ? '...' : 'Yes'}
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                  className="text-muted hover:text-heading text-xs font-semibold transition underline"
+                >
+                  No
+                </button>
+              </div>
+            )}
           </div>
         </td>
       </tr>
