@@ -244,6 +244,20 @@ function rateToPercent(rate: string): number | null {
   return null
 }
 
+// Coerces any value (string, empty string, number, undefined) into a safe number.
+// Used everywhere item fields are summed or sent to the backend, since inputs
+// store raw strings while typing.
+function toNum(v: any): number {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : 0
+}
+
+const NUMERIC_ITEM_FIELDS = [
+  'quantity', 'rate', 'totalAmount', 'salesTax', 'fixedNotifiedValue',
+  'extraTax', 'furtherTax', 'pfadValue', 'stWithheld', 'fed',
+  'withholdingTax', 'discount'
+] as const
+
 function ItemSNoAutocomplete({
   value,
   onChange
@@ -577,14 +591,14 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
   }
 
   const calculateTotals = () => {
-    const totalAmount     = formData.items.reduce((s, i) => s + (i.totalAmount     || 0), 0)
-    const totalSalesTax   = formData.items.reduce((s, i) => s + (i.salesTax        || 0), 0)
-    const totalFed        = formData.items.reduce((s, i) => s + (i.fed             || 0), 0)
-    const totalDiscount   = formData.items.reduce((s, i) => s + (i.discount        || 0), 0)
-    const totalExtraTax   = formData.items.reduce((s, i) => s + (i.extraTax        || 0), 0)
-    const totalFurtherTax = formData.items.reduce((s, i) => s + (i.furtherTax      || 0), 0)
-    const totalPfad       = formData.items.reduce((s, i) => s + (i.pfadValue       || 0), 0)
-    const totalStWithheld = formData.items.reduce((s, i) => s + (i.stWithheld      || 0), 0)
+    const totalAmount     = formData.items.reduce((s, i) => s + toNum(i.totalAmount), 0)
+    const totalSalesTax   = formData.items.reduce((s, i) => s + toNum(i.salesTax), 0)
+    const totalFed        = formData.items.reduce((s, i) => s + toNum(i.fed), 0)
+    const totalDiscount   = formData.items.reduce((s, i) => s + toNum(i.discount), 0)
+    const totalExtraTax   = formData.items.reduce((s, i) => s + toNum(i.extraTax), 0)
+    const totalFurtherTax = formData.items.reduce((s, i) => s + toNum(i.furtherTax), 0)
+    const totalPfad       = formData.items.reduce((s, i) => s + toNum(i.pfadValue), 0)
+    const totalStWithheld = formData.items.reduce((s, i) => s + toNum(i.stWithheld), 0)
     return { totalAmount, totalSalesTax, totalFed, totalDiscount, totalExtraTax, totalFurtherTax, totalPfad, totalStWithheld }
   }
 
@@ -705,11 +719,23 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   : `${process.env.NEXT_PUBLIC_API_URL}/api/invoices`
 const method = editInvoiceId ? 'PUT' : 'POST'
 
+// Ensure every numeric item field is a real number (not '' or a string)
+// before this ever reaches the backend — protects against '' being
+// saved instead of 0 for tax/value fields that FBR expects as numbers.
+const normalizedItems = formData.items.map(item => {
+  const normalized = { ...item } as any
+  NUMERIC_ITEM_FIELDS.forEach(field => {
+    normalized[field] = toNum(normalized[field])
+  })
+  return normalized
+})
+
 const res = await fetch(url, {
   method,
   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
   body: JSON.stringify({
     ...formData,
+    items: normalizedItems,
     buyerId: formData.buyerId || undefined,
     originalInvoiceId: originalInvoiceId || undefined,
     amendmentReason: (formData as any).amendmentReason || undefined,
