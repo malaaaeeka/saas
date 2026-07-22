@@ -244,7 +244,7 @@ export default function InvoicesPage() {
       <button
         onClick={e => handleDeleteInvoice(e, invoice.id)}
         disabled={deletingId === invoice.id}
-        className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
+        className="text-muted hover:text-heading text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {deletingId === invoice.id ? '...' : 'Yes'}
       </button>
@@ -258,7 +258,7 @@ export default function InvoicesPage() {
   ) : (
     <button
       onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
-      className="text-error-text hover:opacity-70 text-xs font-semibold transition underline"
+      className="text-muted hover:text-error-text text-xs font-semibold transition underline"
     >
       Delete
     </button>
