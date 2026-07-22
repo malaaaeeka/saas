@@ -333,6 +333,10 @@ function CreateInvoicePageContent() {
   const [success, setSuccess] = useState('')
   const [notWhitelisted, setNotWhitelisted] = useState(false)
   const saveAsDraftRef = useRef(false)
+const saveAsDraftRef = useRef(false)
+const errorBoxRef = useRef<HTMLDivElement>(null)
+const sellerRegNoRef = useRef<HTMLInputElement>(null)
+const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const [formData, setFormData] = useState({
     sellerRegNo: '',
@@ -542,22 +546,41 @@ function CreateInvoicePageContent() {
     setError('')
     setSuccess('')
 
-    if (formData.items.length === 0) {
-      setError('Add at least one item to the invoice')
-      setLoading(false)
-      return
-    }
-    if (!formData.sellerRegNo.trim()) {
-      setError('Seller Registration No. is required')
-      setLoading(false)
-      return
-    }
-    const missingDocNum = formData.items.findIndex(i => !i.documentNumber.trim())
-    if (missingDocNum !== -1) {
-      setError(`Item ${missingDocNum + 1}: Document Number is required`)
-      setLoading(false)
-      return
-    }
+   if (formData.items.length === 0) {
+  setError('Add at least one item to the invoice')
+  setLoading(false)
+  setTimeout(() => errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+  return
+}
+if (!formData.sellerRegNo.trim()) {
+  setError('Seller Registration No. is required')
+  setLoading(false)
+  setTimeout(() => sellerRegNoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+  sellerRegNoRef.current?.focus()
+  return
+}
+const missingDocNum = formData.items.findIndex(i => !i.documentNumber.trim())
+if (missingDocNum !== -1) {
+  setError(`Item ${missingDocNum + 1}: Document Number is required`)
+  setLoading(false)
+  setTimeout(() => itemRefs.current[missingDocNum]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+  return
+}
+if (formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note') {
+  const missingRef = formData.items.findIndex(i => !i.invoiceRefNo.trim())
+  if (missingRef !== -1) {
+    setError(`Item ${missingRef + 1}: Invoice Reference No. is required for ${formData.documentType} (FBR col Y)`)
+    setLoading(false)
+    setTimeout(() => itemRefs.current[missingRef]?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+    return
+  }
+}
+if (amendmentType && !(formData as any).amendmentReason?.trim()) {
+  setError('Please provide a reason for this amendment')
+  setLoading(false)
+  setTimeout(() => errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+  return
+}
     // ===== Col Y validation: Invoice Reference No. is required on every line
     // of a Credit Note or Debit Note =====
     if (formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note') {
@@ -663,12 +686,12 @@ setTimeout(() => {
             <p className="text-heading text-sm font-medium">{success}</p>
           </div>
         )}
-        {error && (
-          <div className="bg-surface border border-border border-l-4 border-l-error-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-error-text" />
-            <p className="text-heading text-sm font-medium">{error}</p>
-          </div>
-        )}
+      {error && (
+  <div ref={errorBoxRef} className="bg-red-50 border-2 border-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
+    <p className="text-red-700 text-sm font-semibold">{error}</p>
+  </div>
+)}
 
         {!business ? (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
@@ -691,9 +714,9 @@ setTimeout(() => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Seller Registration No. (NTN) *</label>
-                  <input type="text" name="sellerRegNo" value={formData.sellerRegNo} onChange={handleInputChange}
-                    placeholder="Registration No. or NTN with Check Digit" required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
+                <input ref={sellerRegNoRef} type="text" name="sellerRegNo" value={formData.sellerRegNo} onChange={handleInputChange}
+  placeholder="Registration No. or NTN with Check Digit" required
+  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                   <p className="text-xs text-muted mt-1">Provide Registration No. or NTN with Check Digit, per FBR requirement</p>
                 </div>
                 <div>
@@ -813,8 +836,8 @@ setTimeout(() => {
               </div>
 
               <div className="space-y-4">
-                {formData.items.map((item, index) => (
-                  <div key={index} className="bg-surface rounded-xl p-4 border border-border shadow-sm">
+              {formData.items.map((item, index) => (
+  <div key={index} ref={el => { itemRefs.current[index] = el }} className="bg-surface rounded-xl p-4 border border-border shadow-sm">
 
                     {/* Document Number (col H) + Invoice Reference No. (col Y) — top of card */}
                     <div className="grid grid-cols-2 gap-3 mb-3">
