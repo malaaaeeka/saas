@@ -518,10 +518,9 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
           setNotWhitelisted(true)
         }
         setFormData(prev => ({
-          ...prev,
-          sellerRegNo: data.data.ntn || data.data.registrationNo || prev.sellerRegNo,
-          originationProvince: data.data.province || prev.originationProvince
-        }))
+  ...prev,
+  sellerRegNo: data.data.ntn || data.data.registrationNo || prev.sellerRegNo
+}))
       } else {
         setError('Please setup your business profile first')
       }
@@ -898,7 +897,7 @@ setTimeout(() => {
   ]}
   value={formData.invoiceType ? { value: formData.invoiceType, label: formData.invoiceType } : null}
   onChange={opt => handleSelectChange('invoiceType', opt?.value || '')}
-  placeholder="Select invoice type..."
+  placeholder="Select invoice type"
 />
                 </div>
                 <div>
@@ -907,6 +906,7 @@ setTimeout(() => {
           options={toOptions(DOCUMENT_TYPES)}
           value={{ value: formData.documentType, label: formData.documentType }}
           onChange={opt => handleSelectChange('documentType', opt?.value || '')}
+          placeholder="Select document type"
         />
                 </div>
                 <div>
@@ -920,6 +920,7 @@ setTimeout(() => {
   options={toOptions(SALE_TYPES)}
   value={{ value: formData.saleType, label: formData.saleType }}
   onChange={opt => handleSelectChange('saleType', opt?.value || '')}
+  placeholder="Select sale type"
 />
                 </div>
               </div>
@@ -931,6 +932,7 @@ setTimeout(() => {
   options={toOptions(PROVINCES)}
   value={{ value: formData.originationProvince, label: formData.originationProvince }}
   onChange={opt => handleSelectChange('originationProvince', opt?.value || '')}
+  placeholder="Select origination province"
 />
                 </div>
                 <div>
@@ -939,6 +941,7 @@ setTimeout(() => {
   options={toOptions(PROVINCES)}
   value={{ value: formData.destinationProvince, label: formData.destinationProvince }}
   onChange={opt => handleSelectChange('destinationProvince', opt?.value || '')}
+  placeholder="Select destination province"
 />
                 </div>
               </div>
@@ -976,6 +979,7 @@ setTimeout(() => {
   options={toOptions(BUYER_TYPES)}
   value={{ value: formData.buyerType, label: formData.buyerType }}
   onChange={opt => handleSelectChange('buyerType', opt?.value || '')}
+   placeholder="Select buyer type"
 />
                 </div>
               </div>

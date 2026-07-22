@@ -18,6 +18,7 @@ export default function StyledSelect<IsMulti extends boolean = false>(
   return (
     <Select
       unstyled
+      isClearable
       classNames={{
         control: (state) =>
           `w-full bg-surface border rounded-lg px-2 py-1 text-sm cursor-pointer transition-colors ${
@@ -38,7 +39,7 @@ export default function StyledSelect<IsMulti extends boolean = false>(
           }`,
         indicatorSeparator: () => 'hidden',
         dropdownIndicator: () => 'text-muted px-2',
-        clearIndicator: () => 'text-muted px-1 cursor-pointer hover:text-heading',
+        clearIndicator: () => 'text-heading/50 hover:text-heading px-1 cursor-pointer transition-colors',
       }}
       {...props}
     />
