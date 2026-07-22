@@ -482,16 +482,24 @@ export default function InvoiceDetailPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-start gap-3">
-          {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
-            <button
-              onClick={handleSubmitToFBR}
-              disabled={submitLoading}
-              className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition shadow-sm"
-            >
-              {submitLoading ? 'Submitting...' : 'Submit to FBR'}
-            </button>
-          )}
+<div className="flex flex-wrap items-start gap-3">
+  {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
+    <>
+      <button
+        onClick={handleSubmitToFBR}
+        disabled={submitLoading}
+        className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition shadow-sm"
+      >
+        {submitLoading ? 'Submitting...' : 'Submit to FBR'}
+      </button>
+      <button
+        onClick={() => router.push(`/create?edit=${invoice.id}`)}
+        className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+      >
+        Edit Invoice
+      </button>
+    </>
+  )}
 
           <button
             onClick={handleDownloadPDF}
