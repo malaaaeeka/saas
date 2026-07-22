@@ -401,23 +401,25 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [formData, setFormData] = useState({
-    sellerRegNo: '',
-    taxPeriod: new Date().toISOString().slice(0, 7),
-    invoiceType: 'SALE',
-    invoiceDate: new Date().toISOString().split('T')[0],
-    originationProvince: 'PUNJAB',
-    destinationProvince: 'PUNJAB',
-    buyerId: '' as string | null,
-    buyerNtn: '',
-    buyerCnic: '',
-    buyerName: '',
-    buyerType: 'Unregistered',
-    documentType: 'Sale Invoice',
-    saleType: 'Goods at standard rate (default)',
-    branchId: '',
-    items: [{ ...DEFAULT_ITEM }]
-  })
+ const [formData, setFormData] = useState({
+  sellerRegNo: '',
+  taxPeriod: new Date().toISOString().slice(0, 7),
+  invoiceType: '',
+  invoiceDate: new Date().toISOString().split('T')[0],
+  originationProvince: '',
+  destinationProvince: '',
+  buyerId: '' as string | null,
+  buyerNtn: '',
+  buyerCnic: '',
+  buyerName: '',
+  buyerType: '',
+  documentType: '',
+  saleType: '',
+  branchId: '',
+  items: [{ ...DEFAULT_ITEM }]
+})
+
+
 
   const searchParams = useSearchParams()
   const amendmentType = searchParams.get('amendmentType')
@@ -887,13 +889,17 @@ setTimeout(() => {
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Type *</label>
-                  <select name="invoiceType" value={formData.invoiceType} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    <option value="SALE">Sale</option>
-                    <option value="PURCHASE">Purchase</option>
-                    <option value="DEBIT_NOTE">Debit Note</option>
-                    <option value="CREDIT_NOTE">Credit Note</option>
-                  </select>
+                 <StyledSelect
+  options={[
+    { value: 'SALE', label: 'Sale' },
+    { value: 'PURCHASE', label: 'Purchase' },
+    { value: 'DEBIT_NOTE', label: 'Debit Note' },
+    { value: 'CREDIT_NOTE', label: 'Credit Note' },
+  ]}
+  value={formData.invoiceType ? { value: formData.invoiceType, label: formData.invoiceType } : null}
+  onChange={opt => handleSelectChange('invoiceType', opt?.value || '')}
+  placeholder="Select invoice type..."
+/>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Document Type *</label>
