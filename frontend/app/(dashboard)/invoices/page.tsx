@@ -224,8 +224,8 @@ export default function InvoicesPage() {
           </span>
         </td>
         <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
-        <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center gap-3">
+        <td className="px-6 py-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+  <div className="flex items-center gap-3">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
            <button
   onClick={e => handleSubmitFBR(e, invoice.id)}
@@ -448,8 +448,8 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <>
-            <div className="bg-surface rounded-lg border border-border overflow-hidden mb-4">
-              <table className="w-full">
+            <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
+  <table className="w-full min-w-[900px]">
                 <thead className="bg-border-light">
                   <tr>
                     <th className="text-left px-6 py-4 text-muted text-sm">Invoice ID</th>
