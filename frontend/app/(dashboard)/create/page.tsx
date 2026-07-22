@@ -1025,21 +1025,21 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1">Qty</label>
                         <input type="number" value={item.quantity}
-                          onChange={e => handleItemChange(index, 'quantity', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'quantity', e.target.value)}
                           placeholder="1"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Unit Price</label>
                         <input type="number" value={item.rate}
-                          onChange={e => handleItemChange(index, 'rate', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'rate', e.target.value)}
                           placeholder="0"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Total</label>
                         <input type="text" value={Number(item.totalAmount || 0).toFixed(2)} disabled
-                          className="w-full bg-border-light border border-border text-heading rounded px-3 py-1 text-sm opacity-70" />
+                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                     </div>
 
@@ -1078,7 +1078,7 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Fixed / Notified Value or Retail Price (PKR)</label>
                         <input type="number" value={item.fixedNotifiedValue}
-                          onChange={e => handleItemChange(index, 'fixedNotifiedValue', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'fixedNotifiedValue', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                         <p className="text-xs text-muted mt-1">Leave 0 if no govt-notified price applies</p>
@@ -1086,7 +1086,7 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Extra Tax (PKR)</label>
                         <input type="number" value={item.extraTax}
-                          onChange={e => handleItemChange(index, 'extraTax', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'extraTax', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                         <p className="text-xs text-muted mt-1">Applies to SIMs, mobile phones, petroleum etc.</p>
@@ -1094,7 +1094,7 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Further Tax (PKR)</label>
                         <input type="number" value={item.furtherTax}
-                          onChange={e => handleItemChange(index, 'furtherTax', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'furtherTax', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                         <p className="text-xs text-muted mt-1">3% surcharge for sales to unregistered buyers</p>
@@ -1102,7 +1102,7 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Total Value of Sales — PFAD only (PKR)</label>
                         <input type="number" value={item.pfadValue}
-                          onChange={e => handleItemChange(index, 'pfadValue', e.target.value ? parseFloat(e.target.value) : 0)}
+                          onChange={e => handleItemChange(index, 'pfadValue', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                         <p className="text-xs text-muted mt-1">Only for Palm Fatty Acid Distillate supplies</p>
@@ -1110,7 +1110,7 @@ setTimeout(() => {
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">ST Withheld at Source (PKR)</label>
                         <input type="number" value={item.stWithheld}
-                          onChange={e => handleItemChange(index, 'stWithheld', e.target.value ? parseFloat(e.target.value) : 0)}
+                         onChange={e => handleItemChange(index, 'stWithheld', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                         <p className="text-xs text-muted mt-1">Sales tax withheld by buyer at source</p>
