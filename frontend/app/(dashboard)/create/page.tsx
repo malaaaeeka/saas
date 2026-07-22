@@ -875,9 +875,9 @@ setTimeout(() => {
           </div>
         )}
       {error && (
-  <div ref={errorBoxRef} className="bg-red-50 border-2 border-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
-    <span className="w-2 h-2 rounded-full bg-red-600 flex-shrink-0" />
-    <p className="text-red-700 text-sm font-semibold">{error}</p>
+  <div ref={errorBoxRef} className="bg-surface border border-border border-l-4 border-l-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+    <span className="w-1.5 h-1.5 rounded-full bg-red-600 flex-shrink-0" />
+    <p className="text-red-700 text-sm font-medium">{error}</p>
   </div>
 )}
 
@@ -1067,7 +1067,9 @@ setTimeout(() => {
                         <input type="text" value={item.documentNumber}
                           onChange={e => handleItemChange(index, 'documentNumber', e.target.value)}
                           placeholder="e.g. INV-2025-001 or File-02"
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                          className={`w-full bg-surface border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent ${
+                            !item.documentNumber.trim() && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                          }`} />
                         <p className="text-xs text-muted mt-1">Your internal invoice / file number for this line. Required.</p>
                       </div>
 
@@ -1086,7 +1088,9 @@ setTimeout(() => {
                           <input type="text" value={item.invoiceRefNo}
                             onChange={e => handleItemChange(index, 'invoiceRefNo', e.target.value)}
                             placeholder="FBR invoice no. of the original invoice"
-                            className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                            className={`w-full bg-surface border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent ${
+                              !item.invoiceRefNo.trim() && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                            }`} />
                           <p className="text-xs text-muted mt-1">FBR-assigned number of the original invoice this line corrects.</p>
                         </div>
                       )}
