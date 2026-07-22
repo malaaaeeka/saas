@@ -870,7 +870,7 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Tax Period *</label>
-                  <input type="month" name="taxPeriod" value={formData.taxPeriod} onChange={handleInputChange}
+                  <input type="month" name="taxPeriod" value={formData.taxPeriod} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
               </div>
@@ -882,7 +882,7 @@ setTimeout(() => {
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Type *</label>
-                  <select name="invoiceType" value={formData.invoiceType} onChange={handleInputChange}
+                  <select name="invoiceType" value={formData.invoiceType} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     <option value="SALE">Sale</option>
                     <option value="PURCHASE">Purchase</option>
@@ -892,14 +892,14 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Document Type *</label>
-                  <select name="documentType" value={formData.documentType} onChange={handleInputChange}
+                  <select name="documentType" value={formData.documentType} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {DOCUMENT_TYPES.map(dt => <option key={dt} value={dt}>{dt}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Date *</label>
-                  <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange}
+                  <input type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
@@ -914,14 +914,14 @@ setTimeout(() => {
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Sale Origination Province of Supplier *</label>
-                  <select name="originationProvince" value={formData.originationProvince} onChange={handleInputChange}
+                  <select name="originationProvince" value={formData.originationProvince} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Destination of Supply *</label>
-                  <select name="destinationProvince" value={formData.destinationProvince} onChange={handleInputChange}
+                  <select name="destinationProvince" value={formData.destinationProvince} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -938,18 +938,18 @@ setTimeout(() => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted mb-2">
-                    Buyer NTN {formData.buyerType === 'Registered' && <span className="text-error-text">*</span>}
-                  </label>
+                 <label className="block text-sm text-muted mb-2">
+  Buyer NTN {formData.buyerType === 'Registered' && '*'}
+</label>
                   <input ref={buyerNtnRef} type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
                     placeholder="7 digit NTN"
                     required={formData.buyerType === 'Registered'}
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted mb-2">
-                    Buyer CNIC {formData.buyerType !== 'Registered' && <span className="text-error-text">*</span>}
-                  </label>
+                 <label className="block text-sm text-muted mb-2">
+  Buyer CNIC {formData.buyerType !== 'Registered' && '*'}
+</label>
                   <input ref={buyerCnicRef} type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
                     placeholder="13 digit CNIC"
                     required={formData.buyerType !== 'Registered'}
@@ -957,7 +957,7 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
-                  <select name="buyerType" value={formData.buyerType} onChange={handleInputChange}
+                  <select name="buyerType" value={formData.buyerType} onChange={handleInputChange} required
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
                     {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
@@ -967,7 +967,9 @@ setTimeout(() => {
               {amendmentType && (
                 <div className="mt-4">
                   <label className="block text-sm text-muted mb-2">
-                    Reason for Amendment <span className="text-error-text">*</span>
+                    <select name="buyerType" value={formData.buyerType} onChange={handleInputChange} required
+                    className="w-full bg-surface border border-bordReason for Amendment *er text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
+                    {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </label>
                   <textarea name="amendmentReason" value={(formData as any).amendmentReason || ''} onChange={handleInputChange}
                     placeholder={amendmentType === 'CREDIT_NOTE'
@@ -998,9 +1000,9 @@ setTimeout(() => {
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <label className="block text-xs text-muted mb-1">
-                          Document Number <span className="text-error-text">*</span>
-                          <span className="ml-1 text-muted font-normal"></span>
-                        </label>
+  Document Number *
+  <span className="ml-1 text-muted font-normal"></span>
+</label>
                         <input type="text" value={item.documentNumber}
                           onChange={e => handleItemChange(index, 'documentNumber', e.target.value)}
                           placeholder="e.g. INV-2025-001 or File-02"
@@ -1017,9 +1019,9 @@ setTimeout(() => {
                       {isAmendment && (
                         <div>
                           <label className="block text-xs text-muted mb-1">
-                            Invoice Reference No. <span className="text-error-text">*</span>
-                            <span className="ml-1 text-muted font-normal">(FBR col Y)</span>
-                          </label>
+  Invoice Reference No. *
+  <span className="ml-1 text-muted font-normal">(FBR col Y)</span>
+</label>
                           <input type="text" value={item.invoiceRefNo}
                             onChange={e => handleItemChange(index, 'invoiceRefNo', e.target.value)}
                             placeholder="FBR invoice no. of the original invoice"
