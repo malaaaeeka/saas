@@ -96,7 +96,7 @@ export default function ClientAutocomplete({ value, onSelect, onTextChange }: Pr
           onChange={handleChange}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Type buyer name, NTN, or CNIC to search..."
-          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 pr-8 text-sm focus:outline-none focus:border-accent"
+          className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 pr-8 focus:outline-none focus:border-accent"
         />
         {query && (
           <button
