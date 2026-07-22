@@ -9,7 +9,8 @@ import {
   getStats,
   downloadInvoicePdf,
   submitToFBR,
-   sendInvoiceEmail
+  sendInvoiceEmail
+  deleteInvoice
 } from '../controllers/invoice.controller'
 import { authenticate } from '../middleware/auth.middleware'
 
@@ -25,5 +26,6 @@ router.get('/:id', authenticate, getInvoiceById)
 router.get('/:id/pdf', authenticate, downloadInvoicePdf)
 router.post('/:id/submit-fbr', authenticate, submitToFBR)
 router.post('/:id/send-email', authenticate, sendInvoiceEmail)
+router.delete('/:id', authenticate, deleteInvoice)
 
 export default router

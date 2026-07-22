@@ -317,6 +317,8 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
   }
   
 }
+
+
 export const updateInvoice = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params
@@ -431,6 +433,41 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
     sendSuccess(res, invoice, 'Invoice updated successfully')
   } catch (error: any) {
     sendError(res, error.message || 'Failed to update invoice', 500)
+  }
+}
+
+export const deleteInvoice = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business profile not found. Please set up your profile first.', 404)
+      return
+    }
+
+    const invoice = await prisma.invoice.findUnique({ where: { id } })
+    if (!invoice) {
+      sendError(res, 'Invoice not found', 404)
+      return
+    }
+    if (invoice.businessId !== business.id) {
+      sendError(res, 'Access denied', 403)
+      return
+    }
+    if (invoice.status === 'SENT' || invoice.status === 'AMENDED') {
+      sendError(res, 'Cannot delete a submitted or amended invoice', 400)
+      return
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.invoiceItem.deleteMany({ where: { invoiceId: id } })
+      await tx.invoice.delete({ where: { id } })
+    })
+
+    sendSuccess(res, null, 'Invoice deleted successfully')
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to delete invoice', 500)
   }
 }
 
