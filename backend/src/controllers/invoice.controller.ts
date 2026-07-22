@@ -317,6 +317,122 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
   }
   
 }
+export const updateInvoice = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, amendmentReason, status } = req.body
+
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business profile not found. Please set up your profile first.', 404)
+      return
+    }
+
+    const existingInvoice = await prisma.invoice.findUnique({ where: { id } })
+    if (!existingInvoice) {
+      sendError(res, 'Invoice not found', 404)
+      return
+    }
+    if (existingInvoice.businessId !== business.id) {
+      sendError(res, 'Access denied', 403)
+      return
+    }
+
+    // Same buyer-resolution logic as createInvoice
+    let resolvedBuyerName = buyerName
+    let resolvedBuyerNtn = buyerNtn
+    let resolvedBuyerCnic = buyerCnic
+    let finalBuyerId = buyerId || null
+
+    if (buyerId) {
+      const buyer = await prisma.buyer.findUnique({ where: { id: buyerId } })
+      if (!buyer || buyer.businessId !== business.id) {
+        sendError(res, 'Buyer not found', 404)
+        return
+      }
+      resolvedBuyerName = buyer.buyerName
+      resolvedBuyerNtn = buyer.buyerNtn
+      resolvedBuyerCnic = buyer.buyerCnic
+    } else if (buyerName && buyerName.trim()) {
+      const existing = buyerNtn
+        ? await prisma.buyer.findUnique({
+            where: { businessId_buyerNtn: { businessId: business.id, buyerNtn } }
+          })
+        : null
+
+      if (existing) {
+        finalBuyerId = existing.id
+        resolvedBuyerName = existing.buyerName
+        resolvedBuyerNtn = existing.buyerNtn
+        resolvedBuyerCnic = existing.buyerCnic
+      } else {
+        const newBuyer = await prisma.buyer.create({
+          data: { businessId: business.id, buyerName, buyerNtn: buyerNtn || null, buyerCnic: buyerCnic || null, buyerType: buyerType || 'Unregistered' }
+        })
+        finalBuyerId = newBuyer.id
+      }
+    }
+
+    const totalAmount = items.reduce((sum: number, item: any) => sum + Number(item.totalAmount), 0)
+    const totalSalesTax = items.reduce((sum: number, item: any) => sum + Number(item.salesTax), 0)
+    const totalFed = items.reduce((sum: number, item: any) => sum + Number(item.fed || 0), 0)
+    const totalDiscount = items.reduce((sum: number, item: any) => sum + Number(item.discount || 0), 0)
+
+    // Replace items: delete existing, recreate from the submitted form
+    const invoice = await prisma.$transaction(async (tx) => {
+      await tx.invoiceItem.deleteMany({ where: { invoiceId: id } })
+
+      return tx.invoice.update({
+        where: { id },
+        data: {
+          branchId: branchId || null,
+          invoiceType,
+          invoiceDate: new Date(invoiceDate),
+          amendmentReason: amendmentReason || null,
+          buyerId: finalBuyerId,
+          buyerNtn: resolvedBuyerNtn,
+          buyerCnic: resolvedBuyerCnic,
+          buyerName: resolvedBuyerName,
+          saleType,
+          totalAmount,
+          totalSalesTax,
+          totalFed,
+          totalDiscount,
+          status: status === 'DRAFT' ? 'DRAFT' : existingInvoice.status,
+          items: {
+            createMany: {
+              data: items.map((item: any) => ({
+                hsCode: item.hsCode,
+                hsCodeDescription: item.hsCodeDescription || null,
+                productCode: item.productCode,
+                description: item.description,
+                quantity: item.quantity,
+                uom: item.uom,
+                rate: item.rate,
+                totalAmount: item.totalAmount,
+                salesTax: item.salesTax,
+                sroSchedule: item.sroSchedule,
+                itemSNo: item.itemSNo || null,
+                fed: item.fed || 0,
+                extraTax: item.extraTax || 0,
+                furtherTax: item.furtherTax || 0,
+                fixedNotifiedValue: item.fixedNotifiedValue || 0,
+                stWithheld: item.stWithheld || 0,
+                withholdingTax: item.withholdingTax || 0,
+                discount: item.discount || 0
+              }))
+            }
+          }
+        },
+        include: { items: true }
+      })
+    })
+
+    sendSuccess(res, invoice, 'Invoice updated successfully')
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to update invoice', 500)
+  }
+}
 
 export const getInvoiceCounts = async (req: any, res: Response): Promise<void> => {
   try {
