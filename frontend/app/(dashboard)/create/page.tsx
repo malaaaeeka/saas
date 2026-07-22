@@ -333,10 +333,9 @@ function CreateInvoicePageContent() {
   const [success, setSuccess] = useState('')
   const [notWhitelisted, setNotWhitelisted] = useState(false)
   const saveAsDraftRef = useRef(false)
-const saveAsDraftRef = useRef(false)
-const errorBoxRef = useRef<HTMLDivElement>(null)
-const sellerRegNoRef = useRef<HTMLInputElement>(null)
-const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  const errorBoxRef = useRef<HTMLDivElement>(null)
+  const sellerRegNoRef = useRef<HTMLInputElement>(null)
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const [formData, setFormData] = useState({
     sellerRegNo: '',
