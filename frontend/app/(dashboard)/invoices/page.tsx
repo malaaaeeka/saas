@@ -224,7 +224,7 @@ export default function InvoicesPage() {
           </span>
         </td>
         <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
-        <td className="px-6 py-4 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+        <td className="px-6 py-4 whitespace-nowrap min-w-[200px]" onClick={e => e.stopPropagation()}>
   <div className="flex items-center gap-3">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
            <button
@@ -460,7 +460,7 @@ export default function InvoicesPage() {
                     <th className="text-left px-6 py-4 text-muted text-sm">Tax</th>
                     <th className="text-left px-6 py-4 text-muted text-sm">Status</th>
                     <th className="text-left px-6 py-4 text-muted text-sm">FBR No.</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Action</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm min-w-[200px]">Action</th>
                   </tr>
                 </thead>
                 <tbody>
