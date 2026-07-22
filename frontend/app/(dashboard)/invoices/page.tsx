@@ -205,40 +205,33 @@ export default function InvoicesPage() {
         onClick={() => router.push(`/invoices/${invoice.id}`)}
         className={`border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
       >
-        <td className="px-2 py-3">
-  <div className="flex items-center gap-1">
-    {isAmendment && <span className="text-muted text-sm leading-none">└</span>}
-    <span className="font-mono text-[10px] text-muted">{invoice.id.slice(0, 6)}</span>
-  </div>
-</td>
-        <td className="px-2 py-3 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
-        <td className="px-2 py-3 text-sm">
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-2">
+            {isAmendment && <span className="text-muted text-lg leading-none">└─</span>}
+            <span className="font-mono text-xs text-muted">{invoice.id.slice(0, 12)}...</span>
+          </div>
+        </td>
+        <td className="px-6 py-4 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+        <td className="px-6 py-4 text-sm">
           <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
         </td>
-        <td className="px-2 py-3 text-sm">{invoice.buyerName || 'Walk-in Customer'}</td>
-       <td className="px-2 py-3">
-  <div className="font-semibold text-xs">{Number(invoice.totalAmount).toFixed(0)}</div>
-  <div className="text-success-text text-[10px]">Tax {Number(invoice.totalSalesTax).toFixed(0)}</div>
-</td>
-       <td className="px-2 py-3">
-  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(invoice.status)}`}>
-    {invoice.status}
-  </span>
-  {invoice.fbrInvoiceNo && (
-    <div className="font-mono text-[9px] text-link mt-1 truncate">{invoice.fbrInvoiceNo}</div>
-  )}
-</td>
-        <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
-  <div className="flex items-center gap-1.5">
+        <td className="px-6 py-4 text-sm">{invoice.buyerName || 'Walk-in Customer'}</td>
+        <td className="px-6 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
+        <td className="px-6 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
+        <td className="px-6 py-4">
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)}`}>
+            {invoice.status}
+          </span>
+        </td>
+        <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
+        <td className="px-6 py-4 whitespace-nowrap min-w-[200px]" onClick={e => e.stopPropagation()}>
+  <div className="flex items-center gap-3">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
            <button
   onClick={e => handleSubmitFBR(e, invoice.id)}
-  title="Submit"
-  className="w-6 h-6 flex items-center justify-center rounded hover:bg-border-light text-link"
+  className="text-link hover:opacity-70 text-xs font-semibold transition underline"
 >
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
-  </svg>
+  Submit
 </button>
           )}
           {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
@@ -248,19 +241,20 @@ export default function InvoicesPage() {
        {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
   confirmDeleteId === invoice.id ? (
     <span className="flex items-center gap-1.5">
-     <button
-  onClick={e => handleDeleteInvoice(e, invoice.id)}
-  disabled={deletingId === invoice.id}
-  className="px-2 h-6 flex items-center justify-center rounded bg-error-bg text-error-text hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-semibold"
->
-  {deletingId === invoice.id ? '...' : 'Yes'}
-</button>
-<button
-  onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
-  className="px-2 h-6 flex items-center justify-center rounded bg-border-light text-muted hover:text-heading transition text-[10px] font-semibold"
->
-  No
-</button>
+      <button
+        onClick={e => handleDeleteInvoice(e, invoice.id)}
+        disabled={deletingId === invoice.id}
+        title="Confirm delete"
+        className="w-6 h-6 flex items-center justify-center rounded bg-error-bg text-error-text hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        {deletingId === invoice.id ? (
+          <span className="text-[10px]">...</span>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        )}
+      </button>
       <button
         onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
         title="Cancel"
@@ -274,14 +268,11 @@ export default function InvoicesPage() {
     </span>
   ) : (
     <button
-  onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
-  title="Delete"
-  className="w-6 h-6 flex items-center justify-center rounded hover:bg-error-bg text-error-text"
->
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-  </svg>
-</button>
+      onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
+      className="text-error-text hover:opacity-70 text-xs font-semibold transition underline"
+    >
+      Delete
+    </button>
   )
 )}
           </div>
@@ -467,18 +458,20 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <>
-            <div className="bg-surface rounded-lg border border-border mb-4">
-  <table className="w-full table-fixed">
+            <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
+  <table className="w-full min-w-[900px]">
                 <thead className="bg-border-light">
-                 <tr>
-  <th className="text-left px-2 py-3 text-muted text-xs w-20">ID</th>
-  <th className="text-left px-2 py-3 text-muted text-xs w-20">Date</th>
-  <th className="text-left px-2 py-3 text-muted text-xs w-16">Type</th>
-  <th className="text-left px-2 py-3 text-muted text-xs">Buyer</th>
-  <th className="text-left px-2 py-3 text-muted text-xs w-24">Amount</th>
-  <th className="text-left px-2 py-3 text-muted text-xs w-24">Status</th>
-  <th className="text-left px-2 py-3 text-muted text-xs w-16">Action</th>
-</tr>
+                  <tr>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Invoice ID</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Date</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Type</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Buyer</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Amount</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Tax</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">Status</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm">FBR No.</th>
+                    <th className="text-left px-6 py-4 text-muted text-sm min-w-[200px]">Action</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {filtered.map(parent => (
