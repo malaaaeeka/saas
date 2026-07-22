@@ -9,7 +9,7 @@ import {
   getStats,
   downloadInvoicePdf,
   submitToFBR,
-  sendInvoiceEmail
+  sendInvoiceEmail,
   deleteInvoice
 } from '../controllers/invoice.controller'
 import { authenticate } from '../middleware/auth.middleware'
