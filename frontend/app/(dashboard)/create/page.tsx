@@ -304,7 +304,7 @@ const DEFAULT_ITEM = {
   hsCodeDescription: '',
   productCode: '',
   description: '',
-  quantity: 1,
+  quantity: 0,
   uom: 'KG',
   rate: 0,
   taxRate: '18%',
@@ -1026,14 +1026,14 @@ setTimeout(() => {
                         <label className="block text-xs text-muted mb-1">Qty</label>
                         <input type="number" value={item.quantity}
                           onChange={e => handleItemChange(index, 'quantity', e.target.value)}
-                          placeholder="1"
+                          placeholder=""
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Unit Price</label>
                         <input type="number" value={item.rate}
                           onChange={e => handleItemChange(index, 'rate', e.target.value)}
-                          placeholder="0"
+                          placeholder=""
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
                       </div>
                       <div>
