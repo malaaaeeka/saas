@@ -809,9 +809,9 @@ setTimeout(() => {
       <p className="text-heading font-semibold text-sm">Upload Excel to fill the form</p>
       <p className="text-muted text-xs mt-0.5">Drop in a filled template and every field below fills in automatically</p>
     </div>
-    <span className="flex-shrink-0 text-xs font-medium text-muted group-hover:text-heading transition-colors border border-border group-hover:border-heading rounded-lg px-3 py-1.5">
-      Browse
-    </span>
+  <span className="flex-shrink-0 text-xs font-medium text-muted group-hover:text-heading transition-colors border border-border rounded-lg px-3 py-1.5">
+  Browse
+</span>
   </button>
 </div>
 
