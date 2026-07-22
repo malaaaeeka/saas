@@ -248,20 +248,19 @@ export default function InvoicesPage() {
        {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
   confirmDeleteId === invoice.id ? (
     <span className="flex items-center gap-1.5">
-      <button
-        onClick={e => handleDeleteInvoice(e, invoice.id)}
-        disabled={deletingId === invoice.id}
-        title="Confirm delete"
-        className="w-6 h-6 flex items-center justify-center rounded bg-error-bg text-error-text hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {deletingId === invoice.id ? (
-          <span className="text-[10px]">...</span>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
-      </button>
+     <button
+  onClick={e => handleDeleteInvoice(e, invoice.id)}
+  disabled={deletingId === invoice.id}
+  className="px-2 h-6 flex items-center justify-center rounded bg-error-bg text-error-text hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-semibold"
+>
+  {deletingId === invoice.id ? '...' : 'Yes'}
+</button>
+<button
+  onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
+  className="px-2 h-6 flex items-center justify-center rounded bg-border-light text-muted hover:text-heading transition text-[10px] font-semibold"
+>
+  No
+</button>
       <button
         onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
         title="Cancel"
