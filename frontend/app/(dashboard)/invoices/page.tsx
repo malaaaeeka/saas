@@ -20,6 +20,10 @@ export default function InvoicesPage() {
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [invoiceCounts, setInvoiceCounts] = useState<{ total: number, byType: Record<string, number>, byStatus: Record<string, number> }>({ total: 0, byType: {}, byStatus: {} })
 
+  // ---- delete flow ----
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
@@ -144,6 +148,32 @@ export default function InvoicesPage() {
     }
   }
 
+  const handleDeleteInvoice = async (e: React.MouseEvent, invoiceId: string) => {
+    e.stopPropagation()
+    const token = localStorage.getItem('token')
+    setDeletingId(invoiceId)
+    setConfirmDeleteId(null)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoiceId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setInvoices(prev => prev.filter(inv => inv.id !== invoiceId))
+        setTotalCount(prev => Math.max(0, prev - 1))
+        if (token) fetchInvoiceCounts(token)
+      } else {
+        alert(data.message || 'Failed to delete invoice')
+      }
+    } catch (err) {
+      console.log('Failed to delete invoice')
+      alert('Failed to delete invoice. Please try again.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const tree = buildInvoiceTree(invoices)
   const filtered = applyFilters(tree)
   const totalPages = Math.ceil(totalCount / PAGE_SIZE)
@@ -195,6 +225,7 @@ export default function InvoicesPage() {
         </td>
         <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
         <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center gap-3">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
            <button
   onClick={e => handleSubmitFBR(e, invoice.id)}
@@ -206,6 +237,35 @@ export default function InvoicesPage() {
           {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
           {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
           {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
+
+          {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
+            confirmDeleteId === invoice.id ? (
+              <span className="flex items-center gap-2 text-xs">
+                <span className="text-muted">Delete?</span>
+                <button
+                  onClick={e => handleDeleteInvoice(e, invoice.id)}
+                  disabled={deletingId === invoice.id}
+                  className="text-error-text font-semibold underline hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {deletingId === invoice.id ? '...' : 'Yes'}
+                </button>
+                <button
+                  onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
+                  className="text-muted font-semibold underline hover:opacity-70 transition"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
+                className="text-error-text hover:opacity-70 text-xs font-semibold transition underline"
+              >
+                Delete
+              </button>
+            )
+          )}
+          </div>
         </td>
       </tr>
     )
