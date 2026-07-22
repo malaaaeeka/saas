@@ -912,15 +912,21 @@ setTimeout(() => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted mb-2">Buyer NTN</label>
-                  <input type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
-                    placeholder="7 digit NTN (optional)"
+                  <label className="block text-sm text-muted mb-2">
+                    Buyer NTN {formData.buyerType === 'Registered' && <span className="text-error-text">*</span>}
+                  </label>
+                  <input ref={buyerNtnRef} type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
+                    placeholder="7 digit NTN"
+                    required={formData.buyerType === 'Registered'}
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
-                  <label className="block text-sm text-muted mb-2">Buyer CNIC</label>
-                  <input type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
-                    placeholder="13 digit CNIC (optional)"
+                  <label className="block text-sm text-muted mb-2">
+                    Buyer CNIC {formData.buyerType !== 'Registered' && <span className="text-error-text">*</span>}
+                  </label>
+                  <input ref={buyerCnicRef} type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
+                    placeholder="13 digit CNIC"
+                    required={formData.buyerType !== 'Registered'}
                     className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent" />
                 </div>
                 <div>
