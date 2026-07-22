@@ -343,12 +343,34 @@ const DEFAULT_ITEM = {
 
 type FormError = {
   message: string
-  scrollTarget: 'errorBox' | 'sellerRegNo' | 'buyerNtn' | 'buyerCnic' | { item: number }
+  scrollTarget: 'errorBox' | 'sellerRegNo' | 'buyerNtn' | 'buyerCnic'
+    | 'invoiceType' | 'documentType' | 'originationProvince' | 'destinationProvince' | 'buyerType'
+    | { item: number }
 }
 
 function validateForm(formData: any, amendmentType: string | null): FormError | null {
   if (formData.items.length === 0) {
     return { message: 'Add at least one item to the invoice', scrollTarget: 'errorBox' }
+  }
+
+  if (!formData.invoiceType.trim()) {
+    return { message: 'Invoice Type is required', scrollTarget: 'invoiceType' }
+  }
+
+  if (!formData.documentType.trim()) {
+    return { message: 'Document Type is required', scrollTarget: 'documentType' }
+  }
+
+  if (!formData.originationProvince.trim()) {
+    return { message: 'Sale Origination Province is required', scrollTarget: 'originationProvince' }
+  }
+
+  if (!formData.destinationProvince.trim()) {
+    return { message: 'Destination of Supply is required', scrollTarget: 'destinationProvince' }
+  }
+
+  if (!formData.buyerType.trim()) {
+    return { message: 'Buyer Type is required', scrollTarget: 'buyerType' }
   }
 
   if (!formData.sellerRegNo.trim()) {
@@ -395,6 +417,11 @@ function CreateInvoicePageContent() {
   const [notWhitelisted, setNotWhitelisted] = useState(false)
   const saveAsDraftRef = useRef(false)
   const errorBoxRef = useRef<HTMLDivElement>(null)
+  const invoiceTypeRef = useRef<HTMLDivElement>(null)
+  const documentTypeRef = useRef<HTMLDivElement>(null)
+  const originationProvinceRef = useRef<HTMLDivElement>(null)
+  const destinationProvinceRef = useRef<HTMLDivElement>(null)
+  const buyerTypeRef = useRef<HTMLDivElement>(null)
   const sellerRegNoRef = useRef<HTMLInputElement>(null)
 const buyerNtnRef = useRef<HTMLInputElement>(null)
 const buyerCnicRef = useRef<HTMLInputElement>(null)
@@ -521,9 +548,10 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
   ...prev,
   sellerRegNo: data.data.ntn || data.data.registrationNo || prev.sellerRegNo
 }))
-      } else {
-        setError('Please setup your business profile first')
-      }
+     } else {
+  // business not set up yet — the !business block below already
+  // shows the "setup your profile" message, so no need to also setError here
+}
     } catch (err) {
       setError('Failed to load business profile')
     }
@@ -710,6 +738,11 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       setLoading(false)
       setTimeout(() => {
         if (formError.scrollTarget === 'errorBox') errorBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'invoiceType') invoiceTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'documentType') documentTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'originationProvince') originationProvinceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'destinationProvince') destinationProvinceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        else if (formError.scrollTarget === 'buyerType') buyerTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         else if (formError.scrollTarget === 'sellerRegNo') { sellerRegNoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); sellerRegNoRef.current?.focus() }
         else if (formError.scrollTarget === 'buyerNtn') { buyerNtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerNtnRef.current?.focus() }
         else if (formError.scrollTarget === 'buyerCnic') { buyerCnicRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerCnicRef.current?.focus() }
@@ -888,27 +921,30 @@ setTimeout(() => {
               <div className="grid grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Type *</label>
-                 <StyledSelect
-  options={[
-    { value: 'SALE', label: 'Sale' },
-    { value: 'PURCHASE', label: 'Purchase' },
-    { value: 'DEBIT_NOTE', label: 'Debit Note' },
-    { value: 'CREDIT_NOTE', label: 'Credit Note' },
-  ]}
-  value={formData.invoiceType ? { value: formData.invoiceType, label: formData.invoiceType } : null}
-  onChange={opt => handleSelectChange('invoiceType', opt?.value || '')}
-  placeholder="Select invoice type"
-/>
+                  <div ref={invoiceTypeRef} className={!formData.invoiceType && error ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={[
+                        { value: 'SALE', label: 'Sale' },
+                        { value: 'PURCHASE', label: 'Purchase' },
+                        { value: 'DEBIT_NOTE', label: 'Debit Note' },
+                        { value: 'CREDIT_NOTE', label: 'Credit Note' },
+                      ]}
+                      value={formData.invoiceType ? { value: formData.invoiceType, label: formData.invoiceType } : null}
+                      onChange={opt => handleSelectChange('invoiceType', opt?.value || '')}
+                      placeholder="Select invoice type"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Document Type *</label>
-                       <StyledSelect
-  options={toOptions(DOCUMENT_TYPES)}
-  value={formData.documentType ? { value: formData.documentType, label: formData.documentType } : null}
-  onChange={opt => handleSelectChange('documentType', opt?.value || '')}
-  placeholder="Select document type"
-/>
-        
+                  <div ref={documentTypeRef} className={!formData.documentType && error ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(DOCUMENT_TYPES)}
+                      value={formData.documentType ? { value: formData.documentType, label: formData.documentType } : null}
+                      onChange={opt => handleSelectChange('documentType', opt?.value || '')}
+                      placeholder="Select document type"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Date *</label>
@@ -929,21 +965,25 @@ setTimeout(() => {
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Sale Origination Province of Supplier *</label>
-                 <StyledSelect
-  options={toOptions(PROVINCES)}
-  value={formData.originationProvince ? { value: formData.originationProvince, label: formData.originationProvince } : null}
-  onChange={opt => handleSelectChange('originationProvince', opt?.value || '')}
-  placeholder="Select origination province"
-/>
+                  <div ref={originationProvinceRef} className={!formData.originationProvince && error ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(PROVINCES)}
+                      value={formData.originationProvince ? { value: formData.originationProvince, label: formData.originationProvince } : null}
+                      onChange={opt => handleSelectChange('originationProvince', opt?.value || '')}
+                      placeholder="Select origination province"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Destination of Supply *</label>
-                  <StyledSelect
-  options={toOptions(PROVINCES)}
-  value={formData.destinationProvince ? { value: formData.destinationProvince, label: formData.destinationProvince } : null}
-  onChange={opt => handleSelectChange('destinationProvince', opt?.value || '')}
-  placeholder="Select destination province"
-/>
+                  <div ref={destinationProvinceRef} className={!formData.destinationProvince && error ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(PROVINCES)}
+                      value={formData.destinationProvince ? { value: formData.destinationProvince, label: formData.destinationProvince } : null}
+                      onChange={opt => handleSelectChange('destinationProvince', opt?.value || '')}
+                      placeholder="Select destination province"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -976,12 +1016,14 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
-                <StyledSelect
-  options={toOptions(BUYER_TYPES)}
-  value={formData.buyerType ? { value: formData.buyerType, label: formData.buyerType } : null}
-  onChange={opt => handleSelectChange('buyerType', opt?.value || '')}
-  placeholder="Select buyer type"
-/>
+                  <div ref={buyerTypeRef} className={!formData.buyerType && error ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(BUYER_TYPES)}
+                      value={formData.buyerType ? { value: formData.buyerType, label: formData.buyerType } : null}
+                      onChange={opt => handleSelectChange('buyerType', opt?.value || '')}
+                      placeholder="Select buyer type"
+                    />
+                  </div>
                 </div>
               </div>
 
