@@ -753,9 +753,23 @@ setTimeout(() => {
 
 <div className="mb-6">
   <input type="file" accept=".xlsx,.xls" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
-  <button type="button" onClick={() => fileInputRef.current?.click()}
-    className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-4 rounded-lg text-sm transition">
-     Upload Excel to Fill Form
+  <button
+    type="button"
+    onClick={() => fileInputRef.current?.click()}
+    className="w-full group bg-surface border border-dashed border-border hover:border-heading rounded-xl px-6 py-5 shadow-sm transition-colors flex items-center gap-4 text-left"
+  >
+    <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-border-light group-hover:bg-heading/5 flex items-center justify-center transition-colors">
+      <svg className="w-5 h-5 text-muted group-hover:text-heading transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+      </svg>
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-heading font-semibold text-sm">Upload Excel to fill the form</p>
+      <p className="text-muted text-xs mt-0.5">Drop in a filled template and every field below fills in automatically</p>
+    </div>
+    <span className="flex-shrink-0 text-xs font-medium text-muted group-hover:text-heading transition-colors border border-border group-hover:border-heading rounded-lg px-3 py-1.5">
+      Browse
+    </span>
   </button>
 </div>
 
