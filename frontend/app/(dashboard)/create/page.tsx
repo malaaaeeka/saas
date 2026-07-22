@@ -5,6 +5,7 @@ import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
 import ClientAutocomplete from '@/components/ui/ClientAutocomplete'
 import { useRouter, useSearchParams } from 'next/navigation'
 import * as XLSX from 'xlsx'
+import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
 
 
@@ -532,6 +533,10 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
+  const handleSelectChange = (name: string, value: string) => {
+  setFormData(prev => ({ ...prev, [name]: value }))
+}
+
   const handleItemChange = (index: number, field: string, value: any) => {
     const newItems = [...formData.items]
     newItems[index] = { ...newItems[index], [field]: value }
@@ -892,10 +897,11 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Document Type *</label>
-                  <select name="documentType" value={formData.documentType} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {DOCUMENT_TYPES.map(dt => <option key={dt} value={dt}>{dt}</option>)}
-                  </select>
+                        <StyledSelect
+          options={toOptions(DOCUMENT_TYPES)}
+          value={{ value: formData.documentType, label: formData.documentType }}
+          onChange={opt => handleSelectChange('documentType', opt?.value || '')}
+        />
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Invoice Date *</label>
@@ -904,27 +910,30 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Sale Type</label>
-                  <select name="saleType" value={formData.saleType} onChange={handleInputChange}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {SALE_TYPES.map(st => <option key={st} value={st}>{st}</option>)}
-                  </select>
+                  <StyledSelect
+  options={toOptions(SALE_TYPES)}
+  value={{ value: formData.saleType, label: formData.saleType }}
+  onChange={opt => handleSelectChange('saleType', opt?.value || '')}
+/>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Sale Origination Province of Supplier *</label>
-                  <select name="originationProvince" value={formData.originationProvince} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                 <StyledSelect
+  options={toOptions(PROVINCES)}
+  value={{ value: formData.originationProvince, label: formData.originationProvince }}
+  onChange={opt => handleSelectChange('originationProvince', opt?.value || '')}
+/>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Destination of Supply *</label>
-                  <select name="destinationProvince" value={formData.destinationProvince} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {PROVINCES.map(p => <option key={p} value={p}>{p}</option>)}
-                  </select>
+                  <StyledSelect
+  options={toOptions(PROVINCES)}
+  value={{ value: formData.destinationProvince, label: formData.destinationProvince }}
+  onChange={opt => handleSelectChange('destinationProvince', opt?.value || '')}
+/>
                 </div>
               </div>
 
@@ -957,10 +966,11 @@ setTimeout(() => {
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
-                  <select name="buyerType" value={formData.buyerType} onChange={handleInputChange} required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent">
-                    {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                 <StyledSelect
+  options={toOptions(BUYER_TYPES)}
+  value={{ value: formData.buyerType, label: formData.buyerType }}
+  onChange={opt => handleSelectChange('buyerType', opt?.value || '')}
+/>
                 </div>
               </div>
 
@@ -1073,17 +1083,19 @@ setTimeout(() => {
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
                         <label className="block text-xs text-muted mb-1">UoM</label>
-                        <select value={item.uom} onChange={e => handleItemChange(index, 'uom', e.target.value)}
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
-                          {UOMS.map(u => <option key={u} value={u}>{u}</option>)}
-                        </select>
+                       <StyledSelect
+  options={toOptions(UOMS)}
+  value={{ value: item.uom, label: item.uom }}
+  onChange={opt => handleItemChange(index, 'uom', opt?.value || '')}
+/>
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Rate (Tax %) — fixed-charge rates won&apos;t auto-calc sales tax</label>
-                        <select value={item.taxRate} onChange={e => handleItemChange(index, 'taxRate', e.target.value)}
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
-                          {RATES.map(r => <option key={r} value={r}>{r}</option>)}
-                        </select>
+                       <StyledSelect
+  options={toOptions(RATES)}
+  value={{ value: item.taxRate, label: item.taxRate }}
+  onChange={opt => handleItemChange(index, 'taxRate', opt?.value || '')}
+/>
                       </div>
                     </div>
 
@@ -1091,10 +1103,11 @@ setTimeout(() => {
                     {formData.saleType === 'Petroleum Products' && (
                       <div className="mt-3">
                         <label className="block text-xs text-muted mb-1">Petroleum Levy on</label>
-                        <select value={item.petroleumLevyOn} onChange={e => handleItemChange(index, 'petroleumLevyOn', e.target.value)}
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
-                          {PETROLEUM_LEVY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                        </select>
+                       <StyledSelect
+  options={toOptions(PETROLEUM_LEVY_OPTIONS)}
+  value={{ value: item.petroleumLevyOn, label: item.petroleumLevyOn }}
+  onChange={opt => handleItemChange(index, 'petroleumLevyOn', opt?.value || '')}
+/>
                         <p className="text-xs text-muted mt-1">Whether the levy applies to a direct sale or retail sale</p>
                       </div>
                     )}
@@ -1151,10 +1164,11 @@ setTimeout(() => {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs text-muted mb-1">SRO No. / Schedule No.</label>
-                          <select value={item.sroSchedule} onChange={e => handleItemChange(index, 'sroSchedule', e.target.value)}
-                            className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
-                            {SRO_SCHEDULES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                         <StyledSelect
+  options={toOptions(SRO_SCHEDULES)}
+  value={{ value: item.sroSchedule, label: item.sroSchedule }}
+  onChange={opt => handleItemChange(index, 'sroSchedule', opt?.value || '')}
+/>
                           <p className="text-xs text-muted mt-1">Required for exempt/zero-rated/reduced-rate items</p>
                         </div>
                         <div>
@@ -1172,10 +1186,11 @@ setTimeout(() => {
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs text-muted mb-1">Reason</label>
-                            <select value={item.reason} onChange={e => handleItemChange(index, 'reason', e.target.value)}
-                              className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent">
-                              {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
-                            </select>
+                           <StyledSelect
+  options={toOptions(REASONS)}
+  value={{ value: item.reason, label: item.reason }}
+  onChange={opt => handleItemChange(index, 'reason', opt?.value || '')}
+/>
                             <p className="text-xs text-muted mt-1">FBR-approved reason code for this line&apos;s adjustment</p>
                           </div>
                           <div>
