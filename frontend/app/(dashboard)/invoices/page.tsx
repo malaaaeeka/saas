@@ -224,8 +224,8 @@ export default function InvoicesPage() {
           </span>
         </td>
         <td className="px-6 py-4 font-mono text-xs text-link">{invoice.fbrInvoiceNo || '—'}</td>
-        <td className="px-6 py-4 whitespace-nowrap min-w-[260px]" onClick={e => e.stopPropagation()}>
-  <div className="flex items-center gap-3">
+        <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
+  <div className="flex items-center gap-2 flex-wrap">
           {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
            <button
   onClick={e => handleSubmitFBR(e, invoice.id)}
@@ -273,7 +273,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="min-h-screen bg-background text-heading p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -449,18 +449,18 @@ export default function InvoicesPage() {
         ) : (
           <>
             <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
-  <table className="w-full min-w-[900px]">
+  <table className="w-full">
                 <thead className="bg-border-light">
                   <tr>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Invoice ID</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Date</th>
+                   
+                    <th className="text-left px-4 py-4 text-muted text-sm">Invoice ID</th>
                     <th className="text-left px-6 py-4 text-muted text-sm">Type</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Buyer</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Amount</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Tax</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">Status</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm">FBR No.</th>
-                    <th className="text-left px-6 py-4 text-muted text-sm min-w-[260px]">Action</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm">Buyer</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm">Amount</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm">Tax</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm">Status</th>
+                   <th className="text-left px-4 py-4 text-muted text-sm">FBR No.</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm">Action</th>
                   </tr>
                 </thead>
                 <tbody>
