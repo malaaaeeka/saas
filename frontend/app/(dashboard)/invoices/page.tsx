@@ -239,30 +239,12 @@ export default function InvoicesPage() {
           {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
 
    {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
-  confirmDeleteId === invoice.id ? (
-    <span className="flex items-center gap-2">
-      <button
-        onClick={e => handleDeleteInvoice(e, invoice.id)}
-        disabled={deletingId === invoice.id}
-        className="text-muted hover:text-heading text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        {deletingId === invoice.id ? '...' : 'Yes'}
-      </button>
-      <button
-        onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
-        className="text-muted hover:text-heading text-xs font-semibold transition underline"
-      >
-        No
-      </button>
-    </span>
-  ) : (
-    <button
-      onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
-      className="text-muted hover:text-error-text text-xs font-semibold transition underline"
-    >
-      Delete
-    </button>
-  )
+  <button
+    onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }}
+    className="text-muted hover:text-error-text text-xs font-semibold transition underline"
+  >
+    Delete
+  </button>
 )}
           </div>
         </td>
@@ -544,6 +526,39 @@ export default function InvoicesPage() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation modal */}
+      {confirmDeleteId && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-surface rounded-lg border border-border p-6 max-w-sm w-full mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-heading mb-2">Delete this invoice?</h3>
+            <p className="text-muted text-sm mb-6">
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 rounded-lg text-sm border border-border text-body hover:border-heading transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={e => handleDeleteInvoice(e, confirmDeleteId)}
+                disabled={deletingId === confirmDeleteId}
+                className="px-4 py-2 rounded-lg text-sm bg-error-bg text-error-text font-semibold hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deletingId === confirmDeleteId ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
