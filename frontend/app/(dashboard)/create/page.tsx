@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
 import ClientAutocomplete from '@/components/ui/ClientAutocomplete'
 import { useRouter, useSearchParams } from 'next/navigation'
+import * as XLSX from 'xlsx'
 
 
 
@@ -336,6 +337,7 @@ function CreateInvoicePageContent() {
   const errorBoxRef = useRef<HTMLDivElement>(null)
   const sellerRegNoRef = useRef<HTMLInputElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
     sellerRegNo: '',
@@ -539,6 +541,96 @@ function CreateInvoicePageContent() {
     return { totalAmount, totalSalesTax, totalFed, totalDiscount, totalExtraTax, totalFurtherTax, totalPfad, totalStWithheld }
   }
 
+  function excelDateToInputValue(value: any): string {
+  if (typeof value === 'number') {
+    const parsed = XLSX.SSF.parse_date_code(value)
+    const mm = String(parsed.m).padStart(2, '0')
+    const dd = String(parsed.d).padStart(2, '0')
+    return `${parsed.y}-${mm}-${dd}`
+  }
+  const d = new Date(value)
+  return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : ''
+}
+
+const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  setError('')
+  setSuccess('')
+
+  try {
+    const buf = await file.arrayBuffer()
+    const workbook = XLSX.read(buf, { type: 'array' })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+
+    if (rows.length === 0) {
+      setError('That sheet has no data rows')
+      return
+    }
+
+    const first = rows[0]
+
+    const items = rows.map((row) => {
+      const quantity = Number(row['Quantity'] || 0)
+      const rate = Number(row['Rate'] || 0)
+      const taxRate = String(row['TaxRate'] || '18%')
+      const totalAmount = quantity * rate
+      const pct = rateToPercent(taxRate)
+
+      return {
+        ...DEFAULT_ITEM,
+        documentNumber: String(row['DocumentNumber'] || ''),
+        invoiceRefNo: String(row['InvoiceRefNo'] || originalFbrNo || ''),
+        hsCode: String(row['HSCode'] || ''),
+        hsCodeDescription: String(row['HSCodeDescription'] || ''),
+        description: String(row['ProductDescription'] || ''),
+        quantity,
+        uom: String(row['UoM'] || 'KG'),
+        rate,
+        taxRate,
+        totalAmount,
+        salesTax: pct !== null ? totalAmount * pct : 0,
+        fixedNotifiedValue: Number(row['FixedNotifiedValue'] || 0),
+        extraTax: Number(row['ExtraTax'] || 0),
+        furtherTax: Number(row['FurtherTax'] || 0),
+        pfadValue: Number(row['PfadValue'] || 0),
+        stWithheld: Number(row['StWithheld'] || 0),
+        fed: Number(row['Fed'] || 0),
+        withholdingTax: Number(row['WithholdingTax'] || 0),
+        discount: Number(row['Discount'] || 0),
+        sroSchedule: String(row['SROSchedule'] || SRO_SCHEDULES[0]),
+        itemSNo: String(row['ItemSNo'] || ITEM_SR_NOS[0]),
+        reason: String(row['Reason'] || REASONS[0]),
+        reasonRemarks: String(row['ReasonRemarks'] || ''),
+      }
+    })
+
+    setFormData(prev => ({
+      ...prev,
+      sellerRegNo: String(first['SellerRegNo'] || prev.sellerRegNo),
+      invoiceDate: first['InvoiceDate'] ? excelDateToInputValue(first['InvoiceDate']) : prev.invoiceDate,
+      documentType: String(first['DocumentType'] || prev.documentType),
+      saleType: String(first['SaleType'] || prev.saleType),
+      originationProvince: String(first['OriginationProvince'] || prev.originationProvince),
+      destinationProvince: String(first['DestinationProvince'] || prev.destinationProvince),
+      buyerName: String(first['BuyerName'] || prev.buyerName),
+      buyerNtn: String(first['BuyerNTN'] || prev.buyerNtn),
+      buyerCnic: String(first['BuyerCNIC'] || prev.buyerCnic),
+      buyerType: String(first['BuyerType'] || prev.buyerType),
+      buyerId: null, // uploaded name isn't linked to a saved Buyer record
+      items,
+    }))
+
+    setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
+  } catch (err) {
+    console.error(err)
+    setError('Could not read that file — make sure it matches the template format')
+  } finally {
+    e.target.value = '' // lets the same filename be re-uploaded later
+  }
+}
+
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setLoading(true)
@@ -658,6 +750,14 @@ setTimeout(() => {
             {amendmentType ? `Amendment for FBR Invoice: ${originalFbrNo}` : 'Create invoices for your business'}
           </p>
         </div>
+
+<div className="mb-6">
+  <input type="file" accept=".xlsx,.xls" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
+  <button type="button" onClick={() => fileInputRef.current?.click()}
+    className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-4 rounded-lg text-sm transition">
+     Upload Excel to Fill Form
+  </button>
+</div>
 
         {amendmentType && (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl p-4 mb-6 shadow-sm">
