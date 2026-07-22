@@ -602,7 +602,9 @@ const res = await fetch(url, {
       ? 'Invoice updated successfully'
       : 'Invoice created and sent to FBR'
 )
-        setTimeout(() => router.push('/invoices'), 2000)
+setTimeout(() => {
+  router.push(editInvoiceId ? `/invoices/${editInvoiceId}` : '/invoices')
+}, 2000)
       } else {
         setError(data.message || 'Failed to create invoice')
       }

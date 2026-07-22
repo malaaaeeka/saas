@@ -194,7 +194,7 @@ export default function InvoiceDetailPage() {
  const amendmentWindow = getAmendmentWindow()
   const canEditDirectly =
     invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT' ||
-    ((invoice.status === 'SENT' || invoice.status === 'AMENDED') && invoice.sentAt && !amendmentWindow)
+    ((invoice.status === 'SENT' || invoice.status === 'AMENDED') && !!amendmentWindow)
   const typeInfo = getTypeLabel(invoice.invoiceType)
   return (
     <div className="min-h-screen bg-background text-heading p-8">
