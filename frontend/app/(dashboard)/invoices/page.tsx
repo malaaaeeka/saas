@@ -238,32 +238,21 @@ export default function InvoicesPage() {
           {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
           {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
 
-       {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
+   {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && (
   confirmDeleteId === invoice.id ? (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-center gap-2">
       <button
         onClick={e => handleDeleteInvoice(e, invoice.id)}
         disabled={deletingId === invoice.id}
-        title="Confirm delete"
-        className="w-6 h-6 flex items-center justify-center rounded bg-error-bg text-error-text hover:opacity-70 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {deletingId === invoice.id ? (
-          <span className="text-[10px]">...</span>
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        )}
+        {deletingId === invoice.id ? '...' : 'Yes'}
       </button>
       <button
         onClick={e => { e.stopPropagation(); setConfirmDeleteId(null) }}
-        title="Cancel"
-        className="w-6 h-6 flex items-center justify-center rounded bg-border-light text-muted hover:text-heading transition"
+        className="text-muted hover:text-heading text-xs font-semibold transition underline"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </svg>
+        No
       </button>
     </span>
   ) : (
