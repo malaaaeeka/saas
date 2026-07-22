@@ -2,6 +2,7 @@ import { Router } from 'express'
 
 import {
   createInvoice,
+  updateInvoice,
   getInvoices,
   getInvoiceById,
   getInvoiceCounts,
@@ -16,6 +17,7 @@ import { authenticate } from '../middleware/auth.middleware'
 const router = Router()
 
 router.post('/', authenticate, createInvoice)
+router.put('/:id', authenticate, updateInvoice)
 router.get('/', authenticate, getInvoices)
 router.get('/counts', authenticate, getInvoiceCounts)
 router.get('/stats', authenticate, getStats)

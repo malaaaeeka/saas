@@ -191,9 +191,11 @@ export default function InvoiceDetailPage() {
   const totalStWht      = invoice.items?.reduce((sum: number, item: any) => sum + Number(item.stWithheld || 0), 0) || 0
 
   const grandTotal = Number(invoice.totalAmount) + Number(invoice.totalSalesTax) + Number(invoice.totalFed) - Number(invoice.totalDiscount)
-  const amendmentWindow = getAmendmentWindow()
+ const amendmentWindow = getAmendmentWindow()
+  const canEditDirectly =
+    invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT' ||
+    ((invoice.status === 'SENT' || invoice.status === 'AMENDED') && invoice.sentAt && !amendmentWindow)
   const typeInfo = getTypeLabel(invoice.invoiceType)
-
   return (
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-6xl mx-auto">
@@ -481,25 +483,27 @@ export default function InvoiceDetailPage() {
           )}
         </div>
 
-        {/* Action Buttons */}
-<div className="flex flex-wrap items-start gap-3">
-  {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
-    <>
-      <button
-        onClick={handleSubmitToFBR}
-        disabled={submitLoading}
-        className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition shadow-sm"
-      >
-        {submitLoading ? 'Submitting...' : 'Submit to FBR'}
-      </button>
-      <button
-        onClick={() => router.push(`/create?edit=${invoice.id}`)}
-        className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
-      >
-        Edit Invoice
-      </button>
-    </>
-  )}
+{/* Action Buttons */}
+        <div className="flex flex-wrap items-start gap-3">
+          {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
+            <button
+              onClick={handleSubmitToFBR}
+              disabled={submitLoading}
+              className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition shadow-sm"
+            >
+              {submitLoading ? 'Submitting...' : 'Submit to FBR'}
+            </button>
+          )}
+
+          {canEditDirectly && (
+  <button
+    onClick={() => router.push(`/create?edit=${invoice.id}`)}
+    className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Edit Invoice
+  </button>
+)}
+   
 
           <button
             onClick={handleDownloadPDF}
