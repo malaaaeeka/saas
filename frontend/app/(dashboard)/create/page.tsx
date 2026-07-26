@@ -732,8 +732,11 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const headerIndex = buildHeaderIndex(rawHeaders)
     const missingRequired = REQUIRED_FIELDS.filter(f => !headerIndex[f])
 
-    if (missingRequired.length > 0) {
-      setError(`This file doesn't match the invoice template — couldn't find column(s): ${missingRequired.join(', ')}. Please check your column headers.`)
+    // Only hard-reject if NONE of the required fields matched at all —
+    // that means this is almost certainly the wrong file entirely (like
+    // a totally unrelated spreadsheet), so there's nothing useful to import.
+    if (missingRequired.length === REQUIRED_FIELDS.length) {
+      setError(`This file doesn't match the invoice template — none of the expected columns (${REQUIRED_FIELDS.join(', ')}) were found. Please check your column headers or use the template.`)
       e.target.value = ''
       return
     }
@@ -799,7 +802,13 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       items,
     }))
 
-    setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
+    if (missingRequired.length > 0) {
+      setSuccess(
+        `Loaded ${items.length} item(s) from ${file.name}. Note: couldn't find column(s) ${missingRequired.join(', ')} — please fill these in manually before submitting.`
+      )
+    } else {
+      setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
+    }
   } catch (err) {
     console.error(err)
     setError('Could not read that file — make sure it matches the template format.')
