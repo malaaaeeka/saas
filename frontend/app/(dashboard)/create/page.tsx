@@ -259,6 +259,60 @@ const NUMERIC_ITEM_FIELDS = [
   'withholdingTax', 'discount'
 ] as const
 
+const ALIAS_MAP: Record<string, string[]> = {
+  sellerRegNo:         ['sellerregno', 'sellerregistrationno', 'sellerregistrationnumber', 'ntn', 'registrationno'],
+  invoiceDate:         ['invoicedate', 'date'],
+  documentType:        ['documenttype', 'invoicedocumenttype'],
+  saleType:            ['saletype'],
+  originationProvince: ['originationprovince', 'saleoriginationprovince', 'originprovince'],
+  destinationProvince: ['destinationprovince', 'destinationofsupply'],
+  buyerName:           ['buyername', 'name'],
+  buyerNtn:            ['buyerntn', 'buyerregistrationno'],
+  buyerCnic:           ['buyercnic', 'cnic'],
+  buyerType:           ['buyertype'],
+  documentNumber:      ['documentnumber', 'docnumber', 'invoiceno', 'invoicenumber'],
+  invoiceRefNo:        ['invoicerefno', 'invoicereferenceno', 'originalinvoiceno'],
+  hsCode:              ['hscode'],
+  hsCodeDescription:   ['hscodedescription'],
+  productDescription:  ['productdescription', 'description', 'productname'],
+  quantity:            ['quantity', 'qty', 'quantitysupplied'],
+  uom:                 ['uom', 'unit', 'unitofmeasurement'],
+  rate:                ['rate', 'unitprice', 'price'],
+  taxRate:             ['taxrate', 'salestaxrate', 'rateoftax'],
+  fixedNotifiedValue:  ['fixednotifiedvalue', 'fixedvalue', 'notifiedvalue', 'retailprice'],
+  extraTax:            ['extratax'],
+  furtherTax:          ['furthertax'],
+  pfadValue:           ['pfadvalue', 'totalvaluepfad'],
+  stWithheld:          ['stwithheld', 'salestaxwithheld'],
+  fed:                 ['fed'],
+  withholdingTax:      ['withholdingtax'],
+  discount:            ['discount'],
+  sroSchedule:         ['sroschedule', 'sronoschedule', 'sronoscheduleno'],
+  itemSNo:             ['itemsno', 'itemserialno', 'clauseno'],
+  reason:              ['reason'],
+  reasonRemarks:       ['reasonremarks', 'remarks'],
+}
+
+const REQUIRED_FIELDS = ['sellerRegNo', 'quantity', 'rate', 'documentNumber'] as const
+
+function normalizeHeader(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+function buildHeaderIndex(rawHeaders: string[]): Record<string, string> {
+  const index: Record<string, string> = {}
+  for (const header of rawHeaders) {
+    const norm = normalizeHeader(header)
+    for (const [field, aliases] of Object.entries(ALIAS_MAP)) {
+      if (index[field]) continue
+      if (aliases.includes(norm)) {
+        index[field] = header
+      }
+    }
+  }
+  return index
+}
+
 function ItemSNoAutocomplete({
   value,
   onChange
@@ -655,74 +709,102 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
   try {
     const buf = await file.arrayBuffer()
-    const workbook = XLSX.read(buf, { type: 'array' })
+    // sheets: 0 -> only parse the first sheet, skip any hidden/huge sheets
+    const workbook = XLSX.read(buf, { type: 'array', sheets: 0 })
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+    const grid: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
 
-    if (rows.length === 0) {
-      setError('That sheet has no data rows')
+    if (grid.length === 0) {
+      setError('That sheet has no data.')
+      e.target.value = ''
       return
     }
 
-    const first = rows[0]
+    const rawHeaders: string[] = grid[0].map((h: any) => String(h || '').trim())
+    const dataRows = grid.slice(1).filter(row => row.some(cell => String(cell).trim() !== ''))
 
-    const items = rows.map((row) => {
-      const quantity = Number(row['Quantity'] || 0)
-      const rate = Number(row['Rate'] || 0)
-      const taxRate = String(row['TaxRate'] || '18%')
+    if (dataRows.length === 0) {
+      setError('That sheet has no data rows.')
+      e.target.value = ''
+      return
+    }
+
+    const headerIndex = buildHeaderIndex(rawHeaders)
+    const missingRequired = REQUIRED_FIELDS.filter(f => !headerIndex[f])
+
+    if (missingRequired.length > 0) {
+      setError(`This file doesn't match the invoice template — couldn't find column(s): ${missingRequired.join(', ')}. Please check your column headers.`)
+      e.target.value = ''
+      return
+    }
+
+    const get = (row: any[], field: string, fallback: any = '') => {
+      const header = headerIndex[field]
+      if (!header) return fallback
+      const colIdx = rawHeaders.indexOf(header)
+      const val = row[colIdx]
+      return val === undefined || val === '' ? fallback : val
+    }
+
+    const items = dataRows.map((row) => {
+      const quantity = Number(get(row, 'quantity', 0))
+      const rate = Number(get(row, 'rate', 0))
+      const taxRate = String(get(row, 'taxRate', '18%'))
       const totalAmount = quantity * rate
       const pct = rateToPercent(taxRate)
 
       return {
         ...DEFAULT_ITEM,
-        documentNumber: String(row['DocumentNumber'] || ''),
-        invoiceRefNo: String(row['InvoiceRefNo'] || originalFbrNo || ''),
-        hsCode: String(row['HSCode'] || ''),
-        hsCodeDescription: String(row['HSCodeDescription'] || ''),
-        description: String(row['ProductDescription'] || ''),
+        documentNumber: String(get(row, 'documentNumber', '')),
+        invoiceRefNo: String(get(row, 'invoiceRefNo', originalFbrNo || '')),
+        hsCode: String(get(row, 'hsCode', '')),
+        hsCodeDescription: String(get(row, 'hsCodeDescription', '')),
+        description: String(get(row, 'productDescription', '')),
         quantity,
-        uom: String(row['UoM'] || 'KG'),
+        uom: String(get(row, 'uom', 'KG')),
         rate,
         taxRate,
         totalAmount,
         salesTax: pct !== null ? totalAmount * pct : 0,
-        fixedNotifiedValue: Number(row['FixedNotifiedValue'] || 0),
-        extraTax: Number(row['ExtraTax'] || 0),
-        furtherTax: Number(row['FurtherTax'] || 0),
-        pfadValue: Number(row['PfadValue'] || 0),
-        stWithheld: Number(row['StWithheld'] || 0),
-        fed: Number(row['Fed'] || 0),
-        withholdingTax: Number(row['WithholdingTax'] || 0),
-        discount: Number(row['Discount'] || 0),
-        sroSchedule: String(row['SROSchedule'] || SRO_SCHEDULES[0]),
-        itemSNo: String(row['ItemSNo'] || ITEM_SR_NOS[0]),
-        reason: String(row['Reason'] || REASONS[0]),
-        reasonRemarks: String(row['ReasonRemarks'] || ''),
+        fixedNotifiedValue: Number(get(row, 'fixedNotifiedValue', 0)),
+        extraTax: Number(get(row, 'extraTax', 0)),
+        furtherTax: Number(get(row, 'furtherTax', 0)),
+        pfadValue: Number(get(row, 'pfadValue', 0)),
+        stWithheld: Number(get(row, 'stWithheld', 0)),
+        fed: Number(get(row, 'fed', 0)),
+        withholdingTax: Number(get(row, 'withholdingTax', 0)),
+        discount: Number(get(row, 'discount', 0)),
+        sroSchedule: String(get(row, 'sroSchedule', SRO_SCHEDULES[0])),
+        itemSNo: String(get(row, 'itemSNo', ITEM_SR_NOS[0])),
+        reason: String(get(row, 'reason', REASONS[0])),
+        reasonRemarks: String(get(row, 'reasonRemarks', '')),
       }
     })
 
+    const first = dataRows[0]
+
     setFormData(prev => ({
       ...prev,
-      sellerRegNo: String(first['SellerRegNo'] || prev.sellerRegNo),
-      invoiceDate: first['InvoiceDate'] ? excelDateToInputValue(first['InvoiceDate']) : prev.invoiceDate,
-      documentType: String(first['DocumentType'] || prev.documentType),
-      saleType: String(first['SaleType'] || prev.saleType),
-      originationProvince: String(first['OriginationProvince'] || prev.originationProvince),
-      destinationProvince: String(first['DestinationProvince'] || prev.destinationProvince),
-      buyerName: String(first['BuyerName'] || prev.buyerName),
-      buyerNtn: String(first['BuyerNTN'] || prev.buyerNtn),
-      buyerCnic: String(first['BuyerCNIC'] || prev.buyerCnic),
-      buyerType: String(first['BuyerType'] || prev.buyerType),
-      buyerId: null, // uploaded name isn't linked to a saved Buyer record
+      sellerRegNo: String(get(first, 'sellerRegNo', prev.sellerRegNo)),
+      invoiceDate: get(first, 'invoiceDate') ? excelDateToInputValue(get(first, 'invoiceDate')) : prev.invoiceDate,
+      documentType: String(get(first, 'documentType', prev.documentType)),
+      saleType: String(get(first, 'saleType', prev.saleType)),
+      originationProvince: String(get(first, 'originationProvince', prev.originationProvince)),
+      destinationProvince: String(get(first, 'destinationProvince', prev.destinationProvince)),
+      buyerName: String(get(first, 'buyerName', prev.buyerName)),
+      buyerNtn: String(get(first, 'buyerNtn', prev.buyerNtn)),
+      buyerCnic: String(get(first, 'buyerCnic', prev.buyerCnic)),
+      buyerType: String(get(first, 'buyerType', prev.buyerType)),
+      buyerId: null,
       items,
     }))
 
     setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
   } catch (err) {
     console.error(err)
-    setError('Could not read that file — make sure it matches the template format')
+    setError('Could not read that file — make sure it matches the template format.')
   } finally {
-    e.target.value = '' // lets the same filename be re-uploaded later
+    e.target.value = ''
   }
 }
 
@@ -827,7 +909,7 @@ setTimeout(() => {
         </div>
 
 <div className="mb-6">
-  <input type="file" accept=".xlsx,.xls" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
+  <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
   <button
     type="button"
     onClick={() => fileInputRef.current?.click()}
