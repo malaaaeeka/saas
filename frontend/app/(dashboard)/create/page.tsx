@@ -802,9 +802,11 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       items,
     }))
 
-    if (missingRequired.length > 0) {
+    const allUnmatched = Object.keys(ALIAS_MAP).filter(f => !headerIndex[f])
+
+    if (allUnmatched.length > 0) {
       setSuccess(
-        `Loaded ${items.length} item(s) from ${file.name}. Note: couldn't find column(s) ${missingRequired.join(', ')} — please fill these in manually before submitting.`
+        `Loaded ${items.length} item(s) from ${file.name}. Note: couldn't find column(s) ${allUnmatched.join(', ')} — please review and fill these in manually before submitting.`
       )
     } else {
       setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
