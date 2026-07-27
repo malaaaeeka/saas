@@ -525,6 +525,9 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
             setFormData(prev => ({
               ...prev,
               ...inv,
+              invoiceDate: inv.invoiceDate
+                ? new Date(inv.invoiceDate).toISOString().split('T')[0]
+                : prev.invoiceDate,
              items: inv.items.map((item: any) => ({
   ...DEFAULT_ITEM,
   ...item,
