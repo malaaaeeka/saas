@@ -331,9 +331,9 @@ export default function InvoicesPage() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-muted text-sm">
-              {totalCount} total invoices
-            </span>
+        <span className="text-muted text-sm">
+  {totalCount} total invoices · Showing
+</span>
             <div className="w-20">
               <StyledSelect
                 options={PAGE_SIZE_OPTIONS}
