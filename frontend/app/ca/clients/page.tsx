@@ -281,21 +281,23 @@ const handlePageSizeChange = (newSize: number | 'ALL') => {
         <p className="text-muted">
           Showing {visibleClients.length} of {total} clients
         </p>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => setPage(page - 1)}
             disabled={page === 1}
-            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
+            className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition"
           >
-            Previous
+            ←
           </button>
-          <span className="px-4 py-2">Page {page}</span>
+          <span className="w-7 h-7 flex items-center justify-center rounded bg-btn-dark text-btn-dark-text text-xs font-semibold">
+            {page}
+          </span>
           <button
             onClick={() => setPage(page + 1)}
             disabled={pageSize !== 'ALL' && page * pageSize >= total}
-            className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
+            className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition"
           >
-            Next
+            →
           </button>
         </div>
       </div>
