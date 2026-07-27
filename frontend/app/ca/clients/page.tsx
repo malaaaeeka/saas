@@ -3,6 +3,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import StyledSelect from '@/components/ui/StyledSelect'
+
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '25', label: '25' },
+  { value: '100', label: '100' },
+  { value: 'ALL', label: 'All' },
+]
 
 export default function ClientsPage() {
   const router = useRouter()
@@ -14,6 +22,7 @@ export default function ClientsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOpen, setSortOpen] = useState(false)
   const [sortBy, setSortBy] = useState('name-asc')
+  const [pageSize, setPageSize] = useState<number | 'ALL'>(10)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -31,11 +40,12 @@ export default function ClientsPage() {
     }
 
     fetchClients(token, page)
-  }, [page])
+  }, [page, pageSize])
 
   const fetchClients = async (token: string, pageNum: number) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ca/clients?page=${pageNum}&limit=10`, {
+      const limitParam = pageSize === 'ALL' ? 100000 : pageSize
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ca/clients?page=${pageNum}&limit=${limitParam}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
@@ -50,7 +60,10 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
       setLoading(false)
     }
   }
-
+const handlePageSizeChange = (newSize: number | 'ALL') => {
+    setPageSize(newSize)
+    setPage(1)
+  }
   // NOTE: same caveat as other pages — this only searches clients already
   // loaded on the current page (10 at a time). For true cross-database
   // search, add a `?search=` param on the /api/ca/clients route and call
@@ -115,7 +128,40 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
               Sort
             </button>
           </div>
-          <span className="text-sm text-muted">{total} total clients</span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted">{total} total clients · Showing</span>
+            <div className="w-20">
+              <StyledSelect
+                options={PAGE_SIZE_OPTIONS}
+                value={PAGE_SIZE_OPTIONS.find(o => o.value === String(pageSize))}
+                onChange={opt => {
+                  const val = opt?.value
+                  if (!val) return
+                  handlePageSizeChange(val === 'ALL' ? 'ALL' : Number(val))
+                }}
+                isClearable={false}
+                isSearchable={false}
+                classNames={{
+                  control: () => 'bg-transparent border-none px-1 py-0 text-sm cursor-pointer',
+                  placeholder: () => 'text-muted',
+                  singleValue: () => 'text-heading',
+                  input: () => 'text-heading',
+                  menu: () => 'bg-surface border border-border rounded-lg shadow-lg mt-1 z-20 overflow-hidden',
+                  menuList: () => 'py-1 max-h-60 overflow-y-auto',
+                  option: (state) =>
+                    `px-3 py-1.5 text-sm cursor-pointer ${
+                      state.isSelected
+                        ? 'bg-heading text-surface'
+                        : state.isFocused
+                        ? 'bg-border-light text-heading'
+                        : 'text-body'
+                    }`,
+                  indicatorSeparator: () => 'hidden',
+                  dropdownIndicator: () => 'text-muted/70 px-1',
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -246,7 +292,7 @@ setTotal(data.pagination?.total ?? data.data?.total ?? 0)
           <span className="px-4 py-2">Page {page}</span>
           <button
             onClick={() => setPage(page + 1)}
-            disabled={page * 10 >= total}
+            disabled={pageSize !== 'ALL' && page * pageSize >= total}
             className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Next
