@@ -535,20 +535,13 @@ export default function InvoicesPage() {
                     ? `Showing all ${invoices.length} invoices`
                     : `Page ${page} of ${totalPages} — showing ${invoices.length} invoices`}
                 </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={page === 1}
-                    className="px-3 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    «
-                  </button>
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() => handlePageChange(page - 1)}
                     disabled={page === 1}
-                    className="px-4 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition"
                   >
-                    ← Prev
+                    ←
                   </button>
 
                   {/* Page number buttons */}
@@ -561,15 +554,15 @@ export default function InvoicesPage() {
                     }, [])
                     .map((p, idx) =>
                       p === '...' ? (
-                        <span key={`ellipsis-${idx}`} className="px-3 py-2 text-muted text-sm">...</span>
+                        <span key={`ellipsis-${idx}`} className="w-7 h-7 flex items-center justify-center text-muted text-xs">...</span>
                       ) : (
                         <button
                           key={p}
                           onClick={() => handlePageChange(p as number)}
-                          className={`px-4 py-2 rounded-lg text-sm transition ${
+                          className={`w-7 h-7 flex items-center justify-center rounded text-xs transition ${
                             page === p
-                              ? 'bg-btn-dark text-btn-dark-text'
-                              : 'bg-surface border border-border hover:border-heading text-body'
+                              ? 'bg-btn-dark text-btn-dark-text font-semibold'
+                              : 'text-muted hover:text-heading hover:bg-border-light'
                           }`}
                         >
                           {p}
@@ -581,16 +574,9 @@ export default function InvoicesPage() {
                   <button
                     onClick={() => handlePageChange(page + 1)}
                     disabled={page === totalPages}
-                    className="px-4 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition"
                   >
-                    Next →
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={page === totalPages}
-                    className="px-3 py-2 rounded-lg text-sm bg-surface border border-border hover:border-heading text-heading disabled:opacity-40 disabled:cursor-not-allowed transition"
-                  >
-                    »
+                    →
                   </button>
                 </div>
               </div>
