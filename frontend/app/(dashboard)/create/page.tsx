@@ -525,21 +525,22 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
             setFormData(prev => ({
               ...prev,
               ...inv,
-              items: inv.items.map((item: any) => ({
-                ...DEFAULT_ITEM,
-                ...item,
-                quantity:           Number(item.quantity           || 0),
-                rate:               Number(item.rate               || 0),
-                totalAmount:        Number(item.totalAmount        || 0),
-                salesTax:           Number(item.salesTax           || 0),
-                fed:                Number(item.fed                || 0),
-                discount:           Number(item.discount           || 0),
-                fixedNotifiedValue: Number(item.fixedNotifiedValue || 0),
-                extraTax:           Number(item.extraTax           || 0),
-                furtherTax:         Number(item.furtherTax         || 0),
-                pfadValue:          Number(item.pfadValue          || 0),
-                stWithheld:         Number(item.stWithheld         || 0),
-              }))
+             items: inv.items.map((item: any) => ({
+  ...DEFAULT_ITEM,
+  ...item,
+  invoiceRefNo:       item.invoiceRefNo ?? '',
+  quantity:           Number(item.quantity           || 0),
+  rate:               Number(item.rate               || 0),
+  totalAmount:        Number(item.totalAmount        || 0),
+  salesTax:           Number(item.salesTax           || 0),
+  fed:                Number(item.fed                || 0),
+  discount:           Number(item.discount           || 0),
+  fixedNotifiedValue: Number(item.fixedNotifiedValue || 0),
+  extraTax:           Number(item.extraTax           || 0),
+  furtherTax:         Number(item.furtherTax         || 0),
+  pfadValue:          Number(item.pfadValue          || 0),
+  stWithheld:         Number(item.stWithheld         || 0),
+}))
             }))
           } else {
             setError('Could not load invoice for editing')
