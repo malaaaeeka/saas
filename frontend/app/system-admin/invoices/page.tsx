@@ -2,6 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import StyledSelect from '@/components/ui/StyledSelect'
+
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '25', label: '25' },
+  { value: '100', label: '100' },
+  { value: 'ALL', label: 'All' },
+]
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'All Status' },
@@ -24,6 +32,7 @@ export default function InvoicesPage() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [adminInvoiceCounts, setAdminInvoiceCounts] = useState<{ total: number, byStatus: Record<string, number> }>({ total: 0, byStatus: {} })
+  const [pageSize, setPageSize] = useState<number | 'ALL'>(10)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -42,13 +51,14 @@ export default function InvoicesPage() {
 
     fetchInvoices(token, page, statusFilter)
     fetchAdminInvoiceCounts(token)
-  }, [page, statusFilter])
+  }, [page, statusFilter, pageSize])
 
   const fetchInvoices = async (token: string, pageNum: number, status: string) => {
     try {
+      const limitParam = pageSize === 'ALL' ? 100000 : pageSize
       const url = status === 'ALL'
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=10&status=${status}`
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=${limitParam}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/invoices?page=${pageNum}&limit=${limitParam}&status=${status}`
 
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -80,6 +90,13 @@ export default function InvoicesPage() {
       console.error('Failed to fetch invoice counts')
     }
   }
+
+  const handlePageSizeChange = (newSize: number | 'ALL') => {
+    setPageSize(newSize)
+    setPage(1)
+  }
+
+
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -159,7 +176,40 @@ export default function InvoicesPage() {
         Filter &amp; Sort
       </button>
     </div>
-    <span className="text-sm text-muted">{total} total invoices</span>
+    <div className="flex items-center gap-4">
+      <span className="text-sm text-muted">{total} total invoices · Showing</span>
+      <div className="w-20">
+        <StyledSelect
+          options={PAGE_SIZE_OPTIONS}
+          value={PAGE_SIZE_OPTIONS.find(o => o.value === String(pageSize))}
+          onChange={opt => {
+            const val = opt?.value
+            if (!val) return
+            handlePageSizeChange(val === 'ALL' ? 'ALL' : Number(val))
+          }}
+          isClearable={false}
+          isSearchable={false}
+          classNames={{
+            control: () => 'bg-transparent border-none px-1 py-0 text-sm cursor-pointer',
+            placeholder: () => 'text-muted',
+            singleValue: () => 'text-heading',
+            input: () => 'text-heading',
+            menu: () => 'bg-surface border border-border rounded-lg shadow-lg mt-1 z-20 overflow-hidden',
+            menuList: () => 'py-1 max-h-60 overflow-y-auto',
+            option: (state) =>
+              `px-3 py-1.5 text-sm cursor-pointer ${
+                state.isSelected
+                  ? 'bg-heading text-surface'
+                  : state.isFocused
+                  ? 'bg-border-light text-heading'
+                  : 'text-body'
+              }`,
+            indicatorSeparator: () => 'hidden',
+            dropdownIndicator: () => 'text-muted/70 px-1',
+          }}
+        />
+      </div>
+    </div>
   </div>
 </div>
 
@@ -320,7 +370,7 @@ export default function InvoicesPage() {
           <span className="px-4 py-2">Page {page}</span>
           <button
             onClick={() => setPage(page + 1)}
-            disabled={page * 10 >= total}
+            disabled={pageSize !== 'ALL' && page * pageSize >= total}
             className="bg-surface border border-border hover:border-heading text-heading disabled:opacity-50 px-4 py-2 rounded"
           >
             Next
