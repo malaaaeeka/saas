@@ -87,16 +87,20 @@ model Branch {
 }
 
 model Invoice {
-  id            String        @id @default(cuid())
-  businessId    String
-  branchId      String?
-  invoiceType   InvoiceType
-  invoiceDate   DateTime
-  buyerId       String?
-  buyerNtn      String?
-  buyerCnic     String?
-  buyerName     String?
-  saleType      String
+  id                  String        @id @default(cuid())
+  businessId          String
+  branchId            String?
+  invoiceType         InvoiceType
+  documentType        String?
+  originationProvince String?
+  destinationProvince String?
+  buyerType           String?
+  invoiceDate         DateTime
+  buyerId             String?
+  buyerNtn            String?
+  buyerCnic           String?
+  buyerName           String?
+  saleType            String
   totalAmount   Decimal
   totalSalesTax Decimal
   totalFed      Decimal       @default(0)
@@ -136,6 +140,8 @@ enum InvoiceStatus {
 model InvoiceItem {
   id                 String  @id @default(cuid())
   invoiceId          String
+  documentNumber     String?
+  invoiceRefNo       String?
   hsCode             String
   hsCodeDescription  String?
   productCode        String?

@@ -230,7 +230,7 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 }
 export const createInvoice = async (req: any, res: Response): Promise<void> => {
   try {
-    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, originalInvoiceId, amendmentReason, status } = req.body
+    const { invoiceType, documentType, originationProvince, destinationProvince, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, originalInvoiceId, amendmentReason, status } = req.body
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
       sendError(res, 'Business profile not found. Please set up your profile first.', 404)
@@ -284,6 +284,10 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         businessId: business.id,
         branchId: branchId || null,
         invoiceType,
+        documentType: documentType || null,
+        originationProvince: originationProvince || null,
+        destinationProvince: destinationProvince || null,
+        buyerType: buyerType || null,
         invoiceDate: new Date(invoiceDate),
         originalInvoiceId: originalInvoiceId || null,
         amendmentReason: amendmentReason || null,
@@ -300,6 +304,8 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         items: {
           createMany: {
             data: items.map((item: any) => ({
+              documentNumber: item.documentNumber || null,
+              invoiceRefNo: item.invoiceRefNo || null,
               hsCode: item.hsCode,
               hsCodeDescription: item.hsCodeDescription || null,
               productCode: item.productCode,
@@ -343,7 +349,7 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
 export const updateInvoice = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const { invoiceType, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, amendmentReason, status } = req.body
+    const { invoiceType, documentType, originationProvince, destinationProvince, invoiceDate, buyerId, buyerNtn, buyerCnic, buyerName, buyerType, saleType, branchId, items, amendmentReason, status } = req.body
 
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
@@ -410,6 +416,10 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
         data: {
           branchId: branchId || null,
           invoiceType,
+          documentType: documentType || null,
+          originationProvince: originationProvince || null,
+          destinationProvince: destinationProvince || null,
+          buyerType: buyerType || null,
           invoiceDate: new Date(invoiceDate),
           amendmentReason: amendmentReason || null,
           buyerId: finalBuyerId,
@@ -425,6 +435,8 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
           items: {
             createMany: {
               data: items.map((item: any) => ({
+                documentNumber: item.documentNumber || null,
+                invoiceRefNo: item.invoiceRefNo || null,
                 hsCode: item.hsCode,
                 hsCodeDescription: item.hsCodeDescription || null,
                 productCode: item.productCode,
