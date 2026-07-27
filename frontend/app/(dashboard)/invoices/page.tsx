@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-const PAGE_SIZE = 10
+const PAGE_SIZE_OPTIONS = [10, 25, 100, 'ALL'] as const
 
 export default function InvoicesPage() {
   const router = useRouter()
@@ -14,6 +14,7 @@ export default function InvoicesPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+  const [pageSize, setPageSize] = useState<number | 'ALL'>(10)
 
   // ---- toaman-style search overlay + filter panel ----
   const [showSearch, setShowSearch] = useState(false)
@@ -27,15 +28,17 @@ export default function InvoicesPage() {
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
-    fetchInvoices(token, page)
+    fetchInvoices(token, page, pageSize)
     fetchInvoiceCounts(token)
-  }, [page])
+  }, [page, pageSize])
 
-  const fetchInvoices = async (token: string, currentPage: number) => {
+  const fetchInvoices = async (token: string, currentPage: number, currentPageSize: number | 'ALL') => {
     setLoading(true)
     try {
+      // 'ALL' sends a very high limit so the backend returns everything in one page
+      const limitParam = currentPageSize === 'ALL' ? 100000 : currentPageSize
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices?page=${currentPage}&limit=${PAGE_SIZE}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices?page=${currentPage}&limit=${limitParam}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       )
       const data = await res.json()
@@ -53,7 +56,12 @@ export default function InvoicesPage() {
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
     const token = localStorage.getItem('token')
-    if (token) fetchInvoices(token, newPage)
+    if (token) fetchInvoices(token, newPage, pageSize)
+  }
+
+  const handlePageSizeChange = (newSize: number | 'ALL') => {
+    setPageSize(newSize)
+    setPage(1) // always reset to page 1 when page size changes
   }
 
   // Fetches accurate Type/Status counts directly from the database via a
@@ -176,7 +184,7 @@ export default function InvoicesPage() {
 
   const tree = buildInvoiceTree(invoices)
   const filtered = applyFilters(tree)
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE)
+  const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(totalCount / pageSize)
 
   // ---- counts for the filter panel (based on currently loaded page of invoices) ----
   const typeOptions = [
@@ -316,7 +324,26 @@ export default function InvoicesPage() {
              Filter & Sort
             </button>
           </div>
-          <span className="text-muted text-sm">{totalCount} total invoices</span>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-muted">
+              Show
+              <select
+                value={pageSize}
+                onChange={e => {
+                  const val = e.target.value
+                  handlePageSizeChange(val === 'ALL' ? 'ALL' : Number(val))
+                }}
+                className="bg-surface border border-border text-heading rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-accent"
+              >
+                {PAGE_SIZE_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt === 'ALL' ? 'All' : opt}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <span className="text-muted text-sm">{totalCount} total invoices</span>
+          </div>
         </div>
 
         {/* Search overlay — full screen takeover, matching toaman's search UI */}
@@ -482,7 +509,9 @@ export default function InvoicesPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between">
                 <p className="text-muted text-sm">
-                  Page {page} of {totalPages} — showing {invoices.length} invoices
+                  {pageSize === 'ALL'
+                    ? `Showing all ${invoices.length} invoices`
+                    : `Page ${page} of ${totalPages} — showing ${invoices.length} invoices`}
                 </p>
                 <div className="flex gap-2">
                   <button
