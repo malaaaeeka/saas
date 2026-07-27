@@ -2,8 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
-const PAGE_SIZE_OPTIONS = [10, 25, 100, 'ALL'] as const
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '25', label: '25' },
+  { value: '100', label: '100' },
+  { value: 'ALL', label: 'All' },
+]
 
 export default function InvoicesPage() {
   const router = useRouter()
@@ -325,24 +331,25 @@ export default function InvoicesPage() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-muted">
-              Show
-              <select
-                value={pageSize}
-                onChange={e => {
-                  const val = e.target.value
+            <div className="w-24">
+              <StyledSelect
+                options={PAGE_SIZE_OPTIONS}
+                value={PAGE_SIZE_OPTIONS.find(o => o.value === String(pageSize))}
+                onChange={opt => {
+                  const val = opt?.value
+                  if (!val) return
                   handlePageSizeChange(val === 'ALL' ? 'ALL' : Number(val))
                 }}
-                className="bg-surface border border-border text-heading rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-accent"
-              >
-                {PAGE_SIZE_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>
-                    {opt === 'ALL' ? 'All' : opt}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <span className="text-muted text-sm">{totalCount} total invoices</span>
+                isClearable={false}
+                isSearchable={false}
+              />
+            </div>
+            <span className="flex items-center gap-1.5 text-muted text-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2" />
+              </svg>
+              {totalCount} total invoices
+            </span>
           </div>
         </div>
 
