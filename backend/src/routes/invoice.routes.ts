@@ -13,12 +13,14 @@ import {
   deleteInvoice
 } from '../controllers/invoice.controller'
 import { authenticate } from '../middleware/auth.middleware'
+import { validate } from '../middleware/validate.middleware'
+import { invoiceSchema } from '../utils/validators'
 
 
 const router = Router()
 
-router.post('/', authenticate, createInvoice)
-router.put('/:id', authenticate, updateInvoice)
+router.post('/', authenticate, validate(invoiceSchema), createInvoice)
+router.put('/:id', authenticate, validate(invoiceSchema), updateInvoice)
 router.get('/', authenticate, getInvoices)
 router.get('/counts', authenticate, getInvoiceCounts)
 router.get('/stats', authenticate, getStats)

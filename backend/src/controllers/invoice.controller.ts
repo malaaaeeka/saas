@@ -6,6 +6,27 @@ import { generateQRCode, generateInvoiceQRData } from '../services/qr.service'
 import fbrService from '../services/fbr.service'
 import emailService from '../services/email.service'
 
+const s = (v: unknown): string => (v === null || v === undefined ? '' : String(v))
+
+function serializeInvoice(invoice: any) {
+  return {
+    ...invoice,
+    buyerNtn: s(invoice.buyerNtn),
+    buyerCnic: s(invoice.buyerCnic),
+    buyerName: s(invoice.buyerName),
+    fbrInvoiceNo: s(invoice.fbrInvoiceNo),
+    errorMessage: s(invoice.errorMessage),
+    amendmentReason: s(invoice.amendmentReason),
+    originalInvoiceId: s(invoice.originalInvoiceId),
+    items: (invoice.items || []).map((item: any) => ({
+      ...item,
+      hsCodeDescription: s(item.hsCodeDescription),
+      productCode: s(item.productCode),
+      itemSNo: s(item.itemSNo),
+    }))
+  }
+}
+
 export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
   const qrData = generateInvoiceQRData(invoice)
   const qrBuffer = await generateQRCode(qrData)
@@ -267,9 +288,9 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         originalInvoiceId: originalInvoiceId || null,
         amendmentReason: amendmentReason || null,
         buyerId: finalBuyerId,
-        buyerNtn: resolvedBuyerNtn,
-        buyerCnic: resolvedBuyerCnic,
-        buyerName: resolvedBuyerName,
+        buyerNtn: resolvedBuyerNtn || '',
+        buyerCnic: resolvedBuyerCnic || '',
+        buyerName: resolvedBuyerName || '',
         saleType,
         totalAmount,
         totalSalesTax,
@@ -311,7 +332,7 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
       })
     }
 
-    sendSuccess(res, invoice, 'Invoice created successfully', 201)
+    sendSuccess(res, serializeInvoice(invoice), 'Invoice created successfully', 201)
   } catch (error: any) {
     sendError(res, error.message || 'Failed to create invoice', 500)
   }
@@ -392,9 +413,9 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
           invoiceDate: new Date(invoiceDate),
           amendmentReason: amendmentReason || null,
           buyerId: finalBuyerId,
-          buyerNtn: resolvedBuyerNtn,
-          buyerCnic: resolvedBuyerCnic,
-          buyerName: resolvedBuyerName,
+          buyerNtn: resolvedBuyerNtn || '',
+          buyerCnic: resolvedBuyerCnic || '',
+          buyerName: resolvedBuyerName || '',
           saleType,
           totalAmount,
           totalSalesTax,
@@ -430,7 +451,7 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
       })
     })
 
-    sendSuccess(res, invoice, 'Invoice updated successfully')
+    sendSuccess(res, serializeInvoice(invoice), 'Invoice updated successfully')
   } catch (error: any) {
     sendError(res, error.message || 'Failed to update invoice', 500)
   }
@@ -524,7 +545,7 @@ export const getInvoices = async (req: any, res: Response): Promise<void> => {
       }),
       prisma.invoice.count({ where: { businessId: business.id } })
     ])
-    sendPaginated(res, invoices, total, Number(page), Number(limit))
+    sendPaginated(res, invoices.map(serializeInvoice), total, Number(page), Number(limit))
   } catch (error) {
     sendError(res, 'Failed to fetch invoices', 500)
   }
@@ -545,7 +566,7 @@ export const getInvoiceById = async (req: any, res: Response): Promise<void> => 
       sendError(res, 'Access denied', 403)
       return
     }
-    sendSuccess(res, invoice)
+    sendSuccess(res, serializeInvoice(invoice))
   } catch (error) {
     sendError(res, 'Failed to fetch invoice', 500)
   }
@@ -703,7 +724,7 @@ export const submitToFBR = async (req: any, res: Response): Promise<void> => {
         include: { items: true, business: true }
       })
       sendSuccess(res, {
-        invoice: updatedInvoice,
+        invoice: serializeInvoice(updatedInvoice),
         fbrInvoiceNo: result.fbrInvoiceNo
       }, `Invoice successfully submitted to FBR. FBR No: ${result.fbrInvoiceNo}`)
     } else {
