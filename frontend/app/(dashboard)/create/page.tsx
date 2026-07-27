@@ -811,6 +811,7 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     } else {
       setSuccess(`Loaded ${items.length} item(s) from ${file.name}`)
     }
+    
   } catch (err) {
     console.error(err)
     setError('Could not read that file — make sure it matches the template format.')
