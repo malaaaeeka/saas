@@ -331,7 +331,10 @@ export default function InvoicesPage() {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <div className="w-24">
+            <span className="text-muted text-sm">
+              {totalCount} total invoices
+            </span>
+            <div className="w-20">
               <StyledSelect
                 options={PAGE_SIZE_OPTIONS}
                 value={PAGE_SIZE_OPTIONS.find(o => o.value === String(pageSize))}
@@ -342,14 +345,26 @@ export default function InvoicesPage() {
                 }}
                 isClearable={false}
                 isSearchable={false}
+                classNames={{
+                  control: () => 'bg-transparent border-none px-1 py-0 text-sm cursor-pointer',
+                  placeholder: () => 'text-muted',
+                  singleValue: () => 'text-heading',
+                  input: () => 'text-heading',
+                  menu: () => 'bg-surface border border-border rounded-lg shadow-lg mt-1 z-20 overflow-hidden',
+                  menuList: () => 'py-1 max-h-60 overflow-y-auto',
+                  option: (state) =>
+                    `px-3 py-1.5 text-sm cursor-pointer ${
+                      state.isSelected
+                        ? 'bg-heading text-surface'
+                        : state.isFocused
+                        ? 'bg-border-light text-heading'
+                        : 'text-body'
+                    }`,
+                  indicatorSeparator: () => 'hidden',
+                  dropdownIndicator: () => 'text-muted/70 px-1',
+                }}
               />
             </div>
-            <span className="flex items-center gap-1.5 text-muted text-sm">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 7a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m0 10V7m0 10a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2" />
-              </svg>
-              {totalCount} total invoices
-            </span>
           </div>
         </div>
 
