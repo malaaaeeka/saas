@@ -8,6 +8,7 @@ export default function InvoiceDetailPage() {
   const [emailInput, setEmailInput] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
   const [includeSro, setIncludeSro] = useState(true)
+  const [showDetails, setShowDetails] = useState(false)
 
   const router = useRouter()
   const params = useParams()
