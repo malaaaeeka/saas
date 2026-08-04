@@ -18,7 +18,6 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     businessName: '',
     ntn: '',
-    strn: '',
     address: '',
     city: '',
     phone: '',
@@ -56,7 +55,6 @@ export default function SettingsPage() {
         setFormData({
           businessName: data.data.businessName  || '',
           ntn:          data.data.ntn           || '',
-          strn:         data.data.strn          || '',
           address:      data.data.address       || '',
           city:         data.data.city          || '',
           phone:        data.data.phone         || '',
@@ -88,7 +86,7 @@ export default function SettingsPage() {
     setError('')
     setSuccess('')
 
-    if (!formData.businessName || !formData.ntn || !formData.strn ||
+    if (!formData.businessName || !formData.ntn ||
         !formData.address || !formData.city || !formData.phone || !formData.businessType) {
       setError('Please fill in all required fields')
       setLoading(false)
@@ -97,12 +95,6 @@ export default function SettingsPage() {
 
     if (!/^\d{7}$/.test(formData.ntn)) {
       setError('NTN must be exactly 7 digits')
-      setLoading(false)
-      return
-    }
-
-    if (!/^\d{11}$/.test(formData.strn)) {
-      setError('STRN must be exactly 11 digits')
       setLoading(false)
       return
     }
@@ -244,10 +236,6 @@ export default function SettingsPage() {
                 <p className="text-muted text-sm">NTN</p>
                 <p className="text-heading font-mono">{business.ntn}</p>
               </div>
-              <div>
-                <p className="text-muted text-sm">STRN</p>
-                <p className="text-heading font-mono">{business.strn}</p>
-              </div>
               <div className="col-span-2">
                 <p className="text-muted text-sm">Address</p>
                 <p className="text-heading">{business.address}</p>
@@ -312,24 +300,6 @@ export default function SettingsPage() {
                   />
                   {business && (
                     <p className="text-xs text-muted mt-1">NTN cannot be changed after registration</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm text-muted mb-2">STRN (11 digits) *</label>
-                  <input
-                    type="text"
-                    name="strn"
-                    value={formData.strn}
-                    onChange={handleInputChange}
-                    placeholder="12345678901"
-                    pattern="\d{11}"
-                    required
-                    disabled={!!business}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {business && (
-                    <p className="text-xs text-muted mt-1">STRN cannot be changed after registration</p>
                   )}
                 </div>
 
@@ -479,7 +449,6 @@ export default function SettingsPage() {
           <h3 className="text-lg font-semibold text-heading mb-4">Need Help?</h3>
           <ul className="text-body space-y-2 text-sm">
             <li>• <strong>NTN:</strong> 7-digit National Tax Number from FBR IRIS</li>
-            <li>• <strong>STRN:</strong> 11-digit Sales Tax Registration Number</li>
             <li>• <strong>Security Token:</strong> From FBR IRIS after POS registration</li>
             <li>• <strong>POS ID:</strong> Point of Sale identifier assigned by FBR</li>
           </ul>
