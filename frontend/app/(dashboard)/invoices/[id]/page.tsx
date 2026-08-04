@@ -7,7 +7,7 @@ export default function InvoiceDetailPage() {
   const [emailLoading, setEmailLoading] = useState(false)
   const [emailInput, setEmailInput] = useState('')
   const [showEmailInput, setShowEmailInput] = useState(false)
-  const [showDetails, setShowDetails] = useState(false)
+  const [includeSro, setIncludeSro] = useState(true)
 
   const router = useRouter()
   const params = useParams()
@@ -70,7 +70,7 @@ export default function InvoiceDetailPage() {
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/pdf`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/invoices/${invoice.id}/pdf?includeSro=${includeSro}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       )
       const blob = await res.blob()
@@ -504,6 +504,19 @@ export default function InvoiceDetailPage() {
   </button>
 )}
    
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="includeSro"
+              checked={includeSro}
+              onChange={e => setIncludeSro(e.target.checked)}
+              className="w-4 h-4 accent-heading cursor-pointer"
+            />
+            <label htmlFor="includeSro" className="text-sm text-body cursor-pointer select-none">
+              Include SRO / Item No. in PDF
+            </label>
+          </div>
 
           <button
             onClick={handleDownloadPDF}
