@@ -1166,17 +1166,11 @@ setTimeout(() => {
                       classifyBuyerId(formData.buyerNtnCnic) === 'invalid' ? 'border-red-500 ring-1 ring-red-500' :
                       'border-border'
                     }`} />
-                  <p className={`text-xs mt-1 ${
-                    classifyBuyerId(formData.buyerNtnCnic) === 'invalid' ? 'text-red-500' : 'text-muted'
-                  }`}>
-                    {(() => {
-                      const kind = classifyBuyerId(formData.buyerNtnCnic)
-                      if (kind === 'ntn') return '✓ Valid NTN'
-                      if (kind === 'cnic') return '✓ Valid CNIC'
-                      if (kind === 'invalid') return 'Not a valid NTN (7 digits) or CNIC (13 digits) format'
-                      return 'Enter a 7-digit NTN or 13-digit CNIC — format detected automatically'
-                    })()}
-                  </p>
+                 {classifyBuyerId(formData.buyerNtnCnic) === 'invalid' && (
+  <p className="text-xs mt-1 text-red-500">
+    Not a valid NTN (7 digits) or CNIC (13 digits) format
+  </p>
+)}
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
