@@ -27,7 +27,8 @@ function serializeInvoice(invoice: any) {
   }
 }
 
-export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
+export const generatePdfBuffer = async (invoice: any, options: { includeSro?: boolean } = {}): Promise<Buffer> => {
+  const includeSro = options.includeSro !== false // default true
   const qrData = generateInvoiceQRData(invoice)
   const qrBuffer = await generateQRCode(qrData)
 
@@ -47,9 +48,9 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
     }
     const title = titleMap[invoice.invoiceType] || 'Sale Invoice'
-    const pageWidth = doc.page.width - 60 // usable width inside 30pt margins
+    const pageWidth = doc.page.width - 60
 
-    // ===== Header: Business name (left) + QR (right) =====
+    // ===== Header (unchanged) =====
     doc.fontSize(16).font('Helvetica-Bold').text(invoice.business.businessName || 'N/A', 30, 30)
     doc.image(qrBuffer, doc.page.width - 110, 25, { width: 80, height: 80 })
     doc.fontSize(7).fillColor('gray')
@@ -58,7 +59,7 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 
     doc.moveTo(30, 120).lineTo(doc.page.width - 30, 120).stroke()
 
-    // ===== Three-column info block: Seller | Buyer | Invoice Summary =====
+    // ===== Three-column info block (unchanged) =====
     const colY = 132
     const col1 = 30
     const col2 = 290
@@ -103,11 +104,11 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       doc.fillColor('black')
     }
 
-    // ===== Items table (with full grid lines) =====
+    // ===== Items table =====
     let tableTop = colY + 90
     const tableLeft = 30
 
-    const cols = [
+    const baseCols = [
       { key: 'sr',          label: 'Sr. No.',              w: 20  },
       { key: 'hsCode',      label: 'HS Code',               w: 38  },
       { key: 'hsDesc',      label: 'HS Code Description',   w: 95  },
@@ -129,10 +130,25 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       { key: 'status',      label: 'Status',                w: 26  },
     ]
 
+    // Drop the SRO columns when not requested, and redistribute their width
+    // proportionally across the remaining columns so the table still fills
+    // the same total width instead of leaving a gap on the right.
+    let cols = baseCols
+    if (!includeSro) {
+      const dropped = baseCols.filter(c => c.key === 'sro' || c.key === 'sroItemSr')
+      const freedWidth = dropped.reduce((sum, c) => sum + c.w, 0)
+      const kept = baseCols.filter(c => c.key !== 'sro' && c.key !== 'sroItemSr')
+      const keptTotalWidth = kept.reduce((sum, c) => sum + c.w, 0)
+      cols = kept.map(c => ({ ...c, w: c.w + (c.w / keptTotalWidth) * freedWidth }))
+    }
+
     let runningX = tableLeft
     const colX: number[] = []
     cols.forEach(c => { colX.push(runningX); runningX += c.w })
     const tableWidth = runningX - tableLeft
+
+    // Helper to find a column's index by key (robust even if columns are removed)
+    const idx = (key: string) => cols.findIndex(c => c.key === key)
 
     // ---- Header row ----
     const headerHeight = 22
@@ -161,23 +177,24 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
       const retailPrice  = Number(item.fixedNotifiedValue || 0)
       const stWht        = Number(item.stWithheld || 0)
 
-      const hsDescHeight   = doc.heightOfString(item.hsCodeDescription || '—', { width: cols[2].w - 4 })
-      const prodDescHeight = doc.heightOfString(item.description || '—', { width: cols[3].w - 4 })
+      const hsDescHeight   = doc.heightOfString(item.hsCodeDescription || '—', { width: cols[idx('hsDesc')].w - 4 })
+      const prodDescHeight = doc.heightOfString(item.description || '—', { width: cols[idx('prodDesc')].w - 4 })
       const rowHeight = Math.max(hsDescHeight, prodDescHeight, 10) + 8
 
       const rowY = tableTop
-      const values = [
-        String(i + 1), item.hsCode || '—', item.hsCodeDescription || '—',
-        item.description || '—', invoice.saleType || '—', String(qty),
-        item.uom || '—', Number(item.rate).toFixed(2), salesValue.toFixed(2),
-        retailPrice.toFixed(2), salesTax.toFixed(2), extraTax.toFixed(2),
-        furtherTax.toFixed(2), fed.toFixed(2), stWht.toFixed(2),
-        discount.toFixed(2), item.sroSchedule || '—', item.itemSNo || '—',
-        invoice.status || '—'
-      ]
 
-      values.forEach((val, ci) => {
-        doc.text(val, colX[ci] + 2, rowY + 4, { width: cols[ci].w - 4 })
+      const valueMap: Record<string, string> = {
+        sr: String(i + 1), hsCode: item.hsCode || '—', hsDesc: item.hsCodeDescription || '—',
+        prodDesc: item.description || '—', saleType: invoice.saleType || '—', qty: String(qty),
+        uom: item.uom || '—', rate: Number(item.rate).toFixed(2), salesValue: salesValue.toFixed(2),
+        retailPrice: retailPrice.toFixed(2), salesTax: salesTax.toFixed(2), extraTax: extraTax.toFixed(2),
+        furtherTax: furtherTax.toFixed(2), fed: fed.toFixed(2), stWht: stWht.toFixed(2),
+        discount: discount.toFixed(2), sro: item.sroSchedule || '—', sroItemSr: item.itemSNo || '—',
+        status: invoice.status || '—'
+      }
+
+      cols.forEach((c, ci) => {
+        doc.text(valueMap[c.key], colX[ci] + 2, rowY + 4, { width: c.w - 4 })
       })
 
       tableTop += rowHeight
@@ -201,10 +218,10 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
     const grandTotal     = subtotal + salesTaxTotal + fedTotal - discountTotal
 
     doc.fontSize(6.5).font('Helvetica-Bold')
-    doc.text('Total:', colX[7] + 2, tableBottom + 4, { width: cols[7].w - 4, align: 'right' })
-    doc.text(subtotal.toFixed(2),      colX[8] + 2, tableBottom + 4, { width: cols[8].w - 4 })
-    doc.text(salesTaxTotal.toFixed(2), colX[10] + 2, tableBottom + 4, { width: cols[10].w - 4 })
-    doc.text(fedTotal.toFixed(2),      colX[13] + 2, tableBottom + 4, { width: cols[13].w - 4 })
+    doc.text('Total:', colX[idx('rate')] + 2, tableBottom + 4, { width: cols[idx('rate')].w - 4, align: 'right' })
+    doc.text(subtotal.toFixed(2),      colX[idx('salesValue')] + 2, tableBottom + 4, { width: cols[idx('salesValue')].w - 4 })
+    doc.text(salesTaxTotal.toFixed(2), colX[idx('salesTax')] + 2, tableBottom + 4, { width: cols[idx('salesTax')].w - 4 })
+    doc.text(fedTotal.toFixed(2),      colX[idx('fed')] + 2, tableBottom + 4, { width: cols[idx('fed')].w - 4 })
 
     tableTop = tableBottom + totalRowHeight + 15
 
@@ -221,7 +238,6 @@ export const generatePdfBuffer = async (invoice: any): Promise<Buffer> => {
 
     // ===== Footer =====
     doc.fontSize(7).font('Helvetica').fillColor('gray')
-      // .text('In the above invoices, "E" denotes that the invoice has been edited, whereas "C" indicates that the invoice has been cancelled.', 30, doc.page.height - 40, { width: pageWidth - 60 })
       .text('This is a computer generated document. Scan QR code to verify authenticity.', 30, doc.page.height - 40, { align: 'right', width: pageWidth })
     doc.fillColor('black')
 
@@ -677,6 +693,8 @@ export const getStats = async (req: any, res: Response): Promise<void> => {
 export const downloadInvoicePdf = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params
+    const includeSro = req.query.includeSro !== 'false' // default true unless explicitly 'false'
+
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       include: { items: true, business: true }
@@ -684,7 +702,7 @@ export const downloadInvoicePdf = async (req: any, res: Response): Promise<void>
     if (!invoice) { sendError(res, 'Invoice not found', 404); return }
     if (invoice.business.userId !== req.user.id) { sendError(res, 'Access denied', 403); return }
 
-    const pdfBuffer = await generatePdfBuffer(invoice)
+    const pdfBuffer = await generatePdfBuffer(invoice, { includeSro })
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoice.id}.pdf`)
     res.send(pdfBuffer)
