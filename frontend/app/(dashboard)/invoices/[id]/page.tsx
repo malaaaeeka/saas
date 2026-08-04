@@ -504,20 +504,6 @@ export default function InvoiceDetailPage() {
     Edit Invoice
   </button>
 )}
-   
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="includeSro"
-              checked={includeSro}
-              onChange={e => setIncludeSro(e.target.checked)}
-              className="w-4 h-4 accent-heading cursor-pointer"
-            />
-            <label htmlFor="includeSro" className="text-sm text-body cursor-pointer select-none">
-              Include SRO / Item No. in PDF
-            </label>
-          </div>
 
           <button
             onClick={handleDownloadPDF}
@@ -564,6 +550,21 @@ export default function InvoiceDetailPage() {
             </div>
           )}
         </div>
+
+{/* SRO checkbox — below action buttons */}
+        <div className="flex items-center gap-2 mt-4">
+          <input
+            type="checkbox"
+            id="includeSro"
+            checked={includeSro}
+            onChange={e => setIncludeSro(e.target.checked)}
+            className="w-4 h-4 accent-heading cursor-pointer"
+          />
+          <label htmlFor="includeSro" className="text-sm text-body cursor-pointer select-none">
+            Include SRO / Item No. in PDF
+          </label>
+        </div>
+
       </div>
     </div>
   )
