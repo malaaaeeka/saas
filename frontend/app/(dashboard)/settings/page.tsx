@@ -82,15 +82,6 @@ export default function SettingsPage() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleFbrInputChange = (e: any) => {const handleInputChange = (e: any) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
   const handleFbrInputChange = (e: any) => {
     const { name, value } = e.target
     setFbrData(prev => ({ ...prev, [name]: value }))
