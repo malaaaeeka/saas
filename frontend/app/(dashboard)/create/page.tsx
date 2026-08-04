@@ -245,12 +245,42 @@ function rateToPercent(rate: string): number | null {
   return null
 }
 
-// Coerces any value (string, empty string, number, undefined) into a safe number.
-// Used everywhere item fields are summed or sent to the backend, since inputs
-// store raw strings while typing.
 function toNum(v: any): number {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
+}
+
+// Pakistani NTN: exactly 7 digits (the check digit, if present, is a
+// separate concern handled server-side by FBR — this validates the
+// core NTN format used across invoicing).
+const NTN_REGEX = /^\d{7}$/
+
+// Pakistani CNIC: 5 digits - 7 digits - 1 digit, dashes optional while typing.
+const CNIC_REGEX = /^\d{5}-?\d{7}-?\d{1}$/
+
+// Strips all non-digits — used to count digits and to compare "raw" values.
+function onlyDigits(v: string): string {
+  return v.replace(/\D/g, '')
+}
+
+// Converts a valid 13-digit CNIC string into canonical dashed form:
+// XXXXX-XXXXXXX-X. Anything else is returned unchanged.
+function normalizeCnic(v: string): string {
+  const digits = onlyDigits(v)
+  if (digits.length !== 13) return v
+  return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`
+}
+
+// Classifies a raw input string as 'ntn' | 'cnic' | 'invalid' | 'incomplete'.
+// 'incomplete' means the user is still typing and it's too short to judge yet.
+function classifyBuyerId(v: string): 'ntn' | 'cnic' | 'invalid' | 'incomplete' {
+  const digits = onlyDigits(v)
+  if (digits.length === 0) return 'incomplete'
+  if (NTN_REGEX.test(digits)) return 'ntn'
+  if (CNIC_REGEX.test(v) || digits.length === 13) return 'cnic'
+  if (digits.length < 7) return 'incomplete'
+  if (digits.length > 7 && digits.length < 13) return 'incomplete'
+  return 'invalid'
 }
 
 const NUMERIC_ITEM_FIELDS = [
@@ -397,7 +427,7 @@ const DEFAULT_ITEM = {
 
 type FormError = {
   message: string
-  scrollTarget: 'errorBox' | 'sellerRegNo' | 'buyerNtn' | 'buyerCnic'
+  scrollTarget: 'errorBox' | 'sellerRegNo' | 'buyerNtnCnic'
     | 'invoiceType' | 'documentType' | 'originationProvince' | 'destinationProvince' | 'buyerType'
     | { item: number }
 }
@@ -431,11 +461,14 @@ function validateForm(formData: any, amendmentType: string | null): FormError | 
     return { message: 'Seller Registration No. is required', scrollTarget: 'sellerRegNo' }
   }
 
-  if (formData.buyerType === 'Registered' && !formData.buyerNtn.trim()) {
-    return { message: 'Buyer NTN is required for Registered buyers', scrollTarget: 'buyerNtn' }
+  if (!formData.buyerNtnCnic.trim()) {
+    return { message: 'Buyer NTN or CNIC is required', scrollTarget: 'buyerNtnCnic' }
   }
-  if (formData.buyerType !== 'Registered' && !formData.buyerCnic.trim()) {
-    return { message: 'Buyer CNIC is required', scrollTarget: 'buyerCnic' }
+  if (!formData.buyerNtn && !formData.buyerCnic) {
+    return {
+      message: 'Enter a valid 7-digit NTN or a 13-digit CNIC (format: 12345-1234567-1)',
+      scrollTarget: 'buyerNtnCnic'
+    }
   }
 
   const missingDocNum = formData.items.findIndex((i: any) => !i.documentNumber.trim())
@@ -477,8 +510,7 @@ function CreateInvoicePageContent() {
   const destinationProvinceRef = useRef<HTMLDivElement>(null)
   const buyerTypeRef = useRef<HTMLDivElement>(null)
   const sellerRegNoRef = useRef<HTMLInputElement>(null)
-const buyerNtnRef = useRef<HTMLInputElement>(null)
-const buyerCnicRef = useRef<HTMLInputElement>(null)
+const buyerIdRef = useRef<HTMLInputElement>(null)
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -492,6 +524,7 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
   buyerId: '' as string | null,
   buyerNtn: '',
   buyerCnic: '',
+  buyerNtnCnic: '',
   buyerName: '',
   buyerType: '',
   documentType: '',
@@ -525,6 +558,7 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
             setFormData(prev => ({
               ...prev,
               ...inv,
+              buyerNtnCnic: inv.buyerNtn || inv.buyerCnic || '',
               invoiceDate: inv.invoiceDate
                 ? new Date(inv.invoiceDate).toISOString().split('T')[0]
                 : prev.invoiceDate,
@@ -624,6 +658,31 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
   setFormData(prev => ({ ...prev, [name]: value }))
 }
 
+  // Classifies as the user types, but only writes into buyerNtn/buyerCnic
+  // (the fields actually sent to the backend/FBR) when the format is a
+  // confirmed match — never on a partial or ambiguous digit count.
+  const handleBuyerIdChange = (e: any) => {
+    const value = e.target.value
+    const kind = classifyBuyerId(value)
+    setFormData(prev => ({
+      ...prev,
+      buyerNtnCnic: value,
+      buyerNtn: kind === 'ntn' ? onlyDigits(value) : '',
+      buyerCnic: kind === 'cnic' ? value : ''
+    }))
+  }
+
+  // On blur, normalize a valid CNIC to the canonical dashed format so
+  // every invoice stores buyer IDs consistently regardless of how the
+  // user typed it (with or without dashes).
+  const handleBuyerIdBlur = () => {
+    const kind = classifyBuyerId(formData.buyerNtnCnic)
+    if (kind === 'cnic') {
+      const normalized = normalizeCnic(formData.buyerNtnCnic)
+      setFormData(prev => ({ ...prev, buyerNtnCnic: normalized, buyerCnic: normalized }))
+    }
+  }
+
   const handleItemChange = (index: number, field: string, value: any) => {
     const newItems = [...formData.items]
     newItems[index] = { ...newItems[index], [field]: value }
@@ -662,6 +721,7 @@ const buyerCnicRef = useRef<HTMLInputElement>(null)
       buyerName: buyer.buyerName,
       buyerNtn: buyer.buyerNtn || '',
       buyerCnic: buyer.buyerCnic || '',
+      buyerNtnCnic: buyer.buyerNtn || buyer.buyerCnic || '',
       buyerType: buyer.buyerType || 'Unregistered'
     }))
   }
@@ -801,6 +861,7 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       buyerName: String(get(first, 'buyerName', prev.buyerName)),
       buyerNtn: String(get(first, 'buyerNtn', prev.buyerNtn)),
       buyerCnic: String(get(first, 'buyerCnic', prev.buyerCnic)),
+      buyerNtnCnic: String(get(first, 'buyerNtn', '') || get(first, 'buyerCnic', '') || prev.buyerNtnCnic),
       buyerType: String(get(first, 'buyerType', prev.buyerType)),
       buyerId: null,
       items,
@@ -842,8 +903,7 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         else if (formError.scrollTarget === 'destinationProvince') destinationProvinceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         else if (formError.scrollTarget === 'buyerType') buyerTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
         else if (formError.scrollTarget === 'sellerRegNo') { sellerRegNoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); sellerRegNoRef.current?.focus() }
-        else if (formError.scrollTarget === 'buyerNtn') { buyerNtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerNtnRef.current?.focus() }
-        else if (formError.scrollTarget === 'buyerCnic') { buyerCnicRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerCnicRef.current?.focus() }
+        else if (formError.scrollTarget === 'buyerNtnCnic') { buyerIdRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); buyerIdRef.current?.focus() }
         else itemRefs.current[formError.scrollTarget.item]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 50)
       return
@@ -1087,7 +1147,7 @@ setTimeout(() => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4 mt-4">
+              <div className="grid grid-cols-3 gap-4 mt-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Name</label>
                   <ClientAutocomplete
@@ -1097,24 +1157,26 @@ setTimeout(() => {
                   />
                 </div>
                 <div>
-                 <label className="block text-sm text-muted mb-2">
-  Buyer NTN {formData.buyerType === 'Registered' && '*'}
-</label>
-                  <input ref={buyerNtnRef} type="text" name="buyerNtn" value={formData.buyerNtn} onChange={handleInputChange}
-                    placeholder="7 digit NTN"
+                  <label className="block text-sm text-muted mb-2">Buyer NTN / CNIC *</label>
+                  <input ref={buyerIdRef} type="text" name="buyerNtnCnic" value={formData.buyerNtnCnic}
+                    onChange={handleBuyerIdChange} onBlur={handleBuyerIdBlur}
+                    placeholder="7-digit NTN or 12345-1234567-1"
                     className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
-                      !formData.buyerNtn.trim() && formData.buyerType === 'Registered' && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                      !formData.buyerNtnCnic.trim() && error ? 'border-red-500 ring-1 ring-red-500' :
+                      classifyBuyerId(formData.buyerNtnCnic) === 'invalid' ? 'border-red-500 ring-1 ring-red-500' :
+                      'border-border'
                     }`} />
-                </div>
-                <div>
-                 <label className="block text-sm text-muted mb-2">
-  Buyer CNIC {formData.buyerType !== 'Registered' && '*'}
-</label>
-                  <input ref={buyerCnicRef} type="text" name="buyerCnic" value={formData.buyerCnic} onChange={handleInputChange}
-                    placeholder="13 digit CNIC"
-                    className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
-                      !formData.buyerCnic.trim() && formData.buyerType !== 'Registered' && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
-                    }`} />
+                  <p className={`text-xs mt-1 ${
+                    classifyBuyerId(formData.buyerNtnCnic) === 'invalid' ? 'text-red-500' : 'text-muted'
+                  }`}>
+                    {(() => {
+                      const kind = classifyBuyerId(formData.buyerNtnCnic)
+                      if (kind === 'ntn') return '✓ Valid NTN'
+                      if (kind === 'cnic') return '✓ Valid CNIC'
+                      if (kind === 'invalid') return 'Not a valid NTN (7 digits) or CNIC (13 digits) format'
+                      return 'Enter a 7-digit NTN or 13-digit CNIC — format detected automatically'
+                    })()}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm text-muted mb-2">Buyer Type *</label>
@@ -1295,7 +1357,7 @@ setTimeout(() => {
                           onChange={e => handleItemChange(index, 'furtherTax', e.target.value)}
                           placeholder="0 if not applicable"
                           className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
-                        <p className="text-xs text-muted mt-1">3% surcharge for sales to unregistered buyers</p>
+                        <p className="text-xs text-muted mt-1">4% surcharge for sales to unregistered buyers</p>
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1 min-h-[2.5rem]">Total Value of Sales — PFAD only (PKR)</label>
