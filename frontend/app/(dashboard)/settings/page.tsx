@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
+
+const BUSINESS_TYPES = ['Retail', 'Wholesale', 'Distributor', 'Manufacturing', 'Services', 'Other']
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -72,6 +75,19 @@ export default function SettingsPage() {
 
   const handleInputChange = (e: any) => {
     const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleFbrInputChange = (e: any) => {const handleInputChange = (e: any) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
@@ -269,20 +285,12 @@ export default function SettingsPage() {
 
                 <div>
                   <label className="block text-sm text-muted mb-2">Business Type *</label>
-                  <select
-                    name="businessType"
-                    value={formData.businessType}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition"
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Wholesale">Wholesale</option>
-                    <option value="Manufacturing">Manufacturing</option>
-                    <option value="Services">Services</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <StyledSelect
+                    options={toOptions(BUSINESS_TYPES)}
+                    value={formData.businessType ? { value: formData.businessType, label: formData.businessType } : null}
+                    onChange={opt => handleSelectChange('businessType', opt?.value || '')}
+                    placeholder="Select Type"
+                  />
                 </div>
 
                 <div>

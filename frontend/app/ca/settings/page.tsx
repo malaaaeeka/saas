@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
-const BUSINESS_TYPES = ['Retail', 'Wholesale', 'Manufacturing', 'Services', 'Other']
+const BUSINESS_TYPES = ['Retail', 'Wholesale', 'Distributor', 'Manufacturing', 'Services', 'Other']
 
 export default function SettingsPage() {
   const router = useRouter()
