@@ -9,7 +9,7 @@ export async function processBulkBatch(batchId: string, invoices: any[], busines
     return
   }
 
-  const CONCURRENCY = 5 // start conservative — raise only if FBR doesn't rate-limit/error
+  const CONCURRENCY = 10 // bumped from 5 after clean test run — watch for FBR rate-limit errors
 
   const results: {
     documentNumber: string
