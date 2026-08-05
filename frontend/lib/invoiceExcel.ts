@@ -144,19 +144,20 @@ export function groupRowsIntoInvoices(dataRows: any[][], rawHeaders: string[]): 
       }
     })
 
-    const payload = {
-      sellerRegNo: String(get(first, 'sellerRegNo', '')),
-      invoiceDate: String(get(first, 'invoiceDate', '')),
-      documentType: String(get(first, 'documentType', 'Sale Invoice')),
-      invoiceType: String(get(first, 'invoiceType', 'SALE')),
-      buyerName: String(get(first, 'buyerName', '')),
-      buyerNtn: String(get(first, 'buyerNtn', '')),
-      buyerCnic: String(get(first, 'buyerCnic', '')),
-      buyerType: String(get(first, 'buyerType', 'Unregistered')),
-      originationProvince: String(get(first, 'originationProvince', '')),
-      destinationProvince: String(get(first, 'destinationProvince', '')),
-      items,
-    }
+   const payload = {
+  sellerRegNo: String(get(first, 'sellerRegNo', '')),
+  invoiceDate: String(get(first, 'invoiceDate', '')),
+  documentType: String(get(first, 'documentType', 'Sale Invoice')),
+  saleType: String(get(first, 'saleType', 'Goods at standard rate (default)')),
+  invoiceType: String(get(first, 'invoiceType', 'SALE')),
+  buyerName: String(get(first, 'buyerName', '')),
+  buyerNtn: String(get(first, 'buyerNtn', '')),
+  buyerCnic: String(get(first, 'buyerCnic', '')),
+  buyerType: String(get(first, 'buyerType', 'Unregistered')),
+  originationProvince: String(get(first, 'originationProvince', '')),
+  destinationProvince: String(get(first, 'destinationProvince', '')),
+  items,
+}
 
     const errors: string[] = []
     if (!payload.sellerRegNo) errors.push('Missing Seller Reg No')
