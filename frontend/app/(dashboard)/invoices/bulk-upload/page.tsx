@@ -11,7 +11,8 @@ export default function BulkUploadPage() {
   const [batchId, setBatchId] = useState<string | null>(null)
   const [status, setStatus] = useState<any>(null)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+const [success, setSuccess] = useState('')
+const [showConfirm, setShowConfirm] = useState(false)
 
   const handleFile = async (e: any) => {
     const file = e.target.files?.[0]
@@ -33,19 +34,31 @@ export default function BulkUploadPage() {
     setSuccess(`Loaded ${parsed.length} invoice(s) from ${file.name}`)
   }
 
-  const handleSubmit = async () => {
+  const validCount = groups.filter(g => g.valid).length
+  const skippedCount = groups.length - validCount
+
+  const requestSubmit = () => {
+    if (validCount === 0) { setError('No valid invoices to submit'); return }
+    setShowConfirm(true)
+  }
+
+  const confirmSubmit = async () => {
+    setShowConfirm(false)
     const valid = groups.filter(g => g.valid)
-    if (valid.length === 0) { setError('No valid invoices to submit'); return }
     setError('')
     const token = localStorage.getItem('token')
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ invoices: valid.map(g => g.payload) }),
-    })
-    const data = await res.json()
-    if (data.success) setBatchId(data.data.batchId)
-    else setError(data.message || 'Failed to start batch')
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ invoices: valid.map(g => g.payload) }),
+      })
+      const data = await res.json()
+      if (data.success) setBatchId(data.data.batchId)
+      else setError(data.message || 'Failed to start batch')
+    } catch {
+      setError('Network error — could not reach the server. Please try again.')
+    }
   }
 
   useEffect(() => {
@@ -114,7 +127,15 @@ export default function BulkUploadPage() {
 
             {groups.length > 0 && (
               <div className="bg-surface rounded-xl p-6 border border-border shadow-sm mb-6">
-                <h2 className="text-lg font-semibold mb-4">Preview — {groups.length} Invoice(s)</h2>
+                <h2 className="text-lg font-semibold mb-2">Preview — {groups.length} Invoice(s)</h2>
+                <div className="flex items-center gap-4 mb-4 text-sm">
+                  <span className="text-success-text font-medium">{validCount} ready to submit</span>
+                  {skippedCount > 0 && (
+                    <span className="text-red-600 font-medium">
+                      {skippedCount} skipped due to errors — fix and re-upload to include them
+                    </span>
+                  )}
+                </div>
                 <div className="border border-border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-border-light text-left">
@@ -143,9 +164,9 @@ export default function BulkUploadPage() {
                 </div>
 
                 <div className="flex gap-4 justify-start mt-6">
-                  <button onClick={handleSubmit}
+                  <button onClick={requestSubmit}
                     className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text font-semibold py-3 px-8 rounded-lg transition">
-                    Submit {groups.filter(g => g.valid).length} Invoice(s)
+                    Submit {validCount} Invoice(s)
                   </button>
                   <button type="button" onClick={() => router.push('/invoices')}
                     className="bg-surface border border-border hover:border-heading text-heading font-semibold py-3 px-8 rounded-lg transition">
@@ -180,6 +201,29 @@ export default function BulkUploadPage() {
                 Go to Invoices
               </button>
             )}
+          </div>
+        )}
+
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-surface rounded-xl p-6 border border-border shadow-lg max-w-md w-full">
+              <h3 className="text-lg font-semibold mb-2">Confirm submission</h3>
+              <p className="text-muted text-sm mb-6">
+                {skippedCount > 0
+                  ? `${skippedCount} invoice(s) will be skipped due to validation errors. Submit the remaining ${validCount}?`
+                  : `Submit ${validCount} invoice(s) for FBR processing?`}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setShowConfirm(false)}
+                  className="bg-surface border border-border hover:border-heading text-heading font-medium py-2 px-5 rounded-lg transition">
+                  Cancel
+                </button>
+                <button onClick={confirmSubmit}
+                  className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text font-medium py-2 px-5 rounded-lg transition">
+                  Confirm Submit
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
