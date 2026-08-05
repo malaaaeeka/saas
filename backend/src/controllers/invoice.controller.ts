@@ -594,24 +594,41 @@ export const getInvoiceCounts = async (req: any, res: Response): Promise<void> =
 
 export const getInvoices = async (req: any, res: Response): Promise<void> => {
   try {
-    const { page = 1, limit = 10 } = req.query
+    const page = Math.max(parseInt(req.query.page as string) || 1, 1)
+    const limit = Math.min(parseInt(req.query.limit as string) || 10, 1000)
+    const type = req.query.type as string | undefined
+    const status = req.query.status as string | undefined
+    const search = (req.query.search as string | undefined)?.trim()
+
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
       sendError(res, 'Business not found', 404)
       return
     }
-    const skip = (Number(page) - 1) * Number(limit)
+
+    const where: any = { businessId: business.id }
+    if (type && type !== 'ALL') where.invoiceType = type
+    if (status && status !== 'ALL') where.status = status
+    if (search) {
+      where.OR = [
+        { buyerName: { contains: search, mode: 'insensitive' } },
+        { fbrInvoiceNo: { contains: search, mode: 'insensitive' } },
+        { id: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const skip = (page - 1) * limit
     const [invoices, total] = await Promise.all([
       prisma.invoice.findMany({
-        where: { businessId: business.id },
-        include: { items: true },
+        where,
         orderBy: { createdAt: 'desc' },
         skip,
-        take: Number(limit)
+        take: limit,
       }),
-      prisma.invoice.count({ where: { businessId: business.id } })
+      prisma.invoice.count({ where }),
     ])
-    sendPaginated(res, invoices.map(serializeInvoice), total, Number(page), Number(limit))
+
+    sendPaginated(res, invoices.map(serializeInvoice), total, page, limit)
   } catch (error) {
     sendError(res, 'Failed to fetch invoices', 500)
   }

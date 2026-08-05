@@ -120,6 +120,9 @@ model Invoice {
   branch   Branch?      @relation(fields: [branchId], references: [id])
   buyer    Buyer?       @relation(fields: [buyerId], references: [id])
   items    InvoiceItem[]
+
+  @@index([businessId, status, invoiceType])
+  @@index([businessId, createdAt])
 }
 
 enum InvoiceType {
