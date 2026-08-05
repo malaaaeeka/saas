@@ -158,7 +158,7 @@ const [showConfirm, setShowConfirm] = useState(false)
           </div>
         )}
 
-        {!batchId && (
+        {batchIds.length === 0 && (
           <>
             <div className="mb-6">
               <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleFile} className="hidden" />
