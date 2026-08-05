@@ -27,7 +27,7 @@ export default function InvoicesPage() {
 
   const [showSearch, setShowSearch] = useState(false)
   const [showFilterPanel, setShowFilterPanel] = useState(false)
-  const [invoiceCounts, setInvoiceCounts] = useState<{ total: number, byType: Record<string, number>, byStatus: Record<string, number> }>({ total: 0, byType: {}, byStatus: {} })
+  const [invoiceCounts, setInvoiceCounts] = useState<{ totalForType: number, totalForStatus: number, byType: Record<string, number>, byStatus: Record<string, number> }>({ totalForType: 0, totalForStatus: 0, byType: {}, byStatus: {} })
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -261,8 +261,8 @@ export default function InvoicesPage() {
     { value: 'FAILED', label: 'Failed' },
     { value: 'AMENDED', label: 'Amended' },
   ]
-  const typeCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byType[value] || 0)
-  const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byStatus[value] || 0)
+  const typeCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForType : (invoiceCounts.byType[value] || 0)
+const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForStatus : (invoiceCounts.byStatus[value] || 0)
 
   const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
     const typeInfo = getTypeLabel(invoice.invoiceType)

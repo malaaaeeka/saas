@@ -566,18 +566,28 @@ export const getInvoiceCounts = async (req: any, res: Response): Promise<void> =
       return
     }
 
-    const [typeCounts, statusCounts, total] = await Promise.all([
+    const type = req.query.type as string | undefined
+    const status = req.query.status as string | undefined
+
+    const typeWhere: any = { businessId: business.id }
+    if (status && status !== 'ALL') typeWhere.status = status
+
+    const statusWhere: any = { businessId: business.id }
+    if (type && type !== 'ALL') statusWhere.invoiceType = type
+
+    const [typeCounts, statusCounts, totalForType, totalForStatus] = await Promise.all([
       prisma.invoice.groupBy({
         by: ['invoiceType'],
-        where: { businessId: business.id },
+        where: typeWhere,
         _count: { _all: true }
       }),
       prisma.invoice.groupBy({
         by: ['status'],
-        where: { businessId: business.id },
+        where: statusWhere,
         _count: { _all: true }
       }),
-      prisma.invoice.count({ where: { businessId: business.id } })
+      prisma.invoice.count({ where: typeWhere }),
+      prisma.invoice.count({ where: statusWhere })
     ])
 
     const byType: Record<string, number> = {}
@@ -586,7 +596,7 @@ export const getInvoiceCounts = async (req: any, res: Response): Promise<void> =
     const byStatus: Record<string, number> = {}
     statusCounts.forEach(s => { byStatus[s.status] = s._count._all })
 
-    sendSuccess(res, { total, byType, byStatus })
+    sendSuccess(res, { totalForType, totalForStatus, byType, byStatus })
   } catch (error) {
     sendError(res, 'Failed to fetch invoice counts', 500)
   }
