@@ -8,14 +8,15 @@ export default function BulkUploadPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [groups, setGroups] = useState<InvoiceGroup[]>([])
-  const [batchId, setBatchId] = useState<string | null>(null)
+  const [batchIds, setBatchIds] = useState<string[]>([])
   const [status, setStatus] = useState<any>(null)
   const [error, setError] = useState('')
 const [success, setSuccess] = useState('')
 const [showConfirm, setShowConfirm] = useState(false)
 
   const MAX_FILE_SIZE_MB = 10
-  const MAX_ROWS = 5000
+  const MAX_ROWS = 20000
+  const CHUNK_SIZE = 500
 
   const handleFile = async (e: any) => {
     const file = e.target.files?.[0]
@@ -78,33 +79,58 @@ const [showConfirm, setShowConfirm] = useState(false)
     const valid = groups.filter(g => g.valid)
     setError('')
     const token = localStorage.getItem('token')
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ invoices: valid.map(g => g.payload) }),
-      })
-      const data = await res.json()
-      if (data.success) setBatchId(data.data.batchId)
-      else setError(data.message || 'Failed to start batch')
-    } catch {
-      setError('Network error — could not reach the server. Please try again.')
+
+    const chunks: typeof valid[] = []
+    for (let i = 0; i < valid.length; i += CHUNK_SIZE) {
+      chunks.push(valid.slice(i, i + CHUNK_SIZE))
     }
+
+    const batchIds: string[] = []
+    for (let i = 0; i < chunks.length; i++) {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ invoices: chunks[i].map(g => g.payload) }),
+        })
+        const data = await res.json()
+        if (data.success) {
+          batchIds.push(data.data.batchId)
+        } else {
+          setError(`Chunk ${i + 1}/${chunks.length} failed to start: ${data.message || 'unknown error'}`)
+          return
+        }
+      } catch {
+        setError(`Network error on chunk ${i + 1}/${chunks.length} — could not reach the server. Please try again.`)
+        return
+      }
+    }
+
+    setBatchIds(batchIds)
   }
 
   useEffect(() => {
-    if (!batchId) return
+    if (batchIds.length === 0) return
     const iv = setInterval(async () => {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk/${batchId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const data = await res.json()
-      setStatus(data.data)
-      if (data.data.status === 'DONE') clearInterval(iv)
+      const results = await Promise.all(
+        batchIds.map(id =>
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/bulk/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then(r => r.json())
+        )
+      )
+      const merged = {
+        total: results.reduce((sum, r) => sum + (r.data?.total || 0), 0),
+        completed: results.reduce((sum, r) => sum + (r.data?.completed || 0), 0),
+        status: results.every(r => r.data?.status === 'DONE') ? 'DONE' : 'IN_PROGRESS',
+        results: results.flatMap(r => r.data?.results || []),
+      }
+      setStatus(merged)
+      if (merged.status === 'DONE') clearInterval(iv)
     }, 2000)
     return () => clearInterval(iv)
-  }, [batchId])
+  }, [batchIds])
 
   return (
     <div className="min-h-screen bg-background text-heading p-8">
@@ -209,7 +235,7 @@ const [showConfirm, setShowConfirm] = useState(false)
           </>
         )}
 
-        {batchId && status && (
+        {batchIds.length > 0 && status && (
           <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
             <h2 className="text-lg font-semibold mb-4">
               Processing: {status.completed} / {status.total} {status.status === 'DONE' ? '— Done' : '...'}
