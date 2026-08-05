@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
 const PAGE_SIZE_OPTIONS = [
@@ -240,34 +240,34 @@ export default function InvoicesPage() {
   const typeCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byType[value] || 0)
   const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byStatus[value] || 0)
 
-  const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
+  const InvoiceRow = ({ invoice, isAmendment = false, style }: { invoice: any, isAmendment?: boolean, style: React.CSSProperties }) => {
     const typeInfo = getTypeLabel(invoice.invoiceType)
     return (
-      <div
+      <tr
         onClick={() => router.push(`/invoices/${invoice.id}`)}
-        className={`flex items-center border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
-        style={{ height: ROW_HEIGHT }}
+        className={`border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
+        style={{ ...style, display: 'table', tableLayout: 'fixed', width: '100%' }}
       >
-        <div className="px-4 py-2 break-all w-[13%]">
+        <td className="px-4 py-4 break-all">
           <div className="flex items-center gap-2">
             {isAmendment && <span className="text-muted text-lg leading-none">└─</span>}
             <span className="font-mono text-xs text-muted">{invoice.id.slice(0, 12)}...</span>
           </div>
-        </div>
-        <div className="px-4 py-2 text-sm w-[10%]">{new Date(invoice.invoiceDate).toLocaleDateString()}</div>
-        <div className="px-4 py-2 text-sm w-[9%]">
+        </td>
+        <td className="px-4 py-4 text-sm">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
+        <td className="px-4 py-4 text-sm">
           <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
-        </div>
-        <div className="px-4 py-2 text-sm break-words w-[13%]">{invoice.buyerName || 'Walk-in Customer'}</div>
-        <div className="px-4 py-2 font-semibold w-[11%]">PKR {Number(invoice.totalAmount).toFixed(2)}</div>
-        <div className="px-4 py-2 text-success-text w-[10%]">PKR {Number(invoice.totalSalesTax).toFixed(2)}</div>
-        <div className="px-4 py-2 w-[9%]">
+        </td>
+        <td className="px-4 py-4 text-sm break-words">{invoice.buyerName || 'Walk-in Customer'}</td>
+        <td className="px-4 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
+        <td className="px-4 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
+        <td className="px-4 py-4">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)}`}>
             {invoice.status}
           </span>
-        </div>
-        <div className="px-4 py-2 font-mono text-xs text-link break-all w-[13%]">{invoice.fbrInvoiceNo || '—'}</div>
-        <div className="px-4 py-2 w-[12%]" onClick={e => e.stopPropagation()}>
+        </td>
+        <td className="px-4 py-4 font-mono text-xs text-link break-all">{invoice.fbrInvoiceNo || '—'}</td>
+        <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
               {(invoice.status === 'PENDING' || invoice.status === 'FAILED' || invoice.status === 'DRAFT') && (
@@ -296,16 +296,14 @@ export default function InvoicesPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </td>
+      </tr>
     )
   }
 
-  // ---- Virtualized table body (only used in "All" mode where row count can be huge) ----
-  const parentRef = useRef<HTMLDivElement>(null)
-  const rowVirtualizer = useVirtualizer({
+  // ---- Virtualized rows, but scrolling happens on the whole page (like before) ----
+  const rowVirtualizer = useWindowVirtualizer({
     count: flatRows.length,
-    getScrollElement: () => parentRef.current,
     estimateSize: () => ROW_HEIGHT,
     overscan: 15,
   })
@@ -431,35 +429,35 @@ export default function InvoicesPage() {
           </div>
         ) : (
           <>
-            <div className="bg-surface rounded-lg border border-border mb-4">
-              <div className="flex bg-border-light">
-                <div className="text-left px-4 py-4 text-muted text-sm w-[13%]">Invoice ID</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[10%]">Date</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[9%]">Type</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[13%]">Buyer</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[11%]">Amount</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[10%]">Tax</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[9%]">Status</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[13%]">FBR No.</div>
-                <div className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</div>
-              </div>
-
-              {/* Virtualized body — only rows in view are ever mounted */}
-              <div ref={parentRef} style={{ height: '65vh', overflow: 'auto' }}>
-                <div style={{ height: rowVirtualizer.getTotalSize(), position: 'relative' }}>
+            <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
+              <table className="w-full table-fixed">
+                <thead className="bg-border-light">
+                  <tr>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Invoice ID</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Date</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Type</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Buyer</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Amount</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Tax</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Status</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">FBR No.</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
+                  </tr>
+                </thead>
+                <tbody style={{ display: 'block', position: 'relative', height: rowVirtualizer.getTotalSize() }}>
                   {rowVirtualizer.getVirtualItems().map(virtualRow => {
                     const row = flatRows[virtualRow.index]
                     return (
-                      <div
+                      <InvoiceRow
                         key={row.id}
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)` }}
-                      >
-                        <InvoiceRow invoice={row} isAmendment={row.isAmendment} />
-                      </div>
+                        invoice={row}
+                        isAmendment={row.isAmendment}
+                        style={{ position: 'absolute', top: 0, left: 0, transform: `translateY(${virtualRow.start}px)` }}
+                      />
                     )
                   })}
-                </div>
-              </div>
+                </tbody>
+              </table>
               {loadingMore && (
                 <div className="text-center py-2 text-sm text-muted border-t border-border">Loading more invoices…</div>
               )}
