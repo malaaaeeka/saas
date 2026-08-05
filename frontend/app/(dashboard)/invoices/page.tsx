@@ -108,6 +108,10 @@ export default function InvoicesPage() {
     }
   }
 
+  // Single source of truth for fetching: fires once per actual change to
+  // page, pageSize, typeFilter, statusFilter, or search. Page-reset on
+  // filter change is handled by the filter handlers below (not a separate
+  // effect), so changing a filter triggers exactly ONE fetch, not two.
   useEffect(() => {
     const token = localStorage.getItem('token')
     if (!token) { router.push('/login'); return }
@@ -126,6 +130,25 @@ export default function InvoicesPage() {
     setPage(1)
   }
 
+  // These reset page to 1 in the SAME update as the filter change, instead
+  // of via a separate effect — that separate effect was the cause of the
+  // "takes so long" slowness (it fired a second full fetch right after the
+  // first one, doubling load time, especially painful in "All" mode).
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value)
+    setPage(1)
+  }
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value)
+    setPage(1)
+  }
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
+
   const fetchInvoiceCounts = async (token: string) => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/counts`, {
@@ -137,11 +160,6 @@ export default function InvoicesPage() {
       console.log('Failed to fetch invoice counts')
     }
   }
-
-  // Reset page (triggers refetch via the effect above) whenever filters change
-  useEffect(() => {
-    setPage(1)
-  }, [typeFilter, statusFilter, search])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -203,8 +221,14 @@ export default function InvoicesPage() {
     }
   }
 
-  // Build parent/amendment tree for rendering.
-  // Filtering is done server-side, so `invoices` already reflects the active filters.
+  // True whenever a type/status/search filter is narrowing the result set.
+  const isFiltering = typeFilter !== 'ALL' || statusFilter !== 'ALL' || search !== ''
+
+  // Build parent/amendment tree for the UNFILTERED view. This nesting only
+  // makes sense when we have the full data — under a filter, the server
+  // may return a parent without its amendment (or vice versa) since they
+  // don't both match the filter, which used to make rows silently vanish
+  // from the tree. So the tree is only used when no filter is active.
   const tree = useMemo(() => {
     const parents = invoices.filter(inv => !inv.originalInvoiceId)
     const amendments = invoices.filter(inv => !!inv.originalInvoiceId)
@@ -212,6 +236,12 @@ export default function InvoicesPage() {
       ...parent,
       amendments: amendments.filter(a => a.originalInvoiceId === parent.id),
     }))
+  }, [invoices])
+
+  // Under a filter/search, show a flat list of exactly what matched —
+  // no forced nesting, so nothing that matched the filter goes missing.
+  const flatFilteredRows = useMemo(() => {
+    return invoices.map(inv => ({ ...inv, isAmendment: !!inv.originalInvoiceId }))
   }, [invoices])
 
   const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(totalCount / (pageSize as number))
@@ -327,7 +357,7 @@ export default function InvoicesPage() {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-muted text-sm">
-              {totalCount} total invoices · Showing {loadingMore ? `(${invoices.length} loaded so far...)` : ''}
+              {totalCount} total invoices
             </span>
             <div className="w-20">
               <StyledSelect
@@ -367,7 +397,7 @@ export default function InvoicesPage() {
                 autoFocus
                 type="text"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => handleSearchChange(e.target.value)}
                 placeholder="Search"
                 className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
               />
@@ -412,7 +442,7 @@ export default function InvoicesPage() {
               <p className="text-xs text-muted uppercase tracking-wide mb-3">Type</p>
               <div className="flex flex-col gap-2">
                 {typeOptions.map(opt => (
-                  <button key={opt.value} onClick={() => setTypeFilter(opt.value)} className={`text-left text-sm transition ${typeFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
+                  <button key={opt.value} onClick={() => handleTypeFilterChange(opt.value)} className={`text-left text-sm transition ${typeFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
                     {opt.label} ({typeCount(opt.value)})
                   </button>
                 ))}
@@ -422,7 +452,7 @@ export default function InvoicesPage() {
               <p className="text-xs text-muted uppercase tracking-wide mb-3">Status</p>
               <div className="flex flex-col gap-2">
                 {statusOptions.map(opt => (
-                  <button key={opt.value} onClick={() => setStatusFilter(opt.value)} className={`text-left text-sm transition ${statusFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
+                  <button key={opt.value} onClick={() => handleStatusFilterChange(opt.value)} className={`text-left text-sm transition ${statusFilter === opt.value ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
                     {opt.label} ({statusCount(opt.value)})
                   </button>
                 ))}
@@ -436,7 +466,7 @@ export default function InvoicesPage() {
         ) : invoices.length === 0 ? (
           <div className="bg-surface rounded-lg p-12 border border-border text-center">
             <p className="text-muted text-lg mb-2">No invoices match your filters</p>
-            <button onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }} className="text-link hover:opacity-70 text-sm transition">
+            <button onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch(''); setPage(1) }} className="text-link hover:opacity-70 text-sm transition">
               Clear filters
             </button>
           </div>
@@ -458,14 +488,18 @@ export default function InvoicesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {tree.map(parent => (
-                    <React.Fragment key={parent.id}>
-                      <InvoiceRow invoice={parent} />
-                      {parent.amendments.map((amendment: any) => (
-                        <InvoiceRow key={amendment.id} invoice={amendment} isAmendment={true} />
+                  {isFiltering
+                    ? flatFilteredRows.map(row => (
+                        <InvoiceRow key={row.id} invoice={row} isAmendment={row.isAmendment} />
+                      ))
+                    : tree.map(parent => (
+                        <React.Fragment key={parent.id}>
+                          <InvoiceRow invoice={parent} />
+                          {parent.amendments.map((amendment: any) => (
+                            <InvoiceRow key={amendment.id} invoice={amendment} isAmendment={true} />
+                          ))}
+                        </React.Fragment>
                       ))}
-                    </React.Fragment>
-                  ))}
                 </tbody>
               </table>
               {loadingMore && (
