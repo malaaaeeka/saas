@@ -5,6 +5,7 @@ import PDFDocument from 'pdfkit'
 import { generateQRCode, generateInvoiceQRData } from '../services/qr.service'
 import fbrService from '../services/fbr.service'
 import emailService from '../services/email.service'
+import { processBulkBatch } from '../services/bulkInvoice.service' 
 
 const s = (v: unknown): string => (v === null || v === undefined ? '' : String(v))
 
@@ -24,6 +25,43 @@ function serializeInvoice(invoice: any) {
       productCode: s(item.productCode),
       itemSNo: s(item.itemSNo),
     }))
+  }
+}
+
+
+export const bulkCreateInvoices = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { invoices } = req.body
+    if (!Array.isArray(invoices) || invoices.length === 0) {
+      sendError(res, 'No invoices provided', 400)
+      return
+    }
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business profile not found', 404)
+      return
+    }
+    const batch = await prisma.bulkBatch.create({
+      data: { businessId: business.id, total: invoices.length, status: 'PROCESSING' }
+    })
+    processBulkBatch(batch.id, invoices, business.id) // fire-and-forget
+    sendSuccess(res, { batchId: batch.id }, 'Bulk upload started', 202)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to start bulk upload', 500)
+  }
+}
+
+export const getBulkBatchStatus = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { batchId } = req.params
+    const batch = await prisma.bulkBatch.findUnique({
+      where: { id: batchId },
+      include: { results: true }
+    })
+    if (!batch) { sendError(res, 'Batch not found', 404); return }
+    sendSuccess(res, batch)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to fetch batch status', 500)
   }
 }
 

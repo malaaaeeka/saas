@@ -10,7 +10,9 @@ import {
   downloadInvoicePdf,
   submitToFBR,
   sendInvoiceEmail,
-  deleteInvoice
+  deleteInvoice,
+  bulkCreateInvoices,
+  getBulkBatchStatus
 } from '../controllers/invoice.controller'
 import { authenticate } from '../middleware/auth.middleware'
 import { validate } from '../middleware/validate.middleware'
@@ -18,6 +20,10 @@ import { invoiceSchema } from '../utils/validators'
 
 
 const router = Router()
+
+// Bulk routes — placed before '/:id' so '/bulk' isn't swallowed by the :id param
+router.post('/bulk', authenticate, bulkCreateInvoices)
+router.get('/bulk/:batchId', authenticate, getBulkBatchStatus)
 
 router.post('/', authenticate, validate(invoiceSchema), createInvoice)
 router.put('/:id', authenticate, validate(invoiceSchema), updateInvoice)

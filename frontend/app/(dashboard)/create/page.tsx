@@ -969,20 +969,32 @@ setTimeout(() => {
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-6xl mx-auto">
 
-        <div className="mb-8">
-          <button onClick={() => router.back()} className="text-muted hover:text-heading text-sm mb-2 flex items-center gap-1 transition">
-            ← Back
-          </button>
-          <h1 className="text-3xl font-bold mb-2">
-  {amendmentType === 'CREDIT_NOTE' && 'Raise Credit Note'}
-  {amendmentType === 'DEBIT_NOTE'  && 'Raise Debit Note'}
-  {editInvoiceId && !amendmentType && 'Edit Invoice'}
-  {!amendmentType && !editInvoiceId && 'Create Invoice'}
-</h1>
-          <p className="text-muted">
-            {amendmentType ? `Amendment for FBR Invoice: ${originalFbrNo}` : 'Create invoices for your business'}
-          </p>
-        </div>
+       <div className="mb-8 flex items-start justify-between">
+  <div>
+    <button onClick={() => router.back()} className="text-muted hover:text-heading text-sm mb-2 flex items-center gap-1 transition">
+      ← Back
+    </button>
+    <h1 className="text-3xl font-bold mb-2">
+      {amendmentType === 'CREDIT_NOTE' && 'Raise Credit Note'}
+      {amendmentType === 'DEBIT_NOTE'  && 'Raise Debit Note'}
+      {editInvoiceId && !amendmentType && 'Edit Invoice'}
+      {!amendmentType && !editInvoiceId && 'Create Invoice'}
+    </h1>
+    <p className="text-muted">
+      {amendmentType ? `Amendment for FBR Invoice: ${originalFbrNo}` : 'Create invoices for your business'}
+    </p>
+  </div>
+
+  {!amendmentType && !editInvoiceId && (
+    <button
+      type="button"
+      onClick={() => router.push('/invoices/bulk-upload')}
+      className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-4 rounded-lg text-sm transition flex-shrink-0"
+    >
+      Bulk Upload
+    </button>
+  )}
+</div>
 
 <div className="mb-6">
   <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />

@@ -67,6 +67,7 @@ model Business {
   invoices     Invoice[]
   buyers       Buyer[]
   subscription Subscription?
+  bulkBatches  BulkBatch[]
 }
 
 model Branch {
@@ -161,8 +162,7 @@ model InvoiceItem {
   withholdingTax     Decimal @default(0)
   discount           Decimal @default(0)
 
-
-invoice Invoice @relation(fields: [invoiceId], references: [id])
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
 }
 
 model Buyer {
@@ -253,3 +253,26 @@ model HsCode {
   @@index([description])
 }
 
+model BulkBatch {
+  id         String            @id @default(cuid())
+  businessId String
+  total      Int
+  completed  Int               @default(0)
+  status     String            @default("PROCESSING")
+  createdAt  DateTime          @default(now())
+
+  business Business          @relation(fields: [businessId], references: [id])
+  results  BulkBatchResult[]
+}
+
+model BulkBatchResult {
+  id             String   @id @default(cuid())
+  batchId        String
+  documentNumber String
+  status         String
+  fbrInvoiceNo   String?
+  error          String?
+  createdAt      DateTime @default(now())
+
+  batch BulkBatch @relation(fields: [batchId], references: [id])
+}
