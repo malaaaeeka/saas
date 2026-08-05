@@ -9,6 +9,8 @@ export async function processBulkBatch(batchId: string, invoices: any[], busines
     return
   }
 
+  const CONCURRENCY = 5 // start conservative — raise only if FBR doesn't rate-limit/error
+
   const results: {
     documentNumber: string
     status: 'SUCCESS' | 'FAILED'
@@ -16,22 +18,30 @@ export async function processBulkBatch(batchId: string, invoices: any[], busines
     error?: string
   }[] = []
 
-  for (const inv of invoices) {
-    const docNumber = inv.items?.[0]?.documentNumber || 'UNKNOWN'
-    try {
-      const result = await createAndSubmitInvoice(business, inv)
-      results.push({
-        documentNumber: docNumber,
-        status: 'SUCCESS',
-        fbrInvoiceNo: result.fbrInvoiceNo || undefined,
+  for (let i = 0; i < invoices.length; i += CONCURRENCY) {
+    const chunk = invoices.slice(i, i + CONCURRENCY)
+
+    const chunkResults = await Promise.all(
+      chunk.map(async (inv) => {
+        const docNumber = inv.items?.[0]?.documentNumber || 'UNKNOWN'
+        try {
+          const result = await createAndSubmitInvoice(business, inv)
+          return {
+            documentNumber: docNumber,
+            status: 'SUCCESS' as const,
+            fbrInvoiceNo: result.fbrInvoiceNo || undefined,
+          }
+        } catch (err: any) {
+          return {
+            documentNumber: docNumber,
+            status: 'FAILED' as const,
+            error: err.message || 'Unknown error',
+          }
+        }
       })
-    } catch (err: any) {
-      results.push({
-        documentNumber: docNumber,
-        status: 'FAILED',
-        error: err.message || 'Unknown error',
-      })
-    }
+    )
+
+    results.push(...chunkResults)
 
     await prisma.bulkBatch.update({
       where: { id: batchId },
