@@ -14,24 +14,55 @@ export default function BulkUploadPage() {
 const [success, setSuccess] = useState('')
 const [showConfirm, setShowConfirm] = useState(false)
 
+  const MAX_FILE_SIZE_MB = 10
+  const MAX_ROWS = 5000
+
   const handleFile = async (e: any) => {
     const file = e.target.files?.[0]
     if (!file) return
     setError('')
     setSuccess('')
-    const buf = await file.arrayBuffer()
-    const workbook = XLSX.read(buf, { type: 'array', sheets: 0 })
-    const sheet = workbook.Sheets[workbook.SheetNames[0]]
-    const grid: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
-    const rawHeaders = grid[0].map((h: any) => String(h || '').trim())
-    const dataRows = grid.slice(1).filter(r => r.some(c => String(c).trim() !== ''))
-    const parsed = groupRowsIntoInvoices(dataRows, rawHeaders)
-    if (parsed.length === 0) {
-      setError('No invoices could be grouped — check the Document Number column is filled in.')
+    setGroups([])
+
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Max allowed is ${MAX_FILE_SIZE_MB}MB — split it into smaller batches.`)
+      e.target.value = ''
       return
     }
-    setGroups(parsed)
-    setSuccess(`Loaded ${parsed.length} invoice(s) from ${file.name}`)
+
+    try {
+      const buf = await file.arrayBuffer()
+      const workbook = XLSX.read(buf, { type: 'array', sheets: 0 })
+      const sheet = workbook.Sheets[workbook.SheetNames[0]]
+      if (!sheet) {
+        setError('This file has no readable sheet — make sure it\'s a valid, unprotected Excel file.')
+        return
+      }
+      const grid: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+      if (grid.length < 2) {
+        setError('This file has no data rows below the header.')
+        return
+      }
+      const rawHeaders = grid[0].map((h: any) => String(h || '').trim())
+      const dataRows = grid.slice(1).filter(r => r.some(c => String(c).trim() !== ''))
+
+      if (dataRows.length > MAX_ROWS) {
+        setError(`This file has ${dataRows.length} rows, which exceeds the ${MAX_ROWS}-row limit. Please split it into smaller files.`)
+        return
+      }
+
+      const parsed = groupRowsIntoInvoices(dataRows, rawHeaders)
+      if (parsed.length === 0) {
+        setError('No invoices could be grouped — check the Document Number column is filled in.')
+        return
+      }
+      setGroups(parsed)
+      setSuccess(`Loaded ${parsed.length} invoice(s) from ${file.name}`)
+    } catch (err) {
+      setError('Could not read this file — it may be corrupted, password-protected, or not a valid Excel file.')
+    } finally {
+      e.target.value = ''
+    }
   }
 
   const validCount = groups.filter(g => g.valid).length
