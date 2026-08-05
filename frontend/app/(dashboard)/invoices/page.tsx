@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useWindowVirtualizer } from '@tanstack/react-virtual'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
 const PAGE_SIZE_OPTIONS = [
@@ -13,7 +12,6 @@ const PAGE_SIZE_OPTIONS = [
 ]
 
 const CHUNK_SIZE = 1000 // per-request size when fetching "All"
-const ROW_HEIGHT = 66   // approx row height in px — tune to match your actual row
 
 export default function InvoicesPage() {
   const router = useRouter()
@@ -68,7 +66,6 @@ export default function InvoicesPage() {
   }
 
   // "All" mode: fetch in 1000-row chunks, appending progressively.
-  // The virtualizer means rendering never blocks regardless of how much is loaded.
   const fetchInvoicesAll = async (token: string) => {
     const myFetchId = ++fetchIdRef.current
     setLoading(true)
@@ -206,19 +203,15 @@ export default function InvoicesPage() {
     }
   }
 
-  // Build parent/amendment tree, then flatten into a single array for virtualization.
-  // Filtering is now done server-side, so `invoices` already reflects the active filters.
-  const flatRows = useMemo(() => {
+  // Build parent/amendment tree for rendering.
+  // Filtering is done server-side, so `invoices` already reflects the active filters.
+  const tree = useMemo(() => {
     const parents = invoices.filter(inv => !inv.originalInvoiceId)
     const amendments = invoices.filter(inv => !!inv.originalInvoiceId)
-    const rows: any[] = []
-    parents.forEach(parent => {
-      rows.push({ ...parent, isAmendment: false })
-      amendments
-        .filter(a => a.originalInvoiceId === parent.id)
-        .forEach(a => rows.push({ ...a, isAmendment: true }))
-    })
-    return rows
+    return parents.map(parent => ({
+      ...parent,
+      amendments: amendments.filter(a => a.originalInvoiceId === parent.id),
+    }))
   }, [invoices])
 
   const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(totalCount / (pageSize as number))
@@ -240,13 +233,12 @@ export default function InvoicesPage() {
   const typeCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byType[value] || 0)
   const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.total : (invoiceCounts.byStatus[value] || 0)
 
-  const InvoiceRow = ({ invoice, isAmendment = false, style }: { invoice: any, isAmendment?: boolean, style: React.CSSProperties }) => {
+  const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
     const typeInfo = getTypeLabel(invoice.invoiceType)
     return (
       <tr
         onClick={() => router.push(`/invoices/${invoice.id}`)}
         className={`border-t border-border hover:bg-border-light transition cursor-pointer ${isAmendment ? 'bg-surface-alt' : ''}`}
-        style={{ ...style, display: 'table', tableLayout: 'fixed', width: '100%' }}
       >
         <td className="px-4 py-4 break-all">
           <div className="flex items-center gap-2">
@@ -300,13 +292,6 @@ export default function InvoicesPage() {
       </tr>
     )
   }
-
-  // ---- Virtualized rows, but scrolling happens on the whole page (like before) ----
-  const rowVirtualizer = useWindowVirtualizer({
-    count: flatRows.length,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 15,
-  })
 
   return (
     <div className="min-h-screen bg-background text-heading p-8">
@@ -386,9 +371,37 @@ export default function InvoicesPage() {
                 placeholder="Search"
                 className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
               />
-              <p className="text-muted text-sm mt-4">
-                {search === '' ? 'Start typing to search invoices...' : `Searching all ${totalCount} invoices — press Enter or close to view results in the table below.`}
-              </p>
+
+              {search === '' ? (
+                <p className="text-muted text-sm mt-4">Start typing to search invoices...</p>
+              ) : (
+                <div className="mt-8">
+                  {invoices.length === 0 ? (
+                    <p className="text-muted text-sm">No invoices match "{search}"</p>
+                  ) : (
+                    invoices.map(inv => {
+                      const typeInfo = getTypeLabel(inv.invoiceType)
+                      return (
+                        <div
+                          key={inv.id}
+                          onClick={() => { setShowSearch(false); router.push(`/invoices/${inv.id}`) }}
+                          className="py-5 border-b border-border cursor-pointer hover:bg-border-light transition -mx-4 px-4"
+                        >
+                          <p className="text-xs text-muted uppercase tracking-wide mb-1">
+                            {typeInfo.label} · {inv.status}
+                          </p>
+                          <p className="text-2xl text-heading mb-1">
+                            {inv.buyerName || 'Walk-in Customer'}
+                          </p>
+                          <p className="text-sm text-muted">
+                            {inv.fbrInvoiceNo ? `FBR No: ${inv.fbrInvoiceNo}` : inv.id.slice(0, 12)} · PKR {Number(inv.totalAmount).toFixed(2)}
+                          </p>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -420,7 +433,7 @@ export default function InvoicesPage() {
 
         {loading ? (
           <p className="text-muted">Loading invoices...</p>
-        ) : flatRows.length === 0 ? (
+        ) : invoices.length === 0 ? (
           <div className="bg-surface rounded-lg p-12 border border-border text-center">
             <p className="text-muted text-lg mb-2">No invoices match your filters</p>
             <button onClick={() => { setTypeFilter('ALL'); setStatusFilter('ALL'); setSearch('') }} className="text-link hover:opacity-70 text-sm transition">
@@ -444,18 +457,15 @@ export default function InvoicesPage() {
                     <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
                   </tr>
                 </thead>
-                <tbody style={{ display: 'block', position: 'relative', height: rowVirtualizer.getTotalSize() }}>
-                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
-                    const row = flatRows[virtualRow.index]
-                    return (
-                      <InvoiceRow
-                        key={row.id}
-                        invoice={row}
-                        isAmendment={row.isAmendment}
-                        style={{ position: 'absolute', top: 0, left: 0, transform: `translateY(${virtualRow.start}px)` }}
-                      />
-                    )
-                  })}
+                <tbody>
+                  {tree.map(parent => (
+                    <React.Fragment key={parent.id}>
+                      <InvoiceRow invoice={parent} />
+                      {parent.amendments.map((amendment: any) => (
+                        <InvoiceRow key={amendment.id} invoice={amendment} isAmendment={true} />
+                      ))}
+                    </React.Fragment>
+                  ))}
                 </tbody>
               </table>
               {loadingMore && (
