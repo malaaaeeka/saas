@@ -73,6 +73,7 @@ export default function InvoicesPage() {
     let currentPage = 1
     let total = Infinity
     let loaded = 0
+    let accumulated: any[] = []
 
     try {
       while (loaded < total) {
@@ -85,13 +86,12 @@ export default function InvoicesPage() {
 
         total = data.pagination?.total || 0
         setTotalCount(total)
-        setInvoices(prev => [...prev, ...data.data])
+        accumulated = accumulated.concat(data.data)
         loaded += data.data.length
         currentPage += 1
         if (data.data.length === 0) break // safety exit
-        if (currentPage === 2) setLoading(false) // let the table start rendering after first chunk
-        else setLoadingMore(true)
       }
+      setInvoices(accumulated)
     } catch {
       console.log('Failed to fetch invoices')
     } finally {
@@ -150,10 +150,11 @@ export default function InvoicesPage() {
   }
 
   const fetchInvoiceCounts = async (token: string) => {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/counts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+  try {
+    const params = new URLSearchParams({ type: typeFilter, status: statusFilter })
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invoices/counts?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       const data = await res.json()
       if (data.success) setInvoiceCounts(data.data)
     } catch {
