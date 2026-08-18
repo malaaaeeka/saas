@@ -14,6 +14,13 @@ interface Buyer {
   email: string | null
 }
 
+const BUYER_TYPES = ['Registered', 'Unregistered', 'Unregistered Distributor', 'Retail Consumer']
+
+const EMPTY_FORM = {
+  buyerName: '', buyerNtn: '', buyerCnic: '', buyerType: 'Unregistered',
+  address: '', phone: '', email: ''
+}
+
 export default function BuyersPage() {
   const router = useRouter()
   const [buyers, setBuyers] = useState<Buyer[]>([])
@@ -21,6 +28,12 @@ export default function BuyersPage() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
+
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchBuyers = useCallback(async (q: string) => {
@@ -57,6 +70,42 @@ export default function BuyersPage() {
     debounceRef.current = setTimeout(() => fetchBuyers(val), 300)
   }
 
+  const handleFormChange = (field: string, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleAddBuyer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaveError('')
+
+    if (!form.buyerName.trim()) {
+      setSaveError('Buyer name is required')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/buyers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(form)
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowAddModal(false)
+        setForm(EMPTY_FORM)
+        fetchBuyers('')
+      } else {
+        setSaveError(data.message || 'Failed to add buyer')
+      }
+    } catch {
+      setSaveError('Cannot reach server')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-7xl mx-auto">
@@ -66,6 +115,12 @@ export default function BuyersPage() {
             <h1 className="text-3xl font-bold mb-2">Buyers</h1>
             <p className="text-muted">All buyers saved to your business</p>
           </div>
+          <button
+            onClick={() => { setForm(EMPTY_FORM); setSaveError(''); setShowAddModal(true) }}
+            className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
+          >
+            Add Buyer
+          </button>
         </div>
 
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
@@ -125,6 +180,84 @@ export default function BuyersPage() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-surface border border-border rounded-xl shadow-lg w-full max-w-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-heading">Add Buyer</h2>
+                <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-heading text-xl leading-none">✕</button>
+              </div>
+
+              {saveError && (
+                <div className="bg-surface border border-border border-l-4 border-l-red-500 rounded-lg px-3 py-2 mb-4">
+                  <p className="text-red-700 text-sm">{saveError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleAddBuyer} className="space-y-3">
+                <div>
+                  <label className="block text-sm text-muted mb-1">Buyer Name *</label>
+                  <input type="text" value={form.buyerName} onChange={e => handleFormChange('buyerName', e.target.value)}
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-muted mb-1">NTN</label>
+                    <input type="text" value={form.buyerNtn} onChange={e => handleFormChange('buyerNtn', e.target.value)}
+                      placeholder="7-digit NTN"
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-muted mb-1">CNIC</label>
+                    <input type="text" value={form.buyerCnic} onChange={e => handleFormChange('buyerCnic', e.target.value)}
+                      placeholder="12345-1234567-1"
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">Buyer Type</label>
+                  <select value={form.buyerType} onChange={e => handleFormChange('buyerType', e.target.value)}
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+                    {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-muted mb-1">Phone</label>
+                    <input type="text" value={form.phone} onChange={e => handleFormChange('phone', e.target.value)}
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-muted mb-1">Email</label>
+                    <input type="email" value={form.email} onChange={e => handleFormChange('email', e.target.value)}
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">Address</label>
+                  <input type="text" value={form.address} onChange={e => handleFormChange('address', e.target.value)}
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" disabled={saving}
+                    className="bg-btn-dark hover:bg-btn-dark-hover disabled:opacity-50 text-btn-dark-text font-semibold py-2 px-6 rounded-lg text-sm transition">
+                    {saving ? 'Saving...' : 'Save Buyer'}
+                  </button>
+                  <button type="button" onClick={() => setShowAddModal(false)}
+                    className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-6 rounded-lg text-sm transition">
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
