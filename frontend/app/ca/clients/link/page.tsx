@@ -78,22 +78,29 @@ export default function LinkClientPage() {
         Search for a business that already has an account and link it to your CA profile.
       </p>
 
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
-        <input
-          type="text"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          placeholder="Search by business name, NTN, or email"
-          className="flex-1 bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-6 py-2 rounded-lg font-semibold transition"
-        >
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-      </form>
+      <form onSubmit={handleSearch} className="relative mb-8">
+  <svg
+    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted"
+    width="18" height="18" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+  <input
+    type="text"
+    value={query}
+    onChange={e => setQuery(e.target.value)}
+    placeholder="Search by business name, NTN, or email"
+    className="w-full bg-surface border border-border text-heading rounded-xl pl-11 pr-32 py-4 text-sm focus:outline-none focus:border-accent transition shadow-sm"
+  />
+  <button
+    type="submit"
+    disabled={loading}
+    className="absolute right-2 top-1/2 -translate-y-1/2 bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-5 py-2 rounded-lg text-sm font-semibold transition"
+  >
+    {loading ? 'Searching...' : 'Search'}
+  </button>
+</form>
 
       {error && (
         <div className="bg-surface border border-border border-l-4 border-l-error-border rounded-xl px-4 py-3 mb-4 shadow-sm">
@@ -106,31 +113,43 @@ export default function LinkClientPage() {
         </div>
       )}
 
-      {results.length > 0 && (
-        <div className="bg-surface border border-border rounded-lg overflow-hidden">
-          {results.map(business => (
-            <div
-              key={business.id}
-              className="flex items-center justify-between px-6 py-4 border-t border-border first:border-t-0"
-            >
-              <div>
-                <p className="font-medium text-heading">{business.businessName}</p>
-                <p className="text-sm text-muted">
-                  {business.user?.email} · NTN: {business.ntn}
-                  {business.caId && ' · Already linked to a CA'}
-                </p>
-              </div>
-              <button
-                onClick={() => handleAssign(business.id)}
-                disabled={assigningId === business.id || !!business.caId}
-                className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-4 py-2 rounded-lg text-sm font-semibold transition"
-              >
-                {assigningId === business.id ? 'Linking...' : business.caId ? 'Already Linked' : 'Assign to Me'}
-              </button>
-            </div>
-          ))}
+    {results.length > 0 && (
+  <div className="space-y-3">
+    {results.map(business => (
+      <div
+        key={business.id}
+        className="flex items-center justify-between bg-surface border border-border rounded-xl px-6 py-5 shadow-sm hover:border-heading/20 transition"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-full bg-border-light flex items-center justify-center text-heading font-semibold text-sm flex-shrink-0">
+            {business.businessName?.[0]?.toUpperCase() || '?'}
+          </div>
+          <div>
+            <p className="font-semibold text-heading">{business.businessName}</p>
+            <p className="text-sm text-muted mt-0.5">
+              {business.user?.email} <span className="text-border-light">·</span> NTN {business.ntn}
+            </p>
+          </div>
         </div>
-      )}
+
+        {business.caId ? (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-muted bg-border-light px-3 py-1.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-muted" />
+            Already Linked
+          </span>
+        ) : (
+          <button
+            onClick={() => handleAssign(business.id)}
+            disabled={assigningId === business.id}
+            className="bg-btn-dark hover:bg-btn-dark-hover disabled:bg-border-light disabled:text-muted text-btn-dark-text px-5 py-2 rounded-lg text-sm font-semibold transition"
+          >
+            {assigningId === business.id ? 'Linking...' : 'Assign to Me'}
+          </button>
+        )}
+      </div>
+    ))}
+  </div>
+)}
     </div>
   )
 }
