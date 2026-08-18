@@ -101,11 +101,21 @@ const handlePageSizeChange = (newSize: number | 'ALL') => {
 
   return (
     <div className="max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Clients</h1>
-        <p className="text-muted mb-6">Manage your referred businesses</p>
+      <div className="flex justify-between items-center mb-6">
+  <div>
+    <h1 className="text-3xl font-bold mb-2">My Clients</h1>
+    <p className="text-muted">Manage your referred businesses</p>
+  </div>
+  <button
+    onClick={() => router.push('/ca/clients/link')}
+    className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Link Existing Business
+  </button>
+</div>
 
-        <div className="flex justify-between items-center pb-4 border-b border-border">
+<div className="mb-8">
+  <div className="flex justify-between items-center pb-4 border-b border-border">
           <div className="flex items-center gap-6">
             <button
               onClick={() => setSearchOpen(true)}
