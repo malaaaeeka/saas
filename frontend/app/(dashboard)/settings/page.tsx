@@ -293,7 +293,7 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
                     placeholder="Select Type"
                   />
                 </div>
-
+<div>
                <label className="block text-sm text-muted mb-2">NTN or CNIC *</label>
 <input
   type="text"
@@ -309,6 +309,7 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
 {isProfileComplete && (
   <p className="text-xs text-muted mt-1">NTN/CNIC cannot be changed after registration</p>
 )}
+</div>
 
                 <div className="col-span-2">
                   <label className="block text-sm text-muted mb-2">Address *</label>
