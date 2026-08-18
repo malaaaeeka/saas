@@ -502,6 +502,7 @@ function CreateInvoicePageContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [notWhitelisted, setNotWhitelisted] = useState(false)
+const [businessLoading, setBusinessLoading] = useState(true)
   const saveAsDraftRef = useRef(false)
   const errorBoxRef = useRef<HTMLDivElement>(null)
   const invoiceTypeRef = useRef<HTMLDivElement>(null)
@@ -646,6 +647,8 @@ const buyerIdRef = useRef<HTMLInputElement>(null)
 }
     } catch (err) {
       setError('Failed to load business profile')
+    } finally {
+      setBusinessLoading(false)
     }
   }
 
@@ -996,7 +999,7 @@ setTimeout(() => {
   )}
 </div>
 
-{notWhitelisted && (
+{!businessLoading && notWhitelisted && (
   <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
     <span className="w-1.5 h-1.5 rounded-full bg-warning-text flex-shrink-0" />
     <p className="text-heading text-sm font-medium">Your business is not whitelisted with FBR yet. Contact the FBR helpline.</p>
@@ -1058,7 +1061,12 @@ setTimeout(() => {
   </div>
 )}
 
-        {!business ? (
+        {businessLoading ? (
+          <div className="bg-surface border border-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" />
+            <p className="text-muted text-sm font-medium">Loading your business profile…</p>
+          </div>
+        ) : !business ? (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
             <p className="text-heading text-sm font-medium">Please setup your business profile before creating invoices</p>
