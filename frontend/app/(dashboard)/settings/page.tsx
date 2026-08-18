@@ -32,6 +32,14 @@ export default function SettingsPage() {
     posId: ''
   })
 
+  const isProfileComplete = !!(
+    business &&
+    business.ntn && !business.ntn.startsWith('PENDING') &&
+    business.address &&
+    business.city &&
+    business.phone
+  )
+
   useEffect(() => {
     const userData = localStorage.getItem('user')
     const token = localStorage.getItem('token')
@@ -55,14 +63,14 @@ export default function SettingsPage() {
 
       if (data.success && data.data) {
         setBusiness(data.data)
-        setFormData({
-          businessName: data.data.businessName  || '',
-          ntn:          data.data.ntn           || '',
-          address:      data.data.address       || '',
-          city:         data.data.city          || '',
-          phone:        data.data.phone         || '',
-          businessType: data.data.businessType  || '',
-        })
+      setFormData({
+  businessName: data.data.businessName || '',
+  ntn:          (data.data.ntn && !data.data.ntn.startsWith('PENDING')) ? data.data.ntn : '',
+  address:      data.data.address || '',
+  city:         data.data.city || '',
+  phone:        data.data.phone || '',
+  businessType: data.data.businessType || '',
+})
         setFbrData({
           securityToken: data.data.securityToken || '',
           posId:         data.data.posId         || ''
@@ -71,6 +79,8 @@ export default function SettingsPage() {
     } catch (err) {
       console.log('Could not load business profile')
     }
+
+    
   }
 
   const handleInputChange = (e: any) => {
@@ -196,15 +206,16 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
         <div className="bg-surface rounded-xl p-6 border border-border shadow-sm mb-6">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-lg font-semibold">
-                {business ? 'Business Details' : 'Setup Your Business'}
-              </h2>
-              <p className="text-muted text-sm mt-1">
-                {business ? 'Your registered business information' : 'Enter your business details to get started'}
-              </p>
+                <h2 className="text-lg font-semibold">
+                  {isProfileComplete ? 'Business Details' : 'Setup Your Business'}
+                </h2>
+                <p className="text-muted text-sm mt-1">
+                  {isProfileComplete ? 'Your registered business information' : 'Enter your business details to get started'}
+                </p>
+            
             </div>
-            {business && !editMode && (
-              <button
+          {isProfileComplete && !editMode && (
+  <button
                 onClick={() => setEditMode(true)}
                 className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-4 py-2 rounded-lg text-sm font-semibold transition"
               >
@@ -227,8 +238,8 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
             </div>
           )}
 
-          {business && !editMode ? (
-            // ── Display Mode ──────────────────────────────────────────────
+       {isProfileComplete && !editMode ? (
+  // ── Display Mode ──────────────────────────────────────────────
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-muted text-sm">Business Name</p>
@@ -292,10 +303,10 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
   placeholder="1234567 or 13-digit CNIC"
   pattern="\d{7}|\d{13}"
   required
-  disabled={!!business && (/^\d{7}$/.test(business.ntn) || /^\d{13}$/.test(business.ntn))}
+  disabled={isProfileComplete}
   className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
 />
-{business && (/^\d{7}$/.test(business.ntn) || /^\d{13}$/.test(business.ntn)) && (
+{isProfileComplete && (
   <p className="text-xs text-muted mt-1">NTN/CNIC cannot be changed after registration</p>
 )}
 
