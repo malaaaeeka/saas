@@ -6,7 +6,9 @@ import {
   getMyClients,
   getCommission,
   getClientInvoices,
-  getClientDetails
+  getClientDetails,
+  searchBusiness,
+  assignClient
 } from '../controllers/ca.controller'
 
 const router = Router()
@@ -19,5 +21,7 @@ router.get('/clients', getMyClients)
 router.get('/commission', getCommission)
 router.get('/client/:clientId', getClientDetails)
 router.get('/client/:clientId/invoices', getClientInvoices)
+router.get('/search-business', searchBusiness)
+router.put('/assign-client/:businessId', assignClient)
 
 export default router

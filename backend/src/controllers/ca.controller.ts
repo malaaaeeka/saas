@@ -230,3 +230,67 @@ export const getClientDetails = async (req: AuthRequest, res: Response): Promise
     sendError(res, error.message, 500)
   }
 }
+
+// GET /api/ca/search-business?query=...
+export const searchBusiness = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { query } = req.query
+    if (!query || String(query).trim().length < 3) {
+      sendError(res, 'Enter at least 3 characters to search', 400)
+      return
+    }
+
+    const q = String(query).trim()
+
+    const businesses = await prisma.business.findMany({
+      where: {
+        OR: [
+          { ntn: { contains: q, mode: 'insensitive' } },
+          { businessName: { contains: q, mode: 'insensitive' } },
+          { user: { email: { contains: q, mode: 'insensitive' } } }
+        ]
+      },
+      include: {
+        user: { select: { email: true } }
+      },
+      take: 10
+    })
+
+    sendSuccess(res, businesses, 'Search results')
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}
+
+// PUT /api/ca/assign-client/:businessId
+export const assignClient = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { businessId } = req.params
+
+    const caProfile = await prisma.cAProfile.findUnique({ where: { userId: req.user.id } })
+    if (!caProfile) {
+      sendError(res, 'CA profile not found', 404)
+      return
+    }
+
+    const business = await prisma.business.findUnique({ where: { id: businessId } })
+    if (!business) {
+      sendError(res, 'Business not found', 404)
+      return
+    }
+
+    if (business.caId) {
+      sendError(res, 'This business is already linked to a CA', 400)
+      return
+    }
+
+    const updated = await prisma.business.update({
+      where: { id: businessId },
+      data: { caId: caProfile.id }
+    })
+
+    sendSuccess(res, updated, 'Business linked to your CA profile')
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}
