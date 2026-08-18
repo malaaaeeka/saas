@@ -131,8 +131,9 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
       const data = await res.json()
 
       if (data.success) {
-        setSuccess(business ? 'Business profile updated!' : 'Business profile created!')
-        setBusiness(data.data)
+  setSuccess(business ? 'Business profile updated!' : 'Business profile created!')
+  console.log('PUT response data.data:', data.data)
+  setBusiness(data.data)
         setEditMode(false)
         setTimeout(() => setSuccess(''), 3000)
       } else {
