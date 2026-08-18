@@ -6,6 +6,7 @@ import {
   getMyClients,
   getCommission,
   getClientInvoices
+  getClientDetails
 } from '../controllers/ca.controller'
 
 const router = Router()
@@ -16,6 +17,7 @@ router.use(authenticate, requireCA)
 router.get('/dashboard', getDashboard)
 router.get('/clients', getMyClients)
 router.get('/commission', getCommission)
+router.get('/client/:clientId', getClientDetails)
 router.get('/client/:clientId/invoices', getClientInvoices)
 
 export default router

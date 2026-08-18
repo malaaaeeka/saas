@@ -198,3 +198,35 @@ export const getClientInvoices = async (req: AuthRequest, res: Response): Promis
     sendError(res, error.message, 500)
   }
 }
+
+// GET /api/ca/client/:clientId
+export const getClientDetails = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { clientId } = req.params
+
+    const caProfile = await prisma.cAProfile.findUnique({
+      where: { userId: req.user.id }
+    })
+
+    if (!caProfile) {
+      sendError(res, 'CA profile not found', 404)
+      return
+    }
+
+    const client = await prisma.business.findUnique({
+      where: { id: clientId },
+      include: {
+        user: { select: { email: true, createdAt: true } }
+      }
+    })
+
+    if (!client || client.caId !== caProfile.id) {
+      sendError(res, 'Client not found', 404)
+      return
+    }
+
+    sendSuccess(res, client, 'Client details retrieved')
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}

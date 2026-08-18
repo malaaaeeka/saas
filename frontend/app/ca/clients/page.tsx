@@ -259,9 +259,12 @@ const handlePageSizeChange = (newSize: number | 'ALL') => {
                   <td className="px-6 py-4 text-sm">{client.user?.email}</td>
                   <td className="px-6 py-4 text-sm">{client.address || 'N/A'}</td>
                   <td className="px-6 py-4">
-                    <button className="text-link hover:opacity-70 text-sm">
-                      View Details
-                    </button>
+                   <button
+  onClick={() => router.push(`/ca/clients/${client.id}`)}
+  className="text-link hover:opacity-70 text-sm"
+>
+  View Details
+</button>
                   </td>
                 </tr>
               ))
