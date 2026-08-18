@@ -59,7 +59,7 @@ export default function BuyersPage() {
 
   return (
     <div className="min-h-screen bg-background text-heading p-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
 
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -135,40 +135,42 @@ export default function BuyersPage() {
           </div>
         )}
 
-        <div className="bg-surface rounded-xl border border-border shadow-sm overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-muted">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">NTN</th>
-                <th className="px-4 py-3">CNIC</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Address</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted">Loading...</td></tr>
-              ) : buyers.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-6 text-center text-muted">No buyers found</td></tr>
-              ) : (
-                buyers.map(b => (
-                  <tr key={b.id} className="border-b border-border last:border-0 text-body">
-                    <td className="px-4 py-3 font-medium text-heading">{b.buyerName}</td>
-                    <td className="px-4 py-3">{b.buyerNtn || '—'}</td>
-                    <td className="px-4 py-3">{b.buyerCnic || '—'}</td>
-                    <td className="px-4 py-3">{b.buyerType || '—'}</td>
-                    <td className="px-4 py-3">{b.phone || '—'}</td>
-                    <td className="px-4 py-3">{b.email || '—'}</td>
-                    <td className="px-4 py-3">{b.address || '—'}</td>
+        {loading ? (
+          <p className="text-muted">Loading buyers...</p>
+        ) : buyers.length === 0 ? (
+          <div className="bg-surface rounded-lg p-12 border border-border text-center">
+            <p className="text-muted text-lg">No buyers found</p>
+          </div>
+        ) : (
+          <div className="bg-surface rounded-lg border border-border overflow-x-auto mb-4">
+            <table className="w-full table-fixed">
+              <thead className="bg-border-light">
+                <tr>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[18%]">Name</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">NTN</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[16%]">CNIC</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Type</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Phone</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[15%]">Email</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[15%]">Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                {buyers.map(b => (
+                  <tr key={b.id} className="border-t border-border hover:bg-border-light transition">
+                    <td className="px-4 py-4 text-sm font-medium text-heading break-words">{b.buyerName}</td>
+                    <td className="px-4 py-4 text-sm">{b.buyerNtn || '—'}</td>
+                    <td className="px-4 py-4 text-sm">{b.buyerCnic || '—'}</td>
+                    <td className="px-4 py-4 text-sm">{b.buyerType || '—'}</td>
+                    <td className="px-4 py-4 text-sm">{b.phone || '—'}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.email || '—'}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.address || '—'}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
