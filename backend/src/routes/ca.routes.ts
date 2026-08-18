@@ -5,7 +5,7 @@ import {
   getDashboard,
   getMyClients,
   getCommission,
-  getClientInvoices
+  getClientInvoices,
   getClientDetails
 } from '../controllers/ca.controller'
 
