@@ -94,9 +94,9 @@ export const getBusinessProfile = async (req: any, res: Response): Promise<void>
 
 export const updateBusinessProfile = async (req: any, res: Response): Promise<void> => {
   try {
-    const { businessName, address, city, phone, businessType } = req.body
+    const { businessName, ntn, address, city, phone, businessType } = req.body
 
-    if (!businessName || !address || !city || !phone) {
+    if (!businessName || !address || !city || !phone || !businessType) {
       sendError(res, 'All required fields must be filled', 400)
       return
     }
@@ -107,15 +107,47 @@ export const updateBusinessProfile = async (req: any, res: Response): Promise<vo
       return
     }
 
+    const updateData: any = { businessName, address, city, phone, businessType }
+
+    // Only allow setting NTN/CNIC once — while it's still the auto-generated placeholder
+    const isPending = existing.ntn?.startsWith('PENDING')
+    if (isPending) {
+      if (!ntn) {
+        sendError(res, 'NTN or CNIC is required', 400)
+        return
+      }
+      if (!/^\d{7}$/.test(ntn) && !/^\d{13}$/.test(ntn)) {
+        sendError(res, 'Enter a valid 7-digit NTN or 13-digit CNIC', 400)
+        return
+      }
+
+      // Check uniqueness before assigning the real value
+      const ntnTaken = await prisma.business.findUnique({ where: { ntn } })
+      if (ntnTaken) {
+        sendError(res, 'NTN/CNIC is already registered to another business', 400)
+        return
+      }
+
+      updateData.ntn = ntn
+    }
+    // If not pending, ntn is left untouched — silently ignored even if sent, preserving "locked after set"
+
     const business = await prisma.business.update({
       where: { userId: req.user.id },
-      data: { businessName, address, city, phone, businessType }
+      data: updateData
     })
 
     sendSuccess(res, business, 'Business profile updated')
 
   } catch (error: any) {
     console.error('updateBusinessProfile error:', error)
+
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0]
+      sendError(res, `${field?.toUpperCase()} is already registered`, 400)
+      return
+    }
+
     sendError(res, error.message || 'Failed to update business profile', 500)
   }
 }
