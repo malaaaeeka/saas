@@ -31,6 +31,7 @@ const loggedInLinks = [
   { label: 'Dashboard', path: '/dashboard' },
   { label: 'Create Invoice', path: '/create' },
   { label: 'Invoices', path: '/invoices' },
+  { label: 'Buyers', path: '/buyers' },
   { label: 'Settings', path: '/settings' },
 ];
 

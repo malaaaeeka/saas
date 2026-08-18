@@ -65,3 +65,33 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
     sendError(res, 'Failed to create buyer', 500)
   }
 }
+
+export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    const { q } = req.query
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const where: any = { businessId }
+    if (q && String(q).trim().length > 0) {
+      where.OR = [
+        { buyerName: { contains: String(q), mode: 'insensitive' } },
+        { buyerNtn:  { contains: String(q), mode: 'insensitive' } },
+        { buyerCnic: { contains: String(q), mode: 'insensitive' } }
+      ]
+    }
+
+    const buyers = await prisma.buyer.findMany({
+      where,
+      orderBy: { buyerName: 'asc' }
+    })
+
+    sendSuccess(res, buyers)
+  } catch (error) {
+    sendError(res, 'Failed to fetch buyers', 500)
+  }
+}
