@@ -99,12 +99,11 @@ export default function SettingsPage() {
       setLoading(false)
       return
     }
-
-    if (!/^\d{7}$/.test(formData.ntn)) {
-      setError('NTN must be exactly 7 digits')
-      setLoading(false)
-      return
-    }
+if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
+  setError('Enter a valid 7-digit NTN or 13-digit CNIC')
+  setLoading(false)
+  return
+}
 
     try {
       const token = localStorage.getItem('token')
@@ -239,10 +238,10 @@ export default function SettingsPage() {
                 <p className="text-muted text-sm">Business Type</p>
                 <p className="text-heading font-semibold">{business.businessType}</p>
               </div>
-              <div>
-                <p className="text-muted text-sm">NTN</p>
-                <p className="text-heading font-mono">{business.ntn}</p>
-              </div>
+             <div>
+  <p className="text-muted text-sm">{business.ntn?.length === 13 ? 'CNIC' : 'NTN'}</p>
+  <p className="text-heading font-mono">{business.ntn}</p>
+</div>
               <div className="col-span-2">
                 <p className="text-muted text-sm">Address</p>
                 <p className="text-heading">{business.address}</p>
@@ -284,23 +283,21 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm text-muted mb-2">NTN (7 digits) *</label>
-                  <input
-                    type="text"
-                    name="ntn"
-                    value={formData.ntn}
-                    onChange={handleInputChange}
-                    placeholder="1234567"
-                    pattern="\d{7}"
-                    required
-                    disabled={!!business}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {business && (
-                    <p className="text-xs text-muted mt-1">NTN cannot be changed after registration</p>
-                  )}
-                </div>
+               <label className="block text-sm text-muted mb-2">NTN or CNIC *</label>
+<input
+  type="text"
+  name="ntn"
+  value={formData.ntn}
+  onChange={handleInputChange}
+  placeholder="1234567 or 13-digit CNIC"
+  pattern="\d{7}|\d{13}"
+  required
+  disabled={!!business && (/^\d{7}$/.test(business.ntn) || /^\d{13}$/.test(business.ntn))}
+  className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition disabled:opacity-50 disabled:cursor-not-allowed"
+/>
+{business && (/^\d{7}$/.test(business.ntn) || /^\d{13}$/.test(business.ntn)) && (
+  <p className="text-xs text-muted mt-1">NTN/CNIC cannot be changed after registration</p>
+)}
 
                 <div className="col-span-2">
                   <label className="block text-sm text-muted mb-2">Address *</label>
@@ -447,7 +444,7 @@ export default function SettingsPage() {
         <div className="bg-surface border border-border border-l-4 border-l-accent rounded-xl p-6 shadow-sm">
           <h3 className="text-lg font-semibold text-heading mb-4">Need Help?</h3>
           <ul className="text-body space-y-2 text-sm">
-            <li>• <strong>NTN:</strong> 7-digit National Tax Number from FBR IRIS</li>
+            <li>• <strong>NTN/CNIC:</strong> 7-digit NTN or 13-digit CNIC from FBR IRIS</li>
             <li>• <strong>Security Token:</strong> From FBR IRIS after POS registration</li>
             <li>• <strong>POS ID:</strong> Point of Sale identifier assigned by FBR</li>
           </ul>

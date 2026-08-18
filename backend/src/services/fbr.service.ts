@@ -2,8 +2,8 @@ import axios from 'axios'
 import https from 'https'
 import logger from '../utils/logger'
 
-const FBR_SANDBOX_URL = 'https://esp.fbr.gov.pk:8244/DigitalInvoicing/v1/PostInvoiceData_v1'
-const FBR_PRODUCTION_URL = 'https://gw.fbr.gov.pk/pdi/v1/api/DigitalInvoicing/PostInvoiceData_v1'
+const FBR_SANDBOX_URL = 'https://gw.fbr.gov.pk/di_data/v1/di/postinvoicedata_sb'
+const FBR_PRODUCTION_URL = 'https://gw.fbr.gov.pk/di_data/v1/di/postinvoicedata'
 
 class FBRService {
 
