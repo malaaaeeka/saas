@@ -52,8 +52,27 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
       return
     }
 
+    if ((!buyerNtn || !buyerNtn.trim()) && (!buyerCnic || !buyerCnic.trim())) {
+      sendError(res, 'A valid NTN or CNIC is required', 400)
+      return
+    }
+
+    if (!buyerType || !buyerType.trim()) {
+      sendError(res, 'Buyer type is required', 400)
+      return
+    }
+
     const buyer = await prisma.buyer.create({
-      data: { businessId, buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email }
+      data: {
+        businessId,
+        buyerName,
+        buyerNtn: buyerNtn || null,
+        buyerCnic: buyerCnic || null,
+        buyerType,
+        address: address || null,
+        phone: phone || null,
+        email: email || null
+      }
     })
 
     sendSuccess(res, buyer)

@@ -16,8 +16,31 @@ interface Buyer {
 
 const BUYER_TYPES = ['Registered', 'Unregistered', 'Unregistered Distributor', 'Retail Consumer']
 
+const NTN_REGEX = /^\d{7}$/
+const CNIC_REGEX = /^\d{5}-?\d{7}-?\d{1}$/
+
+function onlyDigits(v: string): string {
+  return v.replace(/\D/g, '')
+}
+
+function normalizeCnic(v: string): string {
+  const digits = onlyDigits(v)
+  if (digits.length !== 13) return v
+  return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12)}`
+}
+
+function classifyBuyerId(v: string): 'ntn' | 'cnic' | 'invalid' | 'incomplete' {
+  const digits = onlyDigits(v)
+  if (digits.length === 0) return 'incomplete'
+  if (NTN_REGEX.test(digits)) return 'ntn'
+  if (CNIC_REGEX.test(v) || digits.length === 13) return 'cnic'
+  if (digits.length < 7) return 'incomplete'
+  if (digits.length > 7 && digits.length < 13) return 'incomplete'
+  return 'invalid'
+}
+
 const EMPTY_FORM = {
-  buyerName: '', buyerNtn: '', buyerCnic: '', buyerType: 'Unregistered',
+  buyerName: '', buyerNtnCnic: '', buyerType: '',
   address: '', phone: '', email: ''
 }
 
@@ -33,6 +56,7 @@ export default function BuyersPage() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -74,12 +98,29 @@ export default function BuyersPage() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleNtnCnicBlur = () => {
+    if (classifyBuyerId(form.buyerNtnCnic) === 'cnic') {
+      setForm(prev => ({ ...prev, buyerNtnCnic: normalizeCnic(prev.buyerNtnCnic) }))
+    }
+  }
+
+  const idKind = classifyBuyerId(form.buyerNtnCnic)
+
   const handleAddBuyer = async (e: React.FormEvent) => {
     e.preventDefault()
+    setAttemptedSubmit(true)
     setSaveError('')
 
     if (!form.buyerName.trim()) {
       setSaveError('Buyer name is required')
+      return
+    }
+    if (idKind !== 'ntn' && idKind !== 'cnic') {
+      setSaveError('Enter a valid 7-digit NTN or a 13-digit CNIC (format: 12345-1234567-1)')
+      return
+    }
+    if (!form.buyerType) {
+      setSaveError('Buyer type is required')
       return
     }
 
@@ -89,12 +130,21 @@ export default function BuyersPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/buyers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          buyerName: form.buyerName,
+          buyerNtn: idKind === 'ntn' ? onlyDigits(form.buyerNtnCnic) : '',
+          buyerCnic: idKind === 'cnic' ? form.buyerNtnCnic : '',
+          buyerType: form.buyerType,
+          address: form.address,
+          phone: form.phone,
+          email: form.email
+        })
       })
       const data = await res.json()
       if (data.success) {
         setShowAddModal(false)
         setForm(EMPTY_FORM)
+        setAttemptedSubmit(false)
         fetchBuyers('')
       } else {
         setSaveError(data.message || 'Failed to add buyer')
@@ -116,7 +166,7 @@ export default function BuyersPage() {
             <p className="text-muted">All buyers saved to your business</p>
           </div>
           <button
-            onClick={() => { setForm(EMPTY_FORM); setSaveError(''); setShowAddModal(true) }}
+            onClick={() => { setForm(EMPTY_FORM); setSaveError(''); setAttemptedSubmit(false); setShowAddModal(true) }}
             className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
           >
             Add Buyer
@@ -202,28 +252,32 @@ export default function BuyersPage() {
                 <div>
                   <label className="block text-sm text-muted mb-1">Buyer Name *</label>
                   <input type="text" value={form.buyerName} onChange={e => handleFormChange('buyerName', e.target.value)}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-muted mb-1">NTN</label>
-                    <input type="text" value={form.buyerNtn} onChange={e => handleFormChange('buyerNtn', e.target.value)}
-                      placeholder="7-digit NTN"
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted mb-1">CNIC</label>
-                    <input type="text" value={form.buyerCnic} onChange={e => handleFormChange('buyerCnic', e.target.value)}
-                      placeholder="12345-1234567-1"
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                  </div>
+                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                      attemptedSubmit && !form.buyerName.trim() ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`} />
                 </div>
 
                 <div>
-                  <label className="block text-sm text-muted mb-1">Buyer Type</label>
+                  <label className="block text-sm text-muted mb-1">Buyer NTN / CNIC *</label>
+                  <input type="text" value={form.buyerNtnCnic}
+                    onChange={e => handleFormChange('buyerNtnCnic', e.target.value)}
+                    onBlur={handleNtnCnicBlur}
+                    placeholder="7-digit NTN or 12345-1234567-1"
+                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                      attemptedSubmit && idKind !== 'ntn' && idKind !== 'cnic' ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`} />
+                  {attemptedSubmit && idKind === 'invalid' && (
+                    <p className="text-xs mt-1 text-red-500">Not a valid NTN (7 digits) or CNIC (13 digits) format</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">Buyer Type *</label>
                   <select value={form.buyerType} onChange={e => handleFormChange('buyerType', e.target.value)}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent">
+                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                      attemptedSubmit && !form.buyerType ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`}>
+                    <option value="">Select buyer type</option>
                     {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>

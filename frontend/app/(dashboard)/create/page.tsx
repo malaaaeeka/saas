@@ -996,6 +996,13 @@ setTimeout(() => {
   )}
 </div>
 
+{notWhitelisted && (
+  <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+    <span className="w-1.5 h-1.5 rounded-full bg-warning-text flex-shrink-0" />
+    <p className="text-heading text-sm font-medium">Your business is not whitelisted with FBR yet. Contact the FBR helpline.</p>
+  </div>
+)}
+
 <div className="mb-6">
   <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
   <button
@@ -1058,13 +1065,6 @@ setTimeout(() => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
-
-            {notWhitelisted && (
-              <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-warning-text flex-shrink-0" />
-                <p className="text-heading text-sm font-medium">Your business is not whitelisted with FBR yet. Contact the FBR helpline.</p>
-              </div>
-            )}
 
             {/* Seller & Filing Info */}
             <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
