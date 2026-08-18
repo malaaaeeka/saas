@@ -160,8 +160,12 @@ const getTypeLabel = (type: string) => {
               </td>
             </tr>
           )}
-        </tbody>
+                </tbody>
       </table>
     </div>
   )}
 </div>
+
+    </div>
+  )
+}
