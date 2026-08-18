@@ -999,12 +999,17 @@ setTimeout(() => {
   )}
 </div>
 
-{!businessLoading && notWhitelisted && (
+{businessLoading ? (
+  <div className="bg-surface border border-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
+    <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" />
+    <p className="text-muted text-sm font-medium">Loading your business profile…</p>
+  </div>
+) : notWhitelisted ? (
   <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 mb-6 shadow-sm flex items-center gap-2">
     <span className="w-1.5 h-1.5 rounded-full bg-warning-text flex-shrink-0" />
     <p className="text-heading text-sm font-medium">Your business is not whitelisted with FBR yet. Contact the FBR helpline.</p>
   </div>
-)}
+) : null}
 
 <div className="mb-6">
   <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleExcelUpload} className="hidden" />
@@ -1061,12 +1066,7 @@ setTimeout(() => {
   </div>
 )}
 
-        {businessLoading ? (
-          <div className="bg-surface border border-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted animate-pulse" />
-            <p className="text-muted text-sm font-medium">Loading your business profile…</p>
-          </div>
-        ) : !business ? (
+        {businessLoading ? null : !business ? (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl px-4 py-3 shadow-sm flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
             <p className="text-heading text-sm font-medium">Please setup your business profile before creating invoices</p>
