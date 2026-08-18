@@ -114,3 +114,86 @@ export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<voi
     sendError(res, 'Failed to fetch buyers', 500)
   }
 }
+export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+    const { buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email } = req.body
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const existing = await prisma.buyer.findUnique({ where: { id } })
+    if (!existing || existing.businessId !== businessId) {
+      sendError(res, 'Buyer not found', 404)
+      return
+    }
+
+    if (!buyerName || !buyerName.trim()) {
+      sendError(res, 'Buyer name is required', 400)
+      return
+    }
+
+    if ((!buyerNtn || !buyerNtn.trim()) && (!buyerCnic || !buyerCnic.trim())) {
+      sendError(res, 'A valid NTN or CNIC is required', 400)
+      return
+    }
+
+    if (!buyerType || !buyerType.trim()) {
+      sendError(res, 'Buyer type is required', 400)
+      return
+    }
+
+    const buyer = await prisma.buyer.update({
+      where: { id },
+      data: {
+        buyerName,
+        buyerNtn: buyerNtn || null,
+        buyerCnic: buyerCnic || null,
+        buyerType,
+        address: address || null,
+        phone: phone || null,
+        email: email || null
+      }
+    })
+
+    sendSuccess(res, buyer)
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      sendError(res, 'A buyer with this NTN or CNIC already exists', 409)
+      return
+    }
+    sendError(res, 'Failed to update buyer', 500)
+  }
+}
+
+export const deleteBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const existing = await prisma.buyer.findUnique({ where: { id } })
+    if (!existing || existing.businessId !== businessId) {
+      sendError(res, 'Buyer not found', 404)
+      return
+    }
+
+    const invoiceCount = await prisma.invoice.count({ where: { buyerId: id } })
+    if (invoiceCount > 0) {
+      sendError(res, `Cannot delete — this buyer has ${invoiceCount} invoice(s) linked to them`, 400)
+      return
+    }
+
+    await prisma.buyer.delete({ where: { id } })
+    sendSuccess(res, null, 'Buyer deleted successfully')
+  } catch (error) {
+    sendError(res, 'Failed to delete buyer', 500)
+  }
+}

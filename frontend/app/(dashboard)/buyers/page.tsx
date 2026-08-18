@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
 interface Buyer {
   id: string
@@ -52,11 +53,16 @@ export default function BuyersPage() {
   const [query, setQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
 
-  const [showAddModal, setShowAddModal] = useState(false)
+  const [showModal, setShowModal] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState('')
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -106,7 +112,30 @@ export default function BuyersPage() {
 
   const idKind = classifyBuyerId(form.buyerNtnCnic)
 
-  const handleAddBuyer = async (e: React.FormEvent) => {
+  const openAddModal = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setSaveError('')
+    setAttemptedSubmit(false)
+    setShowModal(true)
+  }
+
+  const openEditModal = (b: Buyer) => {
+    setEditingId(b.id)
+    setForm({
+      buyerName: b.buyerName,
+      buyerNtnCnic: b.buyerNtn || b.buyerCnic || '',
+      buyerType: b.buyerType || '',
+      address: b.address || '',
+      phone: b.phone || '',
+      email: b.email || ''
+    })
+    setSaveError('')
+    setAttemptedSubmit(false)
+    setShowModal(true)
+  }
+
+  const handleSaveBuyer = async (e: React.FormEvent) => {
     e.preventDefault()
     setAttemptedSubmit(true)
     setSaveError('')
@@ -127,8 +156,13 @@ export default function BuyersPage() {
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/buyers`, {
-        method: 'POST',
+      const url = editingId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/buyers/${editingId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/buyers`
+      const method = editingId ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           buyerName: form.buyerName,
@@ -142,17 +176,41 @@ export default function BuyersPage() {
       })
       const data = await res.json()
       if (data.success) {
-        setShowAddModal(false)
+        setShowModal(false)
         setForm(EMPTY_FORM)
+        setEditingId(null)
         setAttemptedSubmit(false)
         fetchBuyers('')
       } else {
-        setSaveError(data.message || 'Failed to add buyer')
+        setSaveError(data.message || 'Failed to save buyer')
       }
     } catch {
       setSaveError('Cannot reach server')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDeleteBuyer = async (id: string) => {
+    setDeletingId(id)
+    setDeleteError('')
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/buyers/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setBuyers(prev => prev.filter(b => b.id !== id))
+        setConfirmDeleteId(null)
+      } else {
+        setDeleteError(data.message || 'Failed to delete buyer')
+      }
+    } catch {
+      setDeleteError('Cannot reach server')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -166,7 +224,7 @@ export default function BuyersPage() {
             <p className="text-muted">All buyers saved to your business</p>
           </div>
           <button
-            onClick={() => { setForm(EMPTY_FORM); setSaveError(''); setAttemptedSubmit(false); setShowAddModal(true) }}
+            onClick={openAddModal}
             className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
           >
             Add Buyer
@@ -234,12 +292,12 @@ export default function BuyersPage() {
           </div>
         )}
 
-        {showAddModal && (
+        {showModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-surface border border-border rounded-xl shadow-lg w-full max-w-lg p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-heading">Add Buyer</h2>
-                <button onClick={() => setShowAddModal(false)} className="text-muted hover:text-heading text-xl leading-none">✕</button>
+                <h2 className="text-lg font-semibold text-heading">{editingId ? 'Edit Buyer' : 'Add Buyer'}</h2>
+                <button onClick={() => setShowModal(false)} className="text-muted hover:text-heading text-xl leading-none">✕</button>
               </div>
 
               {saveError && (
@@ -248,7 +306,7 @@ export default function BuyersPage() {
                 </div>
               )}
 
-              <form onSubmit={handleAddBuyer} className="space-y-3">
+              <form onSubmit={handleSaveBuyer} className="space-y-3">
                 <div>
                   <label className="block text-sm text-muted mb-1">Buyer Name *</label>
                   <input type="text" value={form.buyerName} onChange={e => handleFormChange('buyerName', e.target.value)}
@@ -273,13 +331,14 @@ export default function BuyersPage() {
 
                 <div>
                   <label className="block text-sm text-muted mb-1">Buyer Type *</label>
-                  <select value={form.buyerType} onChange={e => handleFormChange('buyerType', e.target.value)}
-                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
-                      attemptedSubmit && !form.buyerType ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
-                    }`}>
-                    <option value="">Select buyer type</option>
-                    {BUYER_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <div className={attemptedSubmit && !form.buyerType ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(BUYER_TYPES)}
+                      value={form.buyerType ? { value: form.buyerType, label: form.buyerType } : null}
+                      onChange={opt => handleFormChange('buyerType', opt?.value || '')}
+                      placeholder="Select buyer type"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -304,9 +363,9 @@ export default function BuyersPage() {
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={saving}
                     className="bg-btn-dark hover:bg-btn-dark-hover disabled:opacity-50 text-btn-dark-text font-semibold py-2 px-6 rounded-lg text-sm transition">
-                    {saving ? 'Saving...' : 'Save Buyer'}
+                    {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Save Buyer'}
                   </button>
-                  <button type="button" onClick={() => setShowAddModal(false)}
+                  <button type="button" onClick={() => setShowModal(false)}
                     className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-6 rounded-lg text-sm transition">
                     Cancel
                   </button>
@@ -322,6 +381,12 @@ export default function BuyersPage() {
           </div>
         )}
 
+        {deleteError && (
+          <div className="bg-surface border border-border border-l-4 border-l-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm">
+            <p className="text-red-700 text-sm font-medium">{deleteError}</p>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-muted">Loading buyers...</p>
         ) : buyers.length === 0 ? (
@@ -333,13 +398,14 @@ export default function BuyersPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[18%]">Name</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">NTN</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[16%]">CNIC</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Type</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Phone</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[15%]">Email</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[15%]">Address</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[16%]">Name</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">NTN</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">CNIC</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Type</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Phone</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Email</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Address</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -352,6 +418,31 @@ export default function BuyersPage() {
                     <td className="px-4 py-4 text-sm">{b.phone || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.email || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.address || '—'}</td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => openEditModal(b)} className="text-link hover:opacity-70 text-xs font-semibold transition underline">
+                            Edit
+                          </button>
+                          {confirmDeleteId !== b.id && (
+                            <button onClick={() => setConfirmDeleteId(b.id)} className="text-muted hover:text-error-text text-xs font-semibold transition underline">
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                        {confirmDeleteId === b.id && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted">Sure?</span>
+                            <button onClick={() => handleDeleteBuyer(b.id)} disabled={deletingId === b.id} className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed">
+                              {deletingId === b.id ? '...' : 'Yes'}
+                            </button>
+                            <button onClick={() => setConfirmDeleteId(null)} className="text-muted hover:text-heading text-xs font-semibold transition underline">
+                              No
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
