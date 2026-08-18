@@ -309,12 +309,18 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
     } else if (buyerName && buyerName.trim()) {
       // No existing buyer was selected, but a name was typed — save it
       // as a new Buyer so it's searchable on future invoices.
-      // Reuse an existing buyer with the same NTN if one exists, to avoid duplicates.
-      const existing = buyerNtn
+      // Reuse an existing buyer with the same NTN or CNIC if one exists, to avoid duplicates.
+      let existing = buyerNtn
         ? await prisma.buyer.findUnique({
             where: { businessId_buyerNtn: { businessId: business.id, buyerNtn } }
           })
         : null
+
+      if (!existing && buyerCnic) {
+        existing = await prisma.buyer.findFirst({
+          where: { businessId: business.id, buyerCnic }
+        })
+      }
 
       if (existing) {
         finalBuyerId = existing.id
@@ -436,12 +442,21 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
       resolvedBuyerName = buyer.buyerName
       resolvedBuyerNtn = buyer.buyerNtn
       resolvedBuyerCnic = buyer.buyerCnic
-    } else if (buyerName && buyerName.trim()) {
-      const existing = buyerNtn
+       } else if (buyerName && buyerName.trim()) {
+      // No existing buyer was selected, but a name was typed — save it
+      // as a new Buyer so it's searchable on future invoices.
+      // Reuse an existing buyer with the same NTN or CNIC if one exists, to avoid duplicates.
+      let existing = buyerNtn
         ? await prisma.buyer.findUnique({
             where: { businessId_buyerNtn: { businessId: business.id, buyerNtn } }
           })
         : null
+
+      if (!existing && buyerCnic) {
+        existing = await prisma.buyer.findFirst({
+          where: { businessId: business.id, buyerCnic }
+        })
+      }
 
       if (existing) {
         finalBuyerId = existing.id

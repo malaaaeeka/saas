@@ -17,11 +17,17 @@ async function resolveBuyer(business: any, buyerId: string | null, buyerName: st
     resolvedBuyerNtn = buyer.buyerNtn ?? ''
     resolvedBuyerCnic = buyer.buyerCnic ?? ''
   } else if (buyerName && buyerName.trim()) {
-    const existing = buyerNtn
+    let existing = buyerNtn
       ? await prisma.buyer.findUnique({
           where: { businessId_buyerNtn: { businessId: business.id, buyerNtn } }
         })
       : null
+
+    if (!existing && buyerCnic) {
+      existing = await prisma.buyer.findFirst({
+        where: { businessId: business.id, buyerCnic }
+      })
+    }
 
     if (existing) {
       finalBuyerId = existing.id
