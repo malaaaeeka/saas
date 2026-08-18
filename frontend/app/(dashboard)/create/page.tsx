@@ -989,7 +989,7 @@ setTimeout(() => {
     <button
       type="button"
       onClick={() => router.push('/invoices/bulk-upload')}
-      className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-4 rounded-lg text-sm transition flex-shrink-0"
+     className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition flex-shrink-0"
     >
       Bulk Upload
     </button>
