@@ -20,6 +20,7 @@ export default function BuyersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchBuyers = useCallback(async (q: string) => {
@@ -59,20 +60,74 @@ export default function BuyersPage() {
   return (
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Buyers</h1>
-          <p className="text-muted">All buyers saved to your business</p>
+
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Buyers</h1>
+            <p className="text-muted">All buyers saved to your business</p>
+          </div>
         </div>
 
-        <div className="mb-6">
-          <input
-            type="text"
-            value={query}
-            onChange={e => handleSearchChange(e.target.value)}
-            placeholder="Search by name, NTN, or CNIC..."
-            className="w-full max-w-md bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent"
-          />
+        <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
+          <div className="flex items-center gap-6">
+            <button onClick={() => setShowSearch(v => !v)} className="flex items-center gap-2 text-sm text-muted hover:text-heading transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="7" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Search
+            </button>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-muted text-sm">
+              {buyers.length} total buyers
+            </span>
+          </div>
         </div>
+
+        {showSearch && (
+          <div className="fixed inset-0 bg-background z-50 overflow-y-auto">
+            <div className="max-w-4xl mx-auto px-8 py-12">
+              <div className="flex justify-between items-center mb-8">
+                <span className="text-xs text-muted uppercase tracking-widest">Search Buyers</span>
+                <button onClick={() => setShowSearch(false)} className="text-muted hover:text-heading text-2xl leading-none">✕</button>
+              </div>
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={e => handleSearchChange(e.target.value)}
+                placeholder="Search"
+                className="w-full bg-transparent text-6xl italic font-serif text-heading placeholder-border border-b border-border focus:outline-none pb-4 mb-2"
+              />
+
+              {query === '' ? (
+                <p className="text-muted text-sm mt-4">Start typing to search buyers...</p>
+              ) : (
+                <div className="mt-8">
+                  {loading ? (
+                    <p className="text-muted text-sm">Searching...</p>
+                  ) : buyers.length === 0 ? (
+                    <p className="text-muted text-sm">No buyers match "{query}"</p>
+                  ) : (
+                    buyers.map(b => (
+                      <div
+                        key={b.id}
+                        onClick={() => setShowSearch(false)}
+                        className="py-5 border-b border-border cursor-pointer hover:bg-border-light transition -mx-4 px-4"
+                      >
+                        <p className="text-2xl text-heading mb-1">{b.buyerName}</p>
+                        <p className="text-sm text-muted">
+                          {b.buyerNtn || b.buyerCnic || 'No NTN/CNIC on file'} · {b.buyerType || 'Unregistered'}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-surface border border-border border-l-4 border-l-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm">
