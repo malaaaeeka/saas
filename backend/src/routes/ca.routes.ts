@@ -6,6 +6,7 @@ import {
   getMyClients,
   getCommission,
   getClientInvoices,
+  getClientInvoiceCounts,
   getClientDetails,
   searchBusiness,
   assignClient
@@ -21,7 +22,9 @@ router.get('/clients', getMyClients)
 router.get('/commission', getCommission)
 router.get('/client/:clientId', getClientDetails)
 router.get('/client/:clientId/invoices', getClientInvoices)
+router.get('/client/:clientId/invoices/counts', getClientInvoiceCounts) 
 router.get('/search-business', searchBusiness)
 router.put('/assign-client/:businessId', assignClient)
+
 
 export default router

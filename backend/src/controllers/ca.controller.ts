@@ -151,10 +151,11 @@ export const getCommission = async (req: AuthRequest, res: Response): Promise<vo
 }
 
 // GET /api/ca/client/:clientId/invoices
+// GET /api/ca/client/:clientId/invoices
 export const getClientInvoices = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { clientId } = req.params
-    const { page = 1, limit = 10 } = req.query
+    const { page = 1, limit = 10, type, status, search } = req.query
 
     const caProfile = await prisma.cAProfile.findUnique({
       where: { userId: req.user.id }
@@ -177,14 +178,33 @@ export const getClientInvoices = async (req: AuthRequest, res: Response): Promis
 
     const skip = (Number(page) - 1) * Number(limit)
 
+    const where: any = { businessId: clientId }
+
+    if (type && type !== 'ALL') {
+      where.invoiceType = type
+    }
+
+    if (status && status !== 'ALL') {
+      where.status = status
+    }
+
+    if (search && String(search).trim().length > 0) {
+      const q = String(search).trim()
+      where.OR = [
+        { buyerName: { contains: q, mode: 'insensitive' } },
+        { fbrInvoiceNo: { contains: q, mode: 'insensitive' } },
+        { id: { contains: q, mode: 'insensitive' } }
+      ]
+    }
+
     const invoices = await prisma.invoice.findMany({
       skip,
       take: Number(limit),
-      where: { businessId: clientId },
+      where,
       orderBy: { createdAt: 'desc' }
     })
 
-    const total = await prisma.invoice.count({ where: { businessId: clientId } })
+    const total = await prisma.invoice.count({ where })
 
     sendPaginated(
       res,
@@ -193,6 +213,68 @@ export const getClientInvoices = async (req: AuthRequest, res: Response): Promis
       Number(page),
       Number(limit),
       'Client invoices retrieved'
+    )
+  } catch (error: any) {
+    sendError(res, error.message, 500)
+  }
+}
+// GET /api/ca/client/:clientId/invoices/counts
+export const getClientInvoiceCounts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { clientId } = req.params
+    const { type, status } = req.query
+
+    const caProfile = await prisma.cAProfile.findUnique({
+      where: { userId: req.user.id }
+    })
+
+    if (!caProfile) {
+      sendError(res, 'CA profile not found', 404)
+      return
+    }
+
+    const client = await prisma.business.findUnique({
+      where: { id: clientId }
+    })
+
+    if (!client || client.caId !== caProfile.id) {
+      sendError(res, 'Client not found', 404)
+      return
+    }
+
+    // totalForType: count of all this client's invoices matching the current status filter (ignoring type)
+    const statusWhere: any = { businessId: clientId }
+    if (status && status !== 'ALL') statusWhere.status = status
+
+    // totalForStatus: count of all this client's invoices matching the current type filter (ignoring status)
+    const typeWhere: any = { businessId: clientId }
+    if (type && type !== 'ALL') typeWhere.invoiceType = type
+
+    const [totalForType, totalForStatus, byTypeRaw, byStatusRaw] = await Promise.all([
+      prisma.invoice.count({ where: statusWhere }),
+      prisma.invoice.count({ where: typeWhere }),
+      prisma.invoice.groupBy({
+        by: ['invoiceType'],
+        where: statusWhere,
+        _count: { _all: true }
+      }),
+      prisma.invoice.groupBy({
+        by: ['status'],
+        where: typeWhere,
+        _count: { _all: true }
+      })
+    ])
+
+    const byType: Record<string, number> = {}
+    byTypeRaw.forEach(row => { byType[row.invoiceType] = row._count._all })
+
+    const byStatus: Record<string, number> = {}
+    byStatusRaw.forEach(row => { byStatus[row.status] = row._count._all })
+
+    sendSuccess(
+      res,
+      { totalForType, totalForStatus, byType, byStatus },
+      'Client invoice counts retrieved'
     )
   } catch (error: any) {
     sendError(res, error.message, 500)
