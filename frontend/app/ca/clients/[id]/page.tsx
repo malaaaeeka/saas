@@ -335,8 +335,8 @@ export default function ClientDetailPage() {
             <span className={`text-muted transition-transform ${invoicesOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
-          {invoicesOpen && (
-            <div className="border-t border-border p-6">
+         {invoicesOpen && (
+  <div className="border-t border-border p-6 bg-background">
 
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
                 <div className="flex items-center gap-6">
@@ -357,7 +357,7 @@ export default function ClientDetailPage() {
                   </button>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-muted text-sm">{totalCount} total</span>
+                  <span className="text-muted text-sm">{totalCount} total invoices</span>
                   <div className="w-20">
                     <StyledSelect
                       options={PAGE_SIZE_OPTIONS}
