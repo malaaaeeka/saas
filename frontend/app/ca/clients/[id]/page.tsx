@@ -91,6 +91,50 @@ const getTypeLabel = (type: string) => {
       <h1 className="text-3xl font-bold mb-2">{client.businessName}</h1>
       <p className="text-muted mb-8">{client.user?.email}</p>
 
+      {/* Profile */}
+<div className="bg-surface rounded-xl border border-border shadow-sm mb-6 overflow-hidden">
+  <button
+    onClick={() => setProfileOpen(v => !v)}
+    className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-surface-alt transition"
+  >
+    <span className="font-semibold text-heading">
+      {profileOpen ? 'Hide Business Profile' : 'View Business Profile'}
+    </span>
+    <span className={`text-muted transition-transform ${profileOpen ? 'rotate-180' : ''}`}>▼</span>
+  </button>
+
+  {profileOpen && (
+    <div className="border-t border-border p-6">
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <p className="text-muted">Business Type</p>
+          <p className="text-heading">{client.businessType}</p>
+        </div>
+        <div>
+          <p className="text-muted">NTN / CNIC</p>
+          <p className="text-heading font-mono">{client.ntn}</p>
+        </div>
+        <div>
+          <p className="text-muted">Address</p>
+          <p className="text-heading">{client.address || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-muted">City</p>
+          <p className="text-heading">{client.city || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-muted">Phone</p>
+          <p className="text-heading">{client.phone || 'N/A'}</p>
+        </div>
+        <div>
+          <p className="text-muted">Whitelisted</p>
+          <p className="text-heading">{client.isWhitelisted ? 'Yes' : 'No'}</p>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
+
  {/* Invoices */}
 <div className="bg-surface rounded-xl border border-border shadow-sm mb-6 overflow-hidden">
   <button
