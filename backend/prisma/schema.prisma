@@ -182,10 +182,11 @@ model Buyer {
 
   business Business @relation(fields: [businessId], references: [id])
   invoices Invoice[]
-
   @@index([businessId, buyerName])
   @@unique([businessId, buyerNtn])
+  @@unique([businessId, buyerCnic])
 }
+
 
 model Subscription {
   id           String   @id @default(cuid())
