@@ -183,9 +183,7 @@ export default function BuyersPage() {
           buyerCnic: idKind === 'cnic' ? form.buyerNtnCnic : '',
           buyerType: form.buyerType,
           province: form.province,
-          // If the user didn't type an address, fall back to the selected
-          // province so the buyer still has something useful on file.
-          address: form.address.trim() || form.province || '',
+          address: form.address,
           phone: form.phone,
           email: form.email
         })
@@ -449,7 +447,7 @@ export default function BuyersPage() {
                     <td className="px-4 py-4 text-sm">{b.province || '—'}</td>
                     <td className="px-4 py-4 text-sm">{b.phone || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.email || '—'}</td>
-                    <td className="px-4 py-4 text-sm break-words">{b.address || b.province || '—'}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.address || '—'}</td>
                     <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
