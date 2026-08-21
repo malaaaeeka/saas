@@ -396,7 +396,7 @@ export default function ProductsPage() {
                             <button onClick={() => setConfirmDeleteId(p.id)} className="text-muted hover:text-error-text text-xs font-semibold transition underline">
                               Delete
                             </button>
-                          )}
+                          )} 
                         </div>
                         {confirmDeleteId === p.id && (
                           <div className="flex items-center gap-2">
