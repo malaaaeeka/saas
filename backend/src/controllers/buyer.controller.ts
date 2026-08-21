@@ -197,3 +197,25 @@ export const deleteBuyer = async (req: AuthRequest, res: Response): Promise<void
     sendError(res, 'Failed to delete buyer', 500)
   }
 }
+
+export const getBuyerById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const buyer = await prisma.buyer.findUnique({ where: { id } })
+    if (!buyer || buyer.businessId !== businessId) {
+      sendError(res, 'Buyer not found', 404)
+      return
+    }
+
+    sendSuccess(res, buyer)
+  } catch (error) {
+    sendError(res, 'Failed to fetch buyer', 500)
+  }
+}

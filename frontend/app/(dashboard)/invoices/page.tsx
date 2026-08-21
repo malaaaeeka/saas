@@ -494,7 +494,7 @@ const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForS
                     <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">Amount</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Tax</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Status</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">FBR No.</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">FBR No.</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
                   </tr>
                 </thead>
