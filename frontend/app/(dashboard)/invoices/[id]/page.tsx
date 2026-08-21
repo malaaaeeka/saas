@@ -267,19 +267,17 @@ export default function InvoiceDetailPage() {
           </div>
         )}
 
-        {/* 72-Hour Amendment Window */}
-        {(invoice.status === 'SENT' || invoice.status === 'AMENDED') && amendmentWindow &&
+        {/* Amendment actions — no time limit. Credit/Debit Notes can be
+            raised against a SENT or AMENDED invoice whenever needed. */}
+        {(invoice.status === 'SENT' || invoice.status === 'AMENDED') &&
          (invoice.invoiceType === 'SALE' || invoice.invoiceType === 'PURCHASE') && (
           <div className="bg-surface border border-border border-l-4 border-l-warning-border rounded-xl p-5 mb-6 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-warning-text" />
-              <p className="text-heading font-semibold text-sm">Amendment Window Open</p>
+              <p className="text-heading font-semibold text-sm">Amend This Invoice</p>
             </div>
             <p className="text-body text-sm mt-2">
-              FBR allows amendments within 72 hours of submission —
-              <span className="text-heading font-semibold ml-1">
-                {amendmentWindow.hoursLeft}h {amendmentWindow.minutesLeft}m remaining
-              </span>
+              Raise a Credit Note to correct an overcharge, or a Debit Note to correct an undercharge.
             </p>
             <div className="flex gap-3 mt-4">
               <button
@@ -295,15 +293,6 @@ export default function InvoiceDetailPage() {
                 Raise Debit Note
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Amendment window expired notice */}
-        {invoice.status === 'SENT' && !amendmentWindow && invoice.sentAt && (
-          <div className="bg-surface border border-border rounded-xl p-4 mb-6">
-            <p className="text-muted text-sm">
-              Amendment window has expired (72 hours passed since submission)
-            </p>
           </div>
         )}
 
