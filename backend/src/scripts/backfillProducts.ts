@@ -1,4 +1,4 @@
-import prisma from '../src/config/database'
+import prisma from '../config/database'
 
 async function main() {
   console.log('Fetching all invoice items...')
