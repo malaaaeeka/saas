@@ -959,22 +959,6 @@ const res = await fetch(url, {
 setTimeout(() => {
   router.push(resultId ? `/invoices/${resultId}` : '/invoices')
 }, 2000)
-      } else {      const data = await res.json()
-      if (data.success) {
-        const resultId = data.data?.id || editInvoiceId
-        const wasRedirectedToNewInvoice = editInvoiceId && resultId !== editInvoiceId
-        setSuccess(
-  saveAsDraftRef.current
-    ? 'Invoice saved as draft'
-    : editInvoiceId
-      ? wasRedirectedToNewInvoice
-        ? 'Invoice already submitted — your changes were saved as a new invoice'
-        : 'Invoice updated successfully'
-      : 'Invoice created and sent to FBR'
-)
-setTimeout(() => {
-  router.push(resultId ? `/invoices/${resultId}` : '/invoices')
-}, 2000)
       } else {
         setError(data.message || 'Failed to create invoice')
       }
