@@ -58,6 +58,12 @@ export async function createInvoiceRecord(business: any, payload: any) {
   const { finalBuyerId, resolvedBuyerName, resolvedBuyerNtn, resolvedBuyerCnic } =
     await resolveBuyer(business, buyerId, buyerName, buyerNtn, buyerCnic, buyerType)
 
+  let rootInvoiceId: string | null = null
+  if (originalInvoiceId) {
+    const parent = await prisma.invoice.findUnique({ where: { id: originalInvoiceId } })
+    rootInvoiceId = parent ? (parent.rootInvoiceId || parent.id) : null
+  }
+
   const totalAmount = items.reduce((sum: number, item: any) => sum + Number(item.totalAmount), 0)
   const totalSalesTax = items.reduce((sum: number, item: any) => sum + Number(item.salesTax), 0)
   const totalFed = items.reduce((sum: number, item: any) => sum + Number(item.fed || 0), 0)
@@ -74,6 +80,7 @@ export async function createInvoiceRecord(business: any, payload: any) {
       buyerType: buyerType || null,
       invoiceDate: new Date(invoiceDate),
       originalInvoiceId: originalInvoiceId || null,
+      rootInvoiceId: rootInvoiceId,
       amendmentReason: amendmentReason || null,
       buyerId: finalBuyerId,
       buyerNtn: resolvedBuyerNtn || '',

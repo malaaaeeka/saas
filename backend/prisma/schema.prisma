@@ -114,6 +114,7 @@ model Invoice {
   createdAt     DateTime      @default(now())
   sentAt             DateTime?
   originalInvoiceId  String?
+  rootInvoiceId      String?
   amendmentReason    String?
 
   business Business     @relation(fields: [businessId], references: [id])
@@ -123,6 +124,7 @@ model Invoice {
 
   @@index([businessId, status, invoiceType])
   @@index([businessId, createdAt])
+  @@index([businessId, rootInvoiceId])
 }
 
 enum InvoiceType {

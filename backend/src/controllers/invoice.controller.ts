@@ -19,6 +19,7 @@ function serializeInvoice(invoice: any) {
     errorMessage: s(invoice.errorMessage),
     amendmentReason: s(invoice.amendmentReason),
     originalInvoiceId: s(invoice.originalInvoiceId),
+    rootInvoiceId: s(invoice.rootInvoiceId),
     items: (invoice.items || []).map((item: any) => ({
       ...item,
       hsCodeDescription: s(item.hsCodeDescription),
@@ -290,6 +291,15 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
       sendError(res, 'Business profile not found. Please set up your profile first.', 404)
       return
     }
+
+    // Resolve the true root of the chain — if the parent already has a
+    // root (it's itself an edit/amendment), reuse that root's id;
+    // otherwise the parent IS the root.
+    let rootInvoiceId: string | null = null
+    if (originalInvoiceId) {
+      const parent = await prisma.invoice.findUnique({ where: { id: originalInvoiceId } })
+      rootInvoiceId = parent ? (parent.rootInvoiceId || parent.id) : null
+    }
     // If a buyerId was provided, snapshot that buyer's current details onto the invoice
     let resolvedBuyerName = buyerName
     let resolvedBuyerNtn = buyerNtn
@@ -350,6 +360,7 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
         buyerType: buyerType || null,
         invoiceDate: new Date(invoiceDate),
         originalInvoiceId: originalInvoiceId || null,
+        rootInvoiceId: rootInvoiceId,
         amendmentReason: amendmentReason || null,
         buyerId: finalBuyerId,
         buyerNtn: resolvedBuyerNtn || '',
@@ -426,8 +437,11 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
       sendError(res, 'Access denied', 403)
       return
     }
- const needsNewRecord = existingInvoice.status === 'SENT' || existingInvoice.status === 'AMENDED'
- 
+    const needsNewRecord = existingInvoice.status === 'SENT' || existingInvoice.status === 'AMENDED'
+    // Always points straight at the true root of the chain, however many
+    // edits deep this invoice already is — not just its immediate parent.
+    const rootInvoiceId = existingInvoice.rootInvoiceId || existingInvoice.id
+
     // Same buyer-resolution logic as createInvoice
     let resolvedBuyerName = buyerName
     let resolvedBuyerNtn = buyerNtn
@@ -516,6 +530,7 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
             buyerType: buyerType || null,
             invoiceDate: new Date(invoiceDate),
             originalInvoiceId: id,
+            rootInvoiceId: rootInvoiceId,
             amendmentReason: amendmentReason || null,
             buyerId: finalBuyerId,
             buyerNtn: resolvedBuyerNtn || '',

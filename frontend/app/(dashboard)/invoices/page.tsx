@@ -232,11 +232,17 @@ export default function InvoicesPage() {
   // don't both match the filter, which used to make rows silently vanish
   // from the tree. So the tree is only used when no filter is active.
   const tree = useMemo(() => {
-    const parents = invoices.filter(inv => !inv.originalInvoiceId)
-    const amendments = invoices.filter(inv => !!inv.originalInvoiceId)
-    return parents.map(parent => ({
-      ...parent,
-      amendments: amendments.filter(a => a.originalInvoiceId === parent.id),
+    const roots = invoices.filter(inv => !inv.originalInvoiceId)
+    const children = invoices.filter(inv => !!inv.originalInvoiceId)
+
+    // Every child (however many edits/amendments deep) carries rootInvoiceId
+    // pointing straight at the true original — no recursion needed, just a
+    // flat filter, sorted so the chain reads oldest-to-newest.
+    return roots.map(root => ({
+      ...root,
+      amendments: children
+        .filter(c => (c.rootInvoiceId || c.originalInvoiceId) === root.id)
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
     }))
   }, [invoices])
 
