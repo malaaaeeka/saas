@@ -291,8 +291,8 @@ const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForS
           <span className={`text-xs font-medium ${typeInfo.color}`}>{typeInfo.label}</span>
         </td>
         <td className="px-4 py-4 text-sm break-words">{invoice.buyerName || 'Walk-in Customer'}</td>
-        <td className="px-4 py-4 font-semibold">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
-        <td className="px-4 py-4 text-success-text">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
+        <td className="px-4 py-4 font-semibold whitespace-nowrap">PKR {Number(invoice.totalAmount).toFixed(2)}</td>
+        <td className="px-4 py-4 text-success-text whitespace-nowrap">PKR {Number(invoice.totalSalesTax).toFixed(2)}</td>
         <td className="px-4 py-4">
           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(invoice.status)}`}>
             {invoice.status}
