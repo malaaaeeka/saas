@@ -140,10 +140,17 @@ export default function InvoiceDetailPage() {
       originalFbrNo: invoice.fbrInvoiceNo,
       prefill: JSON.stringify({
         invoiceType: type,
+        documentType: type === 'CREDIT_NOTE' ? 'Credit Note' : 'Debit Note',
         invoiceDate: new Date().toISOString().split('T')[0],
+        originationProvince: invoice.originationProvince || '',
+        destinationProvince: invoice.destinationProvince || '',
+        branchId: invoice.branchId || '',
+        buyerId: invoice.buyerId || null,
         buyerNtn: invoice.buyerNtn || '',
         buyerCnic: invoice.buyerCnic || '',
+        buyerNtnCnic: invoice.buyerNtn || invoice.buyerCnic || '',
         buyerName: invoice.buyerName || '',
+        buyerType: invoice.buyerType || '',
         saleType: invoice.saleType,
         items: invoice.items
       })
