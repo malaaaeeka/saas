@@ -32,3 +32,159 @@ export const searchProducts = async (req: AuthRequest, res: Response): Promise<v
     sendError(res, 'Failed to search products', 500)
   }
 }
+
+export const getAllProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    const { q } = req.query
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const where: any = { businessId }
+    if (q && String(q).trim().length > 0) {
+      where.description = { contains: String(q), mode: 'insensitive' }
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: { description: 'asc' }
+    })
+
+    sendSuccess(res, products)
+  } catch (error) {
+    sendError(res, 'Failed to fetch products', 500)
+  }
+}
+
+export const getProductById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const product = await prisma.product.findUnique({ where: { id } })
+    if (!product || product.businessId !== businessId) {
+      sendError(res, 'Product not found', 404)
+      return
+    }
+
+    sendSuccess(res, product)
+  } catch (error) {
+    sendError(res, 'Failed to fetch product', 500)
+  }
+}
+
+export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    const { description, hsCode, hsCodeDescription, uom, rate, taxRate, sroSchedule, itemSNo } = req.body
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    if (!description || !description.trim()) {
+      sendError(res, 'Product description is required', 400)
+      return
+    }
+
+    const product = await prisma.product.create({
+      data: {
+        businessId,
+        description: description.trim(),
+        hsCode: hsCode || null,
+        hsCodeDescription: hsCodeDescription || null,
+        uom: uom || null,
+        rate: rate || null,
+        taxRate: taxRate || null,
+        sroSchedule: sroSchedule || null,
+        itemSNo: itemSNo || null
+      }
+    })
+
+    sendSuccess(res, product)
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      sendError(res, 'A product with this description already exists', 409)
+      return
+    }
+    sendError(res, 'Failed to create product', 500)
+  }
+}
+
+export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+    const { description, hsCode, hsCodeDescription, uom, rate, taxRate, sroSchedule, itemSNo } = req.body
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const existing = await prisma.product.findUnique({ where: { id } })
+    if (!existing || existing.businessId !== businessId) {
+      sendError(res, 'Product not found', 404)
+      return
+    }
+
+    if (!description || !description.trim()) {
+      sendError(res, 'Product description is required', 400)
+      return
+    }
+
+    const product = await prisma.product.update({
+      where: { id },
+      data: {
+        description: description.trim(),
+        hsCode: hsCode || null,
+        hsCodeDescription: hsCodeDescription || null,
+        uom: uom || null,
+        rate: rate || null,
+        taxRate: taxRate || null,
+        sroSchedule: sroSchedule || null,
+        itemSNo: itemSNo || null
+      }
+    })
+
+    sendSuccess(res, product)
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      sendError(res, 'A product with this description already exists', 409)
+      return
+    }
+    sendError(res, 'Failed to update product', 500)
+  }
+}
+
+export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params
+    const businessId = req.user?.business?.id
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const existing = await prisma.product.findUnique({ where: { id } })
+    if (!existing || existing.businessId !== businessId) {
+      sendError(res, 'Product not found', 404)
+      return
+    }
+
+    await prisma.product.delete({ where: { id } })
+    sendSuccess(res, null, 'Product deleted successfully')
+  } catch (error) {
+    sendError(res, 'Failed to delete product', 500)
+  }
+}

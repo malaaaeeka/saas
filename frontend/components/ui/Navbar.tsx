@@ -32,6 +32,7 @@ const loggedInLinks = [
   { label: 'Create Invoice', path: '/create' },
   { label: 'Invoices', path: '/invoices' },
   { label: 'Buyers', path: '/buyers' },
+  { label: 'Products', path: '/products' },
   { label: 'Settings', path: '/settings' },
 ];
 
