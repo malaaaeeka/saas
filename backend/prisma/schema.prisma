@@ -139,6 +139,7 @@ enum InvoiceStatus {
   FAILED
   RETRY
   AMENDED
+  EDITED
 }
 
 model InvoiceItem {

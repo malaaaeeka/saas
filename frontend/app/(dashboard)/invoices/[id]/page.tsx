@@ -157,6 +157,7 @@ export default function InvoiceDetailPage() {
       case 'PENDING':  return 'text-warning-text bg-warning-bg border-warning-border'
       case 'FAILED':   return 'text-error-text bg-error-bg border-error-border'
       case 'AMENDED':  return 'text-muted bg-border-light border-border'
+      case 'EDITED':   return 'text-muted bg-border-light border-border'
       default:         return 'text-muted bg-border-light border-border'
     }
   }

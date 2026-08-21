@@ -135,7 +135,7 @@ export async function submitInvoiceToFbr(invoiceId: string, business: any) {
   })
   if (!invoice) throw new Error('Invoice not found')
   if (invoice.status === 'SENT') throw new Error('Invoice already submitted to FBR')
-  if (invoice.status === 'AMENDED') throw new Error('This invoice has been amended and cannot be resubmitted')
+  if (invoice.status === 'AMENDED' || invoice.status === 'EDITED') throw new Error('This invoice has been amended or edited and cannot be resubmitted')
   if (!business.securityToken) throw new Error('FBR Security Token not configured. Please add it in Settings.')
   if (!business.posId) throw new Error('POS ID not configured. Please add it in Settings.')
 

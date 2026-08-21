@@ -426,7 +426,8 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
       sendError(res, 'Access denied', 403)
       return
     }
-
+ const needsNewRecord = existingInvoice.status === 'SENT' || existingInvoice.status === 'AMENDED'
+ 
     // Same buyer-resolution logic as createInvoice
     let resolvedBuyerName = buyerName
     let resolvedBuyerNtn = buyerNtn
@@ -478,6 +479,60 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
 
     // Replace items: delete existing, recreate from the submitted form
     const invoice = await prisma.$transaction(async (tx) => {
+      const itemData = items.map((item: any) => ({
+        documentNumber: item.documentNumber || null,
+        invoiceRefNo: item.invoiceRefNo || null,
+        hsCode: item.hsCode,
+        hsCodeDescription: item.hsCodeDescription || null,
+        productCode: item.productCode,
+        description: item.description,
+        quantity: item.quantity,
+        uom: item.uom,
+        rate: item.rate,
+        totalAmount: item.totalAmount,
+        salesTax: item.salesTax,
+        sroSchedule: item.sroSchedule,
+        itemSNo: item.itemSNo || null,
+        fed: item.fed || 0,
+        extraTax: item.extraTax || 0,
+        furtherTax: item.furtherTax || 0,
+        fixedNotifiedValue: item.fixedNotifiedValue || 0,
+        stWithheld: item.stWithheld || 0,
+        withholdingTax: item.withholdingTax || 0,
+        discount: item.discount || 0
+      }))
+
+      if (needsNewRecord) {
+        await tx.invoice.update({ where: { id }, data: { status: 'EDITED' } })
+
+        return tx.invoice.create({
+          data: {
+            businessId: business.id,
+            branchId: branchId || null,
+            invoiceType,
+            documentType: documentType || null,
+            originationProvince: originationProvince || null,
+            destinationProvince: destinationProvince || null,
+            buyerType: buyerType || null,
+            invoiceDate: new Date(invoiceDate),
+            originalInvoiceId: id,
+            amendmentReason: amendmentReason || null,
+            buyerId: finalBuyerId,
+            buyerNtn: resolvedBuyerNtn || '',
+            buyerCnic: resolvedBuyerCnic || '',
+            buyerName: resolvedBuyerName || '',
+            saleType,
+            totalAmount,
+            totalSalesTax,
+            totalFed,
+            totalDiscount,
+            status: 'PENDING',
+            items: { createMany: { data: itemData } }
+          },
+          include: { items: true }
+        })
+      }
+
       await tx.invoiceItem.deleteMany({ where: { invoiceId: id } })
 
       return tx.invoice.update({
@@ -501,32 +556,7 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
           totalFed,
           totalDiscount,
           status: status === 'DRAFT' ? 'DRAFT' : existingInvoice.status,
-          items: {
-            createMany: {
-              data: items.map((item: any) => ({
-                documentNumber: item.documentNumber || null,
-                invoiceRefNo: item.invoiceRefNo || null,
-                hsCode: item.hsCode,
-                hsCodeDescription: item.hsCodeDescription || null,
-                productCode: item.productCode,
-                description: item.description,
-                quantity: item.quantity,
-                uom: item.uom,
-                rate: item.rate,
-                totalAmount: item.totalAmount,
-                salesTax: item.salesTax,
-                sroSchedule: item.sroSchedule,
-                itemSNo: item.itemSNo || null,
-                fed: item.fed || 0,
-                extraTax: item.extraTax || 0,
-                furtherTax: item.furtherTax || 0,
-                fixedNotifiedValue: item.fixedNotifiedValue || 0,
-                stWithheld: item.stWithheld || 0,
-                withholdingTax: item.withholdingTax || 0,
-                discount: item.discount || 0
-              }))
-            }
-          }
+          items: { createMany: { data: itemData } }
         },
         include: { items: true }
       })
@@ -557,8 +587,8 @@ export const deleteInvoice = async (req: any, res: Response): Promise<void> => {
       sendError(res, 'Access denied', 403)
       return
     }
-    if (invoice.status === 'SENT' || invoice.status === 'AMENDED') {
-      sendError(res, 'Cannot delete a submitted or amended invoice', 400)
+    if (invoice.status === 'SENT' || invoice.status === 'AMENDED' || invoice.status === 'EDITED') {
+      sendError(res, 'Cannot delete a submitted, amended, or edited invoice', 400)
       return
     }
 
@@ -809,8 +839,8 @@ export const submitToFBR = async (req: any, res: Response): Promise<void> => {
       sendError(res, 'Invoice already submitted to FBR', 400)
       return
     }
-    if (invoice.status === 'AMENDED') {
-      sendError(res, 'This invoice has been amended and cannot be resubmitted. Use the Credit/Debit Note instead.', 400)
+    if (invoice.status === 'AMENDED' || invoice.status === 'EDITED') {
+      sendError(res, 'This invoice has been amended or edited and cannot be resubmitted.', 400)
       return
     }
     if (!invoice.business.securityToken) {

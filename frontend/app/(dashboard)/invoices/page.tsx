@@ -168,6 +168,7 @@ export default function InvoicesPage() {
       case 'PENDING': return 'text-warning-text bg-warning-bg'
       case 'FAILED':  return 'text-error-text bg-error-bg'
       case 'AMENDED': return 'text-muted bg-border-light'
+      case 'EDITED':  return 'text-muted bg-border-light'
       default:        return 'text-muted bg-border-light'
     }
   }
@@ -260,12 +261,14 @@ export default function InvoicesPage() {
     { value: 'SENT', label: 'Sent' },
     { value: 'FAILED', label: 'Failed' },
     { value: 'AMENDED', label: 'Amended' },
+    { value: 'EDITED', label: 'Edited' },
   ]
   const typeCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForType : (invoiceCounts.byType[value] || 0)
 const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForStatus : (invoiceCounts.byStatus[value] || 0)
 
   const InvoiceRow = ({ invoice, isAmendment = false }: { invoice: any, isAmendment?: boolean }) => {
-    const typeInfo = getTypeLabel(invoice.invoiceType)
+    const isEditChild = isAmendment && (invoice.invoiceType === 'SALE' || invoice.invoiceType === 'PURCHASE')
+    const typeInfo = isEditChild ? { label: 'Edited', color: 'text-warning-text' } : getTypeLabel(invoice.invoiceType)
     return (
       <tr
         onClick={() => router.push(`/invoices/${invoice.id}`)}
@@ -300,14 +303,15 @@ const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForS
               )}
               {invoice.status === 'SENT'    && <span className="text-success-text text-xs">Submitted</span>}
               {invoice.status === 'AMENDED' && <span className="text-muted text-xs">Amended</span>}
+              {invoice.status === 'EDITED'  && <span className="text-muted text-xs">Edited</span>}
               {invoice.status === 'FAILED'  && <span className="text-error-text text-xs">✗ Failed</span>}
-              {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && confirmDeleteId !== invoice.id && (
+              {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && invoice.status !== 'EDITED' && confirmDeleteId !== invoice.id && (
                 <button onClick={e => { e.stopPropagation(); setConfirmDeleteId(invoice.id) }} className="text-muted hover:text-error-text text-xs font-semibold transition underline">
                   Delete
                 </button>
               )}
             </div>
-            {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && confirmDeleteId === invoice.id && (
+            {invoice.status !== 'SENT' && invoice.status !== 'AMENDED' && invoice.status !== 'EDITED' && confirmDeleteId === invoice.id && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted">Sure?</span>
                 <button onClick={e => handleDeleteInvoice(e, invoice.id)} disabled={deletingId === invoice.id} className="text-error-text hover:opacity-70 text-xs font-semibold transition underline disabled:opacity-40 disabled:cursor-not-allowed">
