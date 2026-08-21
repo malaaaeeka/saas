@@ -410,7 +410,11 @@ export default function BuyersPage() {
               </thead>
               <tbody>
                 {buyers.map(b => (
-                  <tr key={b.id} className="border-t border-border hover:bg-border-light transition">
+                  <tr
+                    key={b.id}
+                    onClick={() => router.push(`/buyers/${b.id}`)}
+                    className="border-t border-border hover:bg-border-light transition cursor-pointer"
+                  >
                     <td className="px-4 py-4 text-sm font-medium text-heading break-words">{b.buyerName}</td>
                     <td className="px-4 py-4 text-sm">{b.buyerNtn || '—'}</td>
                     <td className="px-4 py-4 text-sm">{b.buyerCnic || '—'}</td>
@@ -418,7 +422,7 @@ export default function BuyersPage() {
                     <td className="px-4 py-4 text-sm">{b.phone || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.email || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.address || '—'}</td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
                           <button onClick={() => openEditModal(b)} className="text-link hover:opacity-70 text-xs font-semibold transition underline">

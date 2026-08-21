@@ -669,6 +669,7 @@ export const getInvoices = async (req: any, res: Response): Promise<void> => {
     const type = req.query.type as string | undefined
     const status = req.query.status as string | undefined
     const search = (req.query.search as string | undefined)?.trim()
+    const buyerId = req.query.buyerId as string | undefined
 
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
@@ -679,6 +680,7 @@ export const getInvoices = async (req: any, res: Response): Promise<void> => {
     const where: any = { businessId: business.id }
     if (type && type !== 'ALL') where.invoiceType = type
     if (status && status !== 'ALL') where.status = status
+    if (buyerId) where.buyerId = buyerId
     if (search) {
       where.OR = [
         { buyerName: { contains: search, mode: 'insensitive' } },
