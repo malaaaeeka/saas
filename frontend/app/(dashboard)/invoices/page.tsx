@@ -487,14 +487,14 @@ const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForS
               <table className="w-full table-fixed">
                 <thead className="bg-border-light">
                   <tr>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Invoice ID</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Invoice ID</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Date</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Type</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Buyer</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Amount</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Tax</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Buyer</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">Amount</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Tax</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Status</th>
-                    <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">FBR No.</th>
+                    <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">FBR No.</th>
                     <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
                   </tr>
                 </thead>
