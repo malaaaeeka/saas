@@ -671,12 +671,22 @@ export const getInvoiceCounts = async (req: any, res: Response): Promise<void> =
 
     const type = req.query.type as string | undefined
     const status = req.query.status as string | undefined
+    const buyerId = req.query.buyerId as string | undefined
+    const productDescription = req.query.productDescription as string | undefined
 
     const typeWhere: any = { businessId: business.id }
     if (status && status !== 'ALL') typeWhere.status = status
+    if (buyerId) typeWhere.buyerId = buyerId
+    if (productDescription) {
+      typeWhere.items = { some: { description: { equals: productDescription, mode: 'insensitive' } } }
+    }
 
     const statusWhere: any = { businessId: business.id }
     if (type && type !== 'ALL') statusWhere.invoiceType = type
+    if (buyerId) statusWhere.buyerId = buyerId
+    if (productDescription) {
+      statusWhere.items = { some: { description: { equals: productDescription, mode: 'insensitive' } } }
+    }
 
     const [typeCounts, statusCounts, totalForType, totalForStatus] = await Promise.all([
       prisma.invoice.groupBy({
@@ -713,6 +723,7 @@ export const getInvoices = async (req: any, res: Response): Promise<void> => {
     const status = req.query.status as string | undefined
     const search = (req.query.search as string | undefined)?.trim()
     const buyerId = req.query.buyerId as string | undefined
+    const productDescription = req.query.productDescription as string | undefined
 
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     if (!business) {
@@ -724,6 +735,9 @@ export const getInvoices = async (req: any, res: Response): Promise<void> => {
     if (type && type !== 'ALL') where.invoiceType = type
     if (status && status !== 'ALL') where.status = status
     if (buyerId) where.buyerId = buyerId
+    if (productDescription) {
+      where.items = { some: { description: { equals: productDescription, mode: 'insensitive' } } }
+    }
     if (search) {
       where.OR = [
         { buyerName: { contains: search, mode: 'insensitive' } },
