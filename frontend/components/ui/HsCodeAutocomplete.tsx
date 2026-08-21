@@ -22,6 +22,14 @@ export default function HsCodeAutocomplete({ value, onSelect }: Props) {
   const debounceRef             = useRef<NodeJS.Timeout | null>(null)
   const containerRef            = useRef<HTMLDivElement>(null)
 
+  // Keeps the visible text in sync when the parent sets `value` from
+  // outside this component — e.g. product-select auto-fill, editing an
+  // existing invoice, or loading a prefill. Without this, the box only
+  // ever reflects what the USER typed in here, not what the parent set.
+  useEffect(() => {
+    setQuery(value || '')
+  }, [value])
+
   // Close on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
