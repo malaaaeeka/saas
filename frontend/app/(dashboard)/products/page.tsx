@@ -380,12 +380,12 @@ export default function ProductsPage() {
                     className="border-t border-border hover:bg-border-light transition cursor-pointer"
                   >
                     <td className="px-4 py-4 text-sm font-medium text-heading break-words">{p.description}</td>
-                    <td className="px-4 py-4 text-sm">{p.hsCode || <span className="text-muted">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{p.rate !== null ? `PKR ${p.rate}` : <span className="text-muted">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{p.taxRate || <span className="text-muted">—</span>}</td>
-                    <td className="px-4 py-4 text-sm break-words">{p.sroSchedule || <span className="text-muted">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{p.itemSNo || <span className="text-muted">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{p.hsCode || <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{p.rate !== null ? `PKR ${p.rate}` : <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{p.taxRate || <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm break-words">{p.sroSchedule || <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{p.itemSNo || <span className="text-muted text-xs">—</span>}</td>
                     <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
