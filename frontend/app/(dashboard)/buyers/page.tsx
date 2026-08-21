@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
+const PAGE_SIZE_OPTIONS = [
+  { value: '10', label: '10' },
+  { value: '25', label: '25' },
+  { value: '100', label: '100' },
+  { value: 'ALL', label: 'All' },
+]
+
 interface Buyer {
   id: string
   buyerName: string
@@ -64,6 +71,11 @@ export default function BuyersPage() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [typeFilter, setTypeFilter] = useState('ALL')
+  const [provinceFilter, setProvinceFilter] = useState('ALL')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number | 'ALL'>(10)
 
   const [showModal, setShowModal] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -111,6 +123,30 @@ export default function BuyersPage() {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => fetchBuyers(val), 300)
   }
+
+  const handleTypeFilterChange = (value: string) => {
+    setTypeFilter(value)
+    setPage(1)
+  }
+
+  const handleProvinceFilterChange = (value: string) => {
+    setProvinceFilter(value)
+    setPage(1)
+  }
+
+  const handlePageSizeChange = (newSize: number | 'ALL') => {
+    setPageSize(newSize)
+    setPage(1)
+  }
+
+  const filteredBuyers = buyers.filter(b => {
+    if (typeFilter !== 'ALL' && (b.buyerType || 'Unregistered') !== typeFilter) return false
+    if (provinceFilter !== 'ALL' && b.province !== provinceFilter) return false
+    return true
+  })
+
+  const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(filteredBuyers.length / (pageSize as number))
+  const pagedBuyers = pageSize === 'ALL' ? filteredBuyers : filteredBuyers.slice((page - 1) * (pageSize as number), page * (pageSize as number))
 
   const handleFormChange = (field: string, value: string) => {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -247,18 +283,50 @@ export default function BuyersPage() {
 
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
           <div className="flex items-center gap-6">
-            <button onClick={() => setShowSearch(v => !v)} className="flex items-center gap-2 text-sm text-muted hover:text-heading transition">
+            <button onClick={() => { setShowSearch(v => !v); setShowFilterPanel(false) }} className="flex items-center gap-2 text-sm text-muted hover:text-heading transition">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="7" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
               Search
             </button>
+            <button onClick={() => { setShowFilterPanel(v => !v); setShowSearch(false) }} className="flex items-center gap-2 text-sm text-muted hover:text-heading transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+                <line x1="11" y1="18" x2="13" y2="18" />
+              </svg>
+              Filter & Sort
+            </button>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-muted text-sm">
-              {buyers.length} total buyers
+              {filteredBuyers.length} total buyers
             </span>
+            <div className="w-20">
+              <StyledSelect
+                options={PAGE_SIZE_OPTIONS}
+                value={PAGE_SIZE_OPTIONS.find(o => o.value === String(pageSize))}
+                onChange={opt => {
+                  const val = opt?.value
+                  if (!val) return
+                  handlePageSizeChange(val === 'ALL' ? 'ALL' : Number(val))
+                }}
+                isClearable={false}
+                isSearchable={false}
+                classNames={{
+                  control: () => 'bg-transparent border-none px-1 py-0 text-sm cursor-pointer',
+                  placeholder: () => 'text-muted',
+                  singleValue: () => 'text-heading',
+                  input: () => 'text-heading',
+                  menu: () => 'bg-surface border border-border rounded-lg shadow-lg mt-1 z-20 overflow-hidden',
+                  menuList: () => 'py-1 max-h-60 overflow-y-auto',
+                  option: (state) => `px-3 py-1.5 text-sm cursor-pointer ${state.isSelected ? 'bg-heading text-surface' : state.isFocused ? 'bg-border-light text-heading' : 'text-body'}`,
+                  indicatorSeparator: () => 'hidden',
+                  dropdownIndicator: () => 'text-muted/70 px-1',
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -302,6 +370,31 @@ export default function BuyersPage() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {showFilterPanel && (
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <p className="text-xs text-muted uppercase tracking-wide mb-3">Type</p>
+              <div className="flex flex-col gap-2">
+                {['ALL', ...BUYER_TYPES].map(opt => (
+                  <button key={opt} onClick={() => handleTypeFilterChange(opt)} className={`text-left text-sm transition ${typeFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
+                    {opt === 'ALL' ? 'All Types' : opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-muted uppercase tracking-wide mb-3">Province</p>
+              <div className="flex flex-col gap-2">
+                {['ALL', ...PROVINCES].map(opt => (
+                  <button key={opt} onClick={() => handleProvinceFilterChange(opt)} className={`text-left text-sm transition ${provinceFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
+                    {opt === 'ALL' ? 'All Provinces' : opt}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -434,7 +527,7 @@ export default function BuyersPage() {
                 </tr>
               </thead>
               <tbody>
-                {buyers.map(b => (
+                {pagedBuyers.map(b => (
                   <tr
                     key={b.id}
                     onClick={() => router.push(`/buyers/${b.id}`)}
@@ -477,6 +570,30 @@ export default function BuyersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {pageSize !== 'ALL' && totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-muted text-sm">Page {page} of {totalPages} — showing {pagedBuyers.length} buyers</p>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition">←</button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                .reduce((acc: (number | string)[], p, idx, arr) => {
+                  if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) acc.push('...')
+                  acc.push(p)
+                  return acc
+                }, [])
+                .map((p, idx) => p === '...' ? (
+                  <span key={`ellipsis-${idx}`} className="w-7 h-7 flex items-center justify-center text-muted text-xs">...</span>
+                ) : (
+                  <button key={p} onClick={() => setPage(p as number)} className={`w-7 h-7 flex items-center justify-center rounded text-xs transition ${page === p ? 'bg-btn-dark text-btn-dark-text font-semibold' : 'text-muted hover:text-heading hover:bg-border-light'}`}>
+                    {p}
+                  </button>
+                ))}
+              <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="w-7 h-7 flex items-center justify-center rounded text-muted hover:text-heading disabled:opacity-30 disabled:cursor-not-allowed transition">→</button>
+            </div>
           </div>
         )}
       </div>
