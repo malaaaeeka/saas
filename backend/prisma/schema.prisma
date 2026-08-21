@@ -178,6 +178,7 @@ model Buyer {
   buyerNtn     String?
   buyerCnic    String?
   buyerType    String   @default("Unregistered") 
+  province     String?
   address      String?
   phone        String?
   email        String?

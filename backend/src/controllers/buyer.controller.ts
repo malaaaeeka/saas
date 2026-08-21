@@ -40,7 +40,7 @@ export const searchBuyers = async (req: AuthRequest, res: Response): Promise<voi
 export const createBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.business?.id
-    const { buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email } = req.body
+    const { buyerName, buyerNtn, buyerCnic, buyerType, province, address, phone, email } = req.body
 
     if (!businessId) {
       sendError(res, 'No business profile found for this user', 401)
@@ -69,6 +69,7 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
         buyerNtn: buyerNtn || null,
         buyerCnic: buyerCnic || null,
         buyerType,
+        province: province || null,
         address: address || null,
         phone: phone || null,
         email: email || null
@@ -118,7 +119,7 @@ export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void
   try {
     const { id } = req.params
     const businessId = req.user?.business?.id
-    const { buyerName, buyerNtn, buyerCnic, buyerType, address, phone, email } = req.body
+    const { buyerName, buyerNtn, buyerCnic, buyerType, province, address, phone, email } = req.body
 
     if (!businessId) {
       sendError(res, 'No business profile found for this user', 401)
@@ -153,6 +154,7 @@ export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void
         buyerNtn: buyerNtn || null,
         buyerCnic: buyerCnic || null,
         buyerType,
+        province: province || null,
         address: address || null,
         phone: phone || null,
         email: email || null

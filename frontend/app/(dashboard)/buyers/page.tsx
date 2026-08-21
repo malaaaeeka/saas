@@ -10,12 +10,24 @@ interface Buyer {
   buyerNtn: string | null
   buyerCnic: string | null
   buyerType: string | null
+  province: string | null
   address: string | null
   phone: string | null
   email: string | null
 }
 
 const BUYER_TYPES = ['Registered', 'Unregistered', 'Unregistered Distributor', 'Retail Consumer']
+
+const PROVINCES = [
+  'AZAD JAMMU AND KASHMIR',
+  'BALOCHISTAN',
+  'CAPITAL TERRITORY',
+  'GILGIT BALTISTAN',
+  'KHYBER PAKHTUNKHWA',
+  'PUNJAB',
+  'SINDH',
+  'FATA/PATA'
+]
 
 const NTN_REGEX = /^\d{7}$/
 const CNIC_REGEX = /^\d{5}-?\d{7}-?\d{1}$/
@@ -42,7 +54,7 @@ function classifyBuyerId(v: string): 'ntn' | 'cnic' | 'invalid' | 'incomplete' {
 
 const EMPTY_FORM = {
   buyerName: '', buyerNtnCnic: '', buyerType: '',
-  address: '', phone: '', email: ''
+  province: '', address: '', phone: '', email: ''
 }
 
 export default function BuyersPage() {
@@ -126,6 +138,7 @@ export default function BuyersPage() {
       buyerName: b.buyerName,
       buyerNtnCnic: b.buyerNtn || b.buyerCnic || '',
       buyerType: b.buyerType || '',
+      province: b.province || '',
       address: b.address || '',
       phone: b.phone || '',
       email: b.email || ''
@@ -169,7 +182,10 @@ export default function BuyersPage() {
           buyerNtn: idKind === 'ntn' ? onlyDigits(form.buyerNtnCnic) : '',
           buyerCnic: idKind === 'cnic' ? form.buyerNtnCnic : '',
           buyerType: form.buyerType,
-          address: form.address,
+          province: form.province,
+          // If the user didn't type an address, fall back to the selected
+          // province so the buyer still has something useful on file.
+          address: form.address.trim() || form.province || '',
           phone: form.phone,
           email: form.email
         })
@@ -341,6 +357,16 @@ export default function BuyersPage() {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-sm text-muted mb-1">Province</label>
+                  <StyledSelect
+                    options={toOptions(PROVINCES)}
+                    value={form.province ? { value: form.province, label: form.province } : null}
+                    onChange={opt => handleFormChange('province', opt?.value || '')}
+                    placeholder="Select province"
+                  />
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm text-muted mb-1">Phone</label>
@@ -398,14 +424,15 @@ export default function BuyersPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[16%]">Name</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">NTN</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">CNIC</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Type</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Phone</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Email</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Address</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Action</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">Name</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">NTN</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">CNIC</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Type</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Province</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Phone</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Email</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Address</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -419,9 +446,10 @@ export default function BuyersPage() {
                     <td className="px-4 py-4 text-sm">{b.buyerNtn || '—'}</td>
                     <td className="px-4 py-4 text-sm">{b.buyerCnic || '—'}</td>
                     <td className="px-4 py-4 text-sm">{b.buyerType || '—'}</td>
+                    <td className="px-4 py-4 text-sm">{b.province || '—'}</td>
                     <td className="px-4 py-4 text-sm">{b.phone || '—'}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.email || '—'}</td>
-                    <td className="px-4 py-4 text-sm break-words">{b.address || '—'}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.address || b.province || '—'}</td>
                     <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
