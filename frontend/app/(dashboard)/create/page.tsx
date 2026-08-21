@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
 import ClientAutocomplete from '@/components/ui/ClientAutocomplete'
+import ProductAutocomplete from '@/components/ui/ProductAutocomplete'
 import { useRouter, useSearchParams } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
@@ -705,6 +706,40 @@ const buyerIdRef = useRef<HTMLInputElement>(null)
     setFormData(prev => ({ ...prev, items: newItems }))
   }
 
+  // Fills a line from a previously-saved product. Reuses handleItemChange's
+  // math step so totalAmount/salesTax recompute exactly the way manual
+  // quantity/rate edits do.
+  const handleProductSelect = (index: number, product: {
+    description: string
+    hsCode: string | null
+    hsCodeDescription: string | null
+    uom: string | null
+    rate: number | null
+    taxRate: string | null
+    sroSchedule: string | null
+    itemSNo: string | null
+  } | null) => {
+    if (!product) return
+    const newItems = [...formData.items]
+    newItems[index] = {
+      ...newItems[index],
+      description: product.description,
+      hsCode: product.hsCode || newItems[index].hsCode,
+      hsCodeDescription: product.hsCodeDescription || newItems[index].hsCodeDescription,
+      uom: product.uom || newItems[index].uom,
+      rate: product.rate ?? newItems[index].rate,
+      taxRate: product.taxRate || newItems[index].taxRate,
+      sroSchedule: product.sroSchedule || newItems[index].sroSchedule,
+      itemSNo: product.itemSNo || newItems[index].itemSNo
+    }
+    const qty  = parseFloat(newItems[index].quantity as any) || 0
+    const rate = parseFloat(newItems[index].rate as any) || 0
+    newItems[index].totalAmount = qty * rate
+    const pct = rateToPercent(newItems[index].taxRate)
+    newItems[index].salesTax = pct !== null ? newItems[index].totalAmount * pct : 0
+    setFormData(prev => ({ ...prev, items: newItems }))
+  }
+
   const handleBuyerSelect = (buyer: {
     id: string
     buyerName: string
@@ -1292,10 +1327,11 @@ setTimeout(() => {
                     <div className="grid grid-cols-4 gap-3">
                       <div>
                         <label className="block text-xs text-muted mb-1">Product Description</label>
-                        <input type="text" value={item.description}
-                          onChange={e => handleItemChange(index, 'description', e.target.value)}
-                          placeholder="Product name"
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                        <ProductAutocomplete
+                          value={item.description}
+                          onSelect={(product) => handleProductSelect(index, product)}
+                          onTextChange={(text) => handleItemChange(index, 'description', text)}
+                        />
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Qty</label>
