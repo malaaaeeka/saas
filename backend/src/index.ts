@@ -7,6 +7,7 @@ import helmet from 'helmet'
 import { connectDatabase } from './config/database'
 import logger from './utils/logger'
 import buyerRoutes from './routes/buyer.routes' 
+import productRoutes from './routes/product.routes'
 
 // Routes
 import authRoutes from './routes/auth.routes'
@@ -47,6 +48,7 @@ app.use('/api/ca', caRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/hs-codes', hsCodeRoutes)   // ← moved here, with other app.use lines
 app.use('/api/buyers', buyerRoutes)   // ← add this line
+app.use('/api/products', productRoutes)
 
 // 404 handler
 app.use('*', (req, res) => {

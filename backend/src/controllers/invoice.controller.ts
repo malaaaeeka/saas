@@ -29,6 +29,45 @@ function serializeInvoice(invoice: any) {
   }
 }
 
+// Learns products from invoice items so future invoices can autocomplete
+// them. Runs on every save — if a description is new, it's stored; if it
+// already exists for this business, its details are refreshed to the
+// latest values used (in case rate/HS code changed since last time).
+async function upsertProductsFromItems(businessId: string, items: any[]) {
+  for (const item of items) {
+    if (!item.description || !item.description.trim()) continue
+    try {
+      await prisma.product.upsert({
+        where: {
+          businessId_description: { businessId, description: item.description.trim() }
+        },
+        update: {
+          hsCode: item.hsCode || null,
+          hsCodeDescription: item.hsCodeDescription || null,
+          uom: item.uom || null,
+          rate: item.rate || null,
+          taxRate: item.taxRate || null,
+          sroSchedule: item.sroSchedule || null,
+          itemSNo: item.itemSNo || null
+        },
+        create: {
+          businessId,
+          description: item.description.trim(),
+          hsCode: item.hsCode || null,
+          hsCodeDescription: item.hsCodeDescription || null,
+          uom: item.uom || null,
+          rate: item.rate || null,
+          taxRate: item.taxRate || null,
+          sroSchedule: item.sroSchedule || null,
+          itemSNo: item.itemSNo || null
+        }
+      })
+    } catch {
+      // Non-critical — never let a product-catalog hiccup fail the invoice save
+    }
+  }
+}
+
 
 export const bulkCreateInvoices = async (req: any, res: Response): Promise<void> => {
   try {
@@ -409,6 +448,8 @@ export const createInvoice = async (req: any, res: Response): Promise<void> => {
       })
     }
 
+    await upsertProductsFromItems(business.id, items)
+
     sendSuccess(res, serializeInvoice(invoice), 'Invoice created successfully', 201)
   } catch (error: any) {
     sendError(res, error.message || 'Failed to create invoice', 500)
@@ -576,6 +617,8 @@ export const updateInvoice = async (req: any, res: Response): Promise<void> => {
         include: { items: true }
       })
     })
+
+    await upsertProductsFromItems(business.id, items)
 
     sendSuccess(res, serializeInvoice(invoice), 'Invoice updated successfully')
   } catch (error: any) {

@@ -66,6 +66,7 @@ model Business {
   branches     Branch[]
   invoices     Invoice[]
   buyers       Buyer[]
+  products     Product[]
   subscription Subscription?
   bulkBatches  BulkBatch[]
 }
@@ -283,4 +284,23 @@ model BulkBatchResult {
   createdAt      DateTime @default(now())
 
   batch BulkBatch @relation(fields: [batchId], references: [id])
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  businessId        String
+  description       String
+  hsCode            String?
+  hsCodeDescription String?
+  uom               String?
+  rate              Decimal?
+  taxRate           String?
+  sroSchedule       String?
+  itemSNo           String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id])
+  @@index([businessId, description])
+  @@unique([businessId, description])
 }
