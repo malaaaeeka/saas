@@ -440,14 +440,14 @@ export default function BuyersPage() {
                     onClick={() => router.push(`/buyers/${b.id}`)}
                     className="border-t border-border hover:bg-border-light transition cursor-pointer"
                   >
-                    <td className="px-4 py-4 text-sm font-medium text-heading break-words">{b.buyerName}</td>
-                    <td className="px-4 py-4 text-sm">{b.buyerNtn || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.buyerCnic || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.buyerType || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.province || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.phone || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm break-words">{b.email || <span className="text-muted text-xs">—</span>}</td>
-                    <td className="px-4 py-4 text-sm break-words">{b.address || <span className="text-muted text-xs">—</span>}</td>
+                    <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{b.buyerName}</td>
+                    <td className="px-4 py-4 text-sm font-mono">{b.buyerNtn || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm font-mono">{b.buyerCnic || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{b.buyerType || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{b.province || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm">{b.phone || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.email || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm break-words">{b.address || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-3">
