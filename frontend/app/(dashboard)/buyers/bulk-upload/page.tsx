@@ -12,6 +12,7 @@ export default function BulkUploadBuyersPage() {
   const [success, setSuccess] = useState('')
   const [showConfirm, setShowConfirm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
   const [results, setResults] = useState<any[] | null>(null)
 
   const MAX_FILE_SIZE_MB = 10
@@ -69,6 +70,7 @@ export default function BulkUploadBuyersPage() {
 
     const chunks: typeof valid[] = []
     for (let i = 0; i < valid.length; i += CHUNK_SIZE) chunks.push(valid.slice(i, i + CHUNK_SIZE))
+    setProgress({ done: 0, total: valid.length })
 
     const allResults: any[] = []
     for (let i = 0; i < chunks.length; i++) {
@@ -81,17 +83,19 @@ export default function BulkUploadBuyersPage() {
         const data = await res.json()
         if (data.success) {
           allResults.push(...(data.data?.results || []))
+          setProgress({ done: allResults.length, total: valid.length })
         } else {
           setError(`Chunk ${i + 1}/${chunks.length} failed: ${data.message || 'unknown error'}`)
-          setSubmitting(false); return
+          setSubmitting(false); setProgress(null); return
         }
       } catch {
         setError(`Network error on chunk ${i + 1}/${chunks.length}.`)
-        setSubmitting(false); return
+        setSubmitting(false); setProgress(null); return
       }
     }
     setResults(allResults)
     setSubmitting(false)
+    setProgress(null)
   }
 
   return (
@@ -106,7 +110,7 @@ export default function BulkUploadBuyersPage() {
         {success && <div className="bg-surface border border-border border-l-4 border-l-success-border rounded-xl px-4 py-3 mb-6 shadow-sm"><p className="text-heading text-sm font-medium">{success}</p></div>}
         {error && <div className="bg-surface border border-border border-l-4 border-l-red-500 rounded-xl px-4 py-3 mb-6 shadow-sm"><p className="text-red-700 text-sm font-medium">{error}</p></div>}
 
-        {!results && (
+        {!results && !submitting && (
           <>
             <div className="mb-6">
               <input type="file" accept=".xlsx,.xls,.xlsm" ref={fileInputRef} onChange={handleFile} className="hidden" />
@@ -154,7 +158,7 @@ export default function BulkUploadBuyersPage() {
                 <div className="flex gap-4 justify-start mt-6">
                   <button onClick={requestSubmit} disabled={submitting}
                     className="bg-btn-dark hover:bg-btn-dark-hover disabled:opacity-50 text-btn-dark-text font-semibold py-3 px-8 rounded-lg transition">
-                    {submitting ? 'Submitting...' : `Submit ${validCount} Buyer(s)`}
+                    Submit {validCount} Buyer(s)
                   </button>
                   <button type="button" onClick={() => router.push('/buyers')}
                     className="bg-surface border border-border hover:border-heading text-heading font-semibold py-3 px-8 rounded-lg transition">Cancel</button>
@@ -162,6 +166,14 @@ export default function BulkUploadBuyersPage() {
               </div>
             )}
           </>
+        )}
+
+        {submitting && (
+          <div className="bg-surface rounded-xl p-6 border border-border shadow-sm">
+            <h2 className="text-lg font-semibold mb-4">
+              Processing: {progress?.done ?? 0} / {progress?.total ?? validCount} ...
+            </h2>
+          </div>
         )}
 
         {results && (
