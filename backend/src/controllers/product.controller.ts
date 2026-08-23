@@ -120,6 +120,61 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
   }
 }
 
+export const bulkCreateProducts = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    const { products } = req.body
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    if (!Array.isArray(products) || products.length === 0) {
+      sendError(res, 'No products provided', 400)
+      return
+    }
+
+    const results: { description: string; status: 'SUCCESS' | 'FAILED'; error?: string }[] = []
+
+    for (const p of products) {
+      const { description, hsCode, hsCodeDescription, uom, rate, taxRate, sroSchedule, itemSNo } = p
+
+      if (!description || !description.trim()) {
+        results.push({ description: description || '(blank)', status: 'FAILED', error: 'Product description is required' })
+        continue
+      }
+
+      try {
+        await prisma.product.create({
+          data: {
+            businessId,
+            description: description.trim(),
+            hsCode: hsCode || null,
+            hsCodeDescription: hsCodeDescription || null,
+            uom: uom || null,
+            rate: rate || null,
+            taxRate: taxRate || null,
+            sroSchedule: sroSchedule || null,
+            itemSNo: itemSNo || null
+          }
+        })
+        results.push({ description, status: 'SUCCESS' })
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          results.push({ description, status: 'FAILED', error: 'A product with this description already exists' })
+        } else {
+          results.push({ description, status: 'FAILED', error: 'Failed to create product' })
+        }
+      }
+    }
+
+    sendSuccess(res, { results })
+  } catch (error) {
+    sendError(res, 'Failed to process bulk product upload', 500)
+  }
+}
+
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
