@@ -505,7 +505,15 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-4 py-4 font-mono text-xs text-muted break-words">{p.description}</td>
                     <td className="px-4 py-4 text-sm font-mono">{p.hsCode || <span className="text-muted text-xs font-mono">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4">
+  {p.uom ? (
+    <span className="px-3 py-1 rounded-full text-xs font-semibold text-success-text bg-success-bg">
+      {p.uom}
+    </span>
+  ) : (
+    <span className="text-muted text-xs font-mono">—</span>
+  )}
+</td>
                     <td className="px-4 py-4 text-sm font-semibold whitespace-nowrap">{p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-xs font-medium text-link">{p.taxRate || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm break-words">{p.sroSchedule || <span className="text-muted text-xs font-mono">—</span>}</td>
