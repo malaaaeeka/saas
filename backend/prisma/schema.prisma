@@ -69,6 +69,7 @@ model Business {
   products     Product[]
   subscription Subscription?
   bulkBatches  BulkBatch[]
+  exportJobs   ExportJob[]
 }
 
 model Branch {
@@ -303,4 +304,20 @@ model Product {
   business Business @relation(fields: [businessId], references: [id])
   @@index([businessId, description])
   @@unique([businessId, description])
+}
+
+model ExportJob {
+  id          String    @id @default(cuid())
+  businessId  String
+  type        String    // "invoices" | "products" | "buyers"
+  status      String    @default("PROCESSING") // PROCESSING | COMPLETED | FAILED
+  filename    String?
+  fileData    Bytes?
+  error       String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  business    Business  @relation(fields: [businessId], references: [id])
+
+  @@index([businessId])
 }

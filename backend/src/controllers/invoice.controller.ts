@@ -5,7 +5,8 @@ import PDFDocument from 'pdfkit'
 import { generateQRCode, generateInvoiceQRData } from '../services/qr.service'
 import fbrService from '../services/fbr.service'
 import emailService from '../services/email.service'
-import { processBulkBatch } from '../services/bulkInvoice.service' 
+import { processBulkBatch } from '../services/bulkInvoice.service'
+import { processInvoiceExport } from '../services/exportJob.service' 
 
 const s = (v: unknown): string => (v === null || v === undefined ? '' : String(v))
 
@@ -874,13 +875,11 @@ export const getStats = async (req: any, res: Response): Promise<void> => {
   }
 }
 
-export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> => {
+
+export const startExportInvoicesPDF = async (req: any, res: Response): Promise<void> => {
   try {
     const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
-    if (!business) {
-      sendError(res, 'Business not found', 404)
-      return
-    }
+    if (!business) { sendError(res, 'Business not found', 404); return }
 
     const type = req.query.type as string | undefined
     const status = req.query.status as string | undefined
@@ -897,120 +896,49 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       ]
     }
 
-    const totalCount = await prisma.invoice.count({ where })
+    const job = await prisma.exportJob.create({
+      data: { businessId: business.id, type: 'invoices', status: 'PROCESSING' }
+    })
 
-    res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', 'attachment; filename="invoices.pdf"')
+    processInvoiceExport(job.id, where) // fire-and-forget
 
-    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
-    doc.pipe(res)
-
-    doc.fontSize(16).font('Helvetica').fillColor('#141414').text('Invoices', 30, 30)
-    doc.fillColor('black')
-
-    const tableLeft = 30
-    let tableTop = 60
-
-    const baseCols = [
-      { key: 'id',       label: 'Invoice ID', w: 90  },
-      { key: 'date',     label: 'Date',        w: 60  },
-      { key: 'type',     label: 'Type',        w: 60  },
-      { key: 'buyer',    label: 'Buyer',       w: 130 },
-      { key: 'amount',   label: 'Amount',      w: 80  },
-      { key: 'tax',      label: 'Tax',         w: 80  },
-      { key: 'status',   label: 'Status',      w: 55  },
-      { key: 'fbrNo',    label: 'FBR No.',     w: 120 },
-    ]
-
-    // Stretch columns proportionally so the table always fills the full
-    // usable page width instead of leaving a dead gap on the right.
-    const availableWidth = doc.page.width - tableLeft * 2
-    const baseTotalWidth = baseCols.reduce((sum, c) => sum + c.w, 0)
-    const cols = baseCols.map(c => ({ ...c, w: c.w * (availableWidth / baseTotalWidth) }))
-
-    let runningX = tableLeft
-    const colX: number[] = []
-    cols.forEach(c => { colX.push(runningX); runningX += c.w })
-    const tableWidth = runningX - tableLeft
-
-       const drawHeader = (y: number) => {
-      const headerHeight = 20
-      doc.rect(tableLeft, y, tableWidth, headerHeight).fill('#e5e5e5')
-      doc.fillColor('#141414')
-      doc.fontSize(8).font('Helvetica-Bold')
-      cols.forEach((c, i) => {
-        doc.text(c.label, colX[i] + 4, y + 6, { width: c.w - 8 })
-      })
-      doc.fillColor('black')
-      return y + headerHeight
-    }
-
-    tableTop = drawHeader(tableTop)
-    doc.font('Helvetica').fontSize(7.5)
-
-    const typeLabels: Record<string, string> = {
-      SALE: 'Sale', PURCHASE: 'Purchase', CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
-    }
-
-    // Fetch and draw in bounded batches so memory usage never scales with
-    // total invoice count — only ever holds BATCH_SIZE rows at a time,
-    // regardless of whether there are 12,000 or 200,000 invoices.
-    const BATCH_SIZE = 500
-    let processed = 0
-    let rowIdx = 0
-
-    while (processed < totalCount) {
-      const batch = await prisma.invoice.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: processed,
-        take: BATCH_SIZE
-      })
-      if (batch.length === 0) break
-
-      batch.forEach(inv => {
-        if (tableTop > doc.page.height - 60) {
-          doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
-          tableTop = drawHeader(30)
-          doc.font('Helvetica').fontSize(7.5)
-        }
-
-        const rowHeight = 18
-        const rowY = tableTop
-
-        if (rowIdx % 2 === 0) {
-          doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
-        }
-        doc.fillColor('#505050')
-
-        const valueMap: Record<string, string> = {
-          id: inv.id.slice(0, 12) + '...',
-          date: new Date(inv.invoiceDate).toLocaleDateString(),
-          type: typeLabels[inv.invoiceType] || inv.invoiceType,
-          buyer: inv.buyerName || 'Walk-in Customer',
-          amount: `PKR ${Number(inv.totalAmount).toFixed(2)}`,
-          tax: `PKR ${Number(inv.totalSalesTax).toFixed(2)}`,
-          status: inv.status,
-          fbrNo: inv.fbrInvoiceNo || '—'
-        }
-
-        cols.forEach((c, i) => {
-          doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
-        })
-
-        doc.fillColor('black')
-        tableTop += rowHeight
-        rowIdx++
-      })
-
-      processed += batch.length
-    }
-
-    doc.end()
+    sendSuccess(res, { jobId: job.id }, 'Export started', 202)
   } catch (error: any) {
-    sendError(res, error.message || 'Failed to export invoices PDF', 500)
+    sendError(res, error.message || 'Failed to start export', 500)
   }
 }
+
+export const getExportJobStatus = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { jobId } = req.params
+    const job = await prisma.exportJob.findUnique({
+      where: { id: jobId },
+      select: { id: true, status: true, error: true, type: true, businessId: true }
+    })
+    if (!job) { sendError(res, 'Export job not found', 404); return }
+    sendSuccess(res, job)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to fetch export status', 500)
+  }
+}
+
+export const downloadExportJob = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { jobId } = req.params
+    const job = await prisma.exportJob.findUnique({ where: { id: jobId } })
+    if (!job) { sendError(res, 'Export job not found', 404); return }
+    if (job.status !== 'COMPLETED' || !job.fileData) {
+      sendError(res, 'Export is not ready yet', 400)
+      return
+    }
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', `attachment; filename="${job.filename || 'export.pdf'}"`)
+    res.send(job.fileData)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to download export', 500)
+  }
+}
+ 
 
 export const downloadInvoicePdf = async (req: any, res: Response): Promise<void> => {
   try {

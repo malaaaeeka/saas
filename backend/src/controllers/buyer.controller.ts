@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { AuthRequest } from '../middleware/auth.middleware'
 import prisma from '../config/database'
 import { sendSuccess, sendError } from '../utils/response'
-import PDFDocument from 'pdfkit'
+import { processBuyerExport } from '../services/exportJob.service'
 
 export const searchBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -179,7 +179,7 @@ export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<voi
     sendError(res, 'Failed to fetch buyers', 500)
   }
 }
-export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<void> => {
+export const startExportBuyersPDF = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.business?.id
     if (!businessId) {
@@ -194,111 +194,46 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     if (type && type !== 'ALL') where.buyerType = type
     if (province && province !== 'ALL') where.province = province
 
-    const totalCount = await prisma.buyer.count({ where })
+    const job = await prisma.exportJob.create({
+      data: { businessId, type: 'buyers', status: 'PROCESSING' }
+    })
 
+    processBuyerExport(job.id, where)
+
+    sendSuccess(res, { jobId: job.id }, 'Export started', 202)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to start export', 500)
+  }
+}
+
+export const getBuyerExportJobStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { jobId } = req.params
+    const job = await prisma.exportJob.findUnique({
+      where: { id: jobId },
+      select: { id: true, status: true, error: true, type: true, businessId: true }
+    })
+    if (!job) { sendError(res, 'Export job not found', 404); return }
+    sendSuccess(res, job)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to fetch export status', 500)
+  }
+}
+
+export const downloadBuyerExportJob = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { jobId } = req.params
+    const job = await prisma.exportJob.findUnique({ where: { id: jobId } })
+    if (!job) { sendError(res, 'Export job not found', 404); return }
+    if (job.status !== 'COMPLETED' || !job.fileData) {
+      sendError(res, 'Export is not ready yet', 400)
+      return
+    }
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', 'attachment; filename="buyers.pdf"')
-
-    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
-    doc.pipe(res)
-
-    doc.fontSize(16).font('Helvetica').fillColor('#141414').text('Buyers', 30, 30)
-    doc.fillColor('black')
-
-    const tableLeft = 30
-    let tableTop = 60
-
-    const baseCols = [
-      { key: 'sr',       label: 'Serial No.', w: 45  },
-      { key: 'name',     label: 'Name',       w: 95  },
-      { key: 'ntn',      label: 'NTN',        w: 60  },
-      { key: 'cnic',     label: 'CNIC',       w: 80  },
-      { key: 'type',     label: 'Type',       w: 80  },
-      { key: 'province', label: 'Province',   w: 85  },
-      { key: 'phone',    label: 'Phone',      w: 60  },
-      { key: 'email',    label: 'Email',      w: 85  },
-      { key: 'address',  label: 'Address',    w: 100 },
-    ]
-
-    const availableWidth = doc.page.width - tableLeft * 2
-    const baseTotalWidth = baseCols.reduce((sum, c) => sum + c.w, 0)
-    const cols = baseCols.map(c => ({ ...c, w: c.w * (availableWidth / baseTotalWidth) }))
-
-    let runningX = tableLeft
-    const colX: number[] = []
-    cols.forEach(c => { colX.push(runningX); runningX += c.w })
-    const tableWidth = runningX - tableLeft
-
-    const drawHeader = (y: number) => {
-      const headerHeight = 20
-      doc.rect(tableLeft, y, tableWidth, headerHeight).fill('#e5e5e5')
-      doc.fillColor('#141414')
-      doc.fontSize(8).font('Helvetica-Bold')
-      cols.forEach((c, i) => {
-        doc.text(c.label, colX[i] + 4, y + 6, { width: c.w - 8 })
-      })
-      doc.fillColor('black')
-      return y + headerHeight
-    }
-
-    tableTop = drawHeader(tableTop)
-    doc.font('Helvetica').fontSize(7.5)
-
-    const BATCH_SIZE = 500
-    let processed = 0
-    let rowIdx = 0
-
-    while (processed < totalCount) {
-      const batch = await prisma.buyer.findMany({
-        where,
-        orderBy: { buyerName: 'asc' },
-        skip: processed,
-        take: BATCH_SIZE
-      })
-      if (batch.length === 0) break
-
-      batch.forEach(b => {
-        if (tableTop > doc.page.height - 60) {
-          doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
-          tableTop = drawHeader(30)
-          doc.font('Helvetica').fontSize(7.5)
-        }
-
-        const rowHeight = 18
-        const rowY = tableTop
-
-        if (rowIdx % 2 === 0) {
-          doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
-        }
-        doc.fillColor('#505050')
-
-        const valueMap: Record<string, string> = {
-          sr: String(rowIdx + 1),
-          name: b.buyerName || '—',
-          ntn: b.buyerNtn || '—',
-          cnic: b.buyerCnic || '—',
-          type: b.buyerType || 'Unregistered',
-          province: b.province || '—',
-          phone: b.phone || '—',
-          email: b.email || '—',
-          address: b.address || '—'
-        }
-
-        cols.forEach((c, i) => {
-          doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
-        })
-
-        doc.fillColor('black')
-        tableTop += rowHeight
-        rowIdx++
-      })
-
-      processed += batch.length
-    }
-
-    doc.end()
-  } catch (error) {
-    sendError(res, 'Failed to export buyers PDF', 500)
+    res.setHeader('Content-Disposition', `attachment; filename="${job.filename || 'buyers.pdf'}"`)
+    res.send(job.fileData)
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to download export', 500)
   }
 }
 

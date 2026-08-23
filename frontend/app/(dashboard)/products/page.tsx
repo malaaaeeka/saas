@@ -257,19 +257,45 @@ export default function ProductsPage() {
     try {
       const token = localStorage.getItem('token')
       const params = new URLSearchParams({ uom: uomFilter, taxRate: taxRateFilter })
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/export?${params.toString()}`, {
+
+      // Step 1: start the export job
+      const startRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/export?${params.toString()}`, {
+        method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })
-      if (!res.ok) throw new Error('Export failed')
-      const blob = await res.blob()
+      const startData = await startRes.json()
+      if (!startData.success) throw new Error(startData.message || 'Failed to start export')
+      const jobId = startData.data.jobId
+
+      // Step 2: poll until the job is done
+      let jobStatus = 'PROCESSING'
+      while (jobStatus === 'PROCESSING') {
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        const statusRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/export/${jobId}/status`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        const statusData = await statusRes.json()
+        if (!statusData.success) throw new Error('Failed to check export status')
+        jobStatus = statusData.data.status
+        if (jobStatus === 'FAILED') {
+          throw new Error(statusData.data.error || 'Export failed')
+        }
+      }
+
+      // Step 3: download the finished PDF
+      const downloadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/export/${jobId}/download`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!downloadRes.ok) throw new Error('Download failed')
+      const blob = await downloadRes.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
       a.download = 'products.pdf'
       a.click()
       window.URL.revokeObjectURL(url)
-    } catch {
-      alert('Failed to export PDF. Please try again.')
+    } catch (err: any) {
+      alert(err.message || 'Failed to export PDF. Please try again.')
     } finally {
       setExporting(false)
     }

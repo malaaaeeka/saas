@@ -7,7 +7,9 @@ import {
   bulkCreateProducts,
   updateProduct,
   deleteProduct,
-  exportProductsPDF
+  startExportProductsPDF,
+  getProductExportJobStatus,
+  downloadProductExportJob
 } from '../controllers/product.controller'
 import { authenticate } from '../middleware/auth.middleware'
 
@@ -15,7 +17,9 @@ const router = Router()
 
 // '/search', '/bulk', and '/export' must come before '/:id' so they aren't swallowed by the :id param
 router.get('/search', authenticate, searchProducts)
-router.get('/export', authenticate, exportProductsPDF)
+router.post('/export', authenticate, startExportProductsPDF)
+router.get('/export/:jobId/status', authenticate, getProductExportJobStatus)
+router.get('/export/:jobId/download', authenticate, downloadProductExportJob)
 router.get('/', authenticate, getAllProducts)
 router.post('/', authenticate, createProduct)
 router.post('/bulk', authenticate, bulkCreateProducts)

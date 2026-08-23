@@ -8,7 +8,9 @@ import {
   getInvoiceCounts,
   getStats,
   downloadInvoicePdf,
-  exportInvoicesPDF,
+  startExportInvoicesPDF,
+  getExportJobStatus,
+  downloadExportJob,
   submitToFBR,
   sendInvoiceEmail,
   deleteInvoice,
@@ -31,7 +33,9 @@ router.put('/:id', authenticate, validate(invoiceSchema), updateInvoice)
 router.get('/', authenticate, getInvoices)
 router.get('/counts', authenticate, getInvoiceCounts)
 router.get('/stats', authenticate, getStats)
-router.get('/export', authenticate, exportInvoicesPDF)
+router.post('/export', authenticate, startExportInvoicesPDF)
+router.get('/export/:jobId/status', authenticate, getExportJobStatus)
+router.get('/export/:jobId/download', authenticate, downloadExportJob)
 router.get('/:id', authenticate, getInvoiceById)
 router.get('/:id/pdf', authenticate, downloadInvoicePdf)
 router.post('/:id/submit-fbr', authenticate, submitToFBR)
