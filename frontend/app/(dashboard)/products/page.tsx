@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect from '@/components/ui/StyledSelect'
 
@@ -105,6 +105,18 @@ export default function ProductsPage() {
 
   const uomOptions = Array.from(new Set(products.map(p => p.uom).filter(Boolean))) as string[]
   const taxRateOptions = Array.from(new Set(products.map(p => p.taxRate).filter(Boolean))) as string[]
+
+  const uomCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    products.forEach(p => { if (p.uom) counts[p.uom] = (counts[p.uom] || 0) + 1 })
+    return counts
+  }, [products])
+
+  const taxRateCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    products.forEach(p => { if (p.taxRate) counts[p.taxRate] = (counts[p.taxRate] || 0) + 1 })
+    return counts
+  }, [products])
 
   const filteredProducts = products.filter(p => {
     if (uomFilter !== 'ALL' && p.uom !== uomFilter) return false
@@ -341,7 +353,7 @@ export default function ProductsPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...uomOptions].map(opt => (
                   <button key={opt} onClick={() => handleUomFilterChange(opt)} className={`text-left text-sm transition ${uomFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All UoM' : opt}
+                    {opt === 'ALL' ? 'All UoM' : opt} ({opt === 'ALL' ? products.length : (uomCounts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -351,7 +363,7 @@ export default function ProductsPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...taxRateOptions].map(opt => (
                   <button key={opt} onClick={() => handleTaxRateFilterChange(opt)} className={`text-left text-sm transition ${taxRateFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Tax Rates' : opt}
+                    {opt === 'ALL' ? 'All Tax Rates' : opt} ({opt === 'ALL' ? products.length : (taxRateCounts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -467,7 +479,7 @@ export default function ProductsPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[5%]">#</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[6%]">Serial No.</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[18%]">Description</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">HS Code</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">UoM</th>

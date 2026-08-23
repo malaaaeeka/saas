@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 
@@ -138,6 +138,21 @@ export default function BuyersPage() {
     setPageSize(newSize)
     setPage(1)
   }
+
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    buyers.forEach(b => {
+      const t = b.buyerType || 'Unregistered'
+      counts[t] = (counts[t] || 0) + 1
+    })
+    return counts
+  }, [buyers])
+
+  const provinceCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    buyers.forEach(b => { if (b.province) counts[b.province] = (counts[b.province] || 0) + 1 })
+    return counts
+  }, [buyers])
 
   const filteredBuyers = buyers.filter(b => {
     if (typeFilter !== 'ALL' && (b.buyerType || 'Unregistered') !== typeFilter) return false
@@ -389,7 +404,7 @@ export default function BuyersPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...BUYER_TYPES].map(opt => (
                   <button key={opt} onClick={() => handleTypeFilterChange(opt)} className={`text-left text-sm transition ${typeFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Types' : opt}
+                    {opt === 'ALL' ? 'All Types' : opt} ({opt === 'ALL' ? buyers.length : (typeCounts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -399,7 +414,7 @@ export default function BuyersPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...PROVINCES].map(opt => (
                   <button key={opt} onClick={() => handleProvinceFilterChange(opt)} className={`text-left text-sm transition ${provinceFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Provinces' : opt}
+                    {opt === 'ALL' ? 'All Provinces' : opt} ({opt === 'ALL' ? buyers.length : (provinceCounts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -523,7 +538,7 @@ export default function BuyersPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[5%]">#</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[6%]">Serial No.</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Name</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">NTN</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">CNIC</th>
