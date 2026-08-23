@@ -86,6 +86,69 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
   }
 }
 
+export const bulkCreateBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    const { buyers } = req.body
+
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    if (!Array.isArray(buyers) || buyers.length === 0) {
+      sendError(res, 'No buyers provided', 400)
+      return
+    }
+
+    const results: { buyerName: string; status: 'SUCCESS' | 'FAILED'; error?: string }[] = []
+
+    for (const b of buyers) {
+      const { buyerName, buyerNtn, buyerCnic, buyerType, province, address, phone, email } = b
+
+      if (!buyerName || !buyerName.trim()) {
+        results.push({ buyerName: buyerName || '(blank)', status: 'FAILED', error: 'Buyer name is required' })
+        continue
+      }
+      if ((!buyerNtn || !buyerNtn.trim()) && (!buyerCnic || !buyerCnic.trim())) {
+        results.push({ buyerName, status: 'FAILED', error: 'A valid NTN or CNIC is required' })
+        continue
+      }
+      if (!buyerType || !buyerType.trim()) {
+        results.push({ buyerName, status: 'FAILED', error: 'Buyer type is required' })
+        continue
+      }
+
+      try {
+        await prisma.buyer.create({
+          data: {
+            businessId,
+            buyerName,
+            buyerNtn: buyerNtn || null,
+            buyerCnic: buyerCnic || null,
+            buyerType,
+            province: province || null,
+            address: address || null,
+            phone: phone || null,
+            email: email || null
+          }
+        })
+        results.push({ buyerName, status: 'SUCCESS' })
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          results.push({ buyerName, status: 'FAILED', error: 'A buyer with this NTN or CNIC already exists' })
+        } else {
+          results.push({ buyerName, status: 'FAILED', error: 'Failed to create buyer' })
+        }
+      }
+    }
+
+    sendSuccess(res, { results })
+  } catch (error) {
+    sendError(res, 'Failed to process bulk buyer upload', 500)
+  }
+}
+
 export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const businessId = req.user?.business?.id

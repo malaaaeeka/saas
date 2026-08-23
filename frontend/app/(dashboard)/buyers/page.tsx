@@ -273,12 +273,20 @@ export default function BuyersPage() {
             <h1 className="text-3xl font-bold mb-2">Buyers</h1>
             <p className="text-muted">All buyers saved to your business</p>
           </div>
-          <button
-            onClick={openAddModal}
-            className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
-          >
-            Add Buyer
-          </button>
+         <div className="flex items-center gap-3">
+  <button
+    onClick={() => router.push('/buyers/bulk-upload')}
+    className="bg-surface border border-border hover:border-heading text-heading px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Bulk Upload
+  </button>
+  <button
+    onClick={openAddModal}
+    className="bg-btn-dark hover:bg-btn-dark-hover text-btn-dark-text px-6 py-3 rounded-lg font-semibold transition"
+  >
+    Add Buyer
+  </button>
+</div>
         </div>
 
         <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
