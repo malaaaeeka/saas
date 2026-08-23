@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
+import ClientAutocomplete from '@/components/ui/ClientAutocomplete'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -537,13 +538,24 @@ export default function BuyersPage() {
               )}
 
               <form onSubmit={handleSaveBuyer} className="space-y-3">
-                <div>
-                  <label className="block text-sm text-muted mb-1">Buyer Name *</label>
-                  <input type="text" value={form.buyerName} onChange={e => handleFormChange('buyerName', e.target.value)}
-                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
-                      attemptedSubmit && !form.buyerName.trim() ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
-                    }`} />
-                </div>
+               <div>
+  <label className="block text-sm text-muted mb-1">Buyer Name *</label>
+  <div className={attemptedSubmit && !form.buyerName.trim() ? 'rounded-lg ring-1 ring-red-500' : ''}>
+    <ClientAutocomplete
+      value={form.buyerName}
+      onSelect={(buyer) => {
+        if (!buyer) return
+        setForm(prev => ({
+          ...prev,
+          buyerName: buyer.buyerName,
+          buyerNtnCnic: buyer.buyerNtn || buyer.buyerCnic || prev.buyerNtnCnic,
+          buyerType: buyer.buyerType || prev.buyerType
+        }))
+      }}
+      onTextChange={(text) => handleFormChange('buyerName', text)}
+    />
+  </div>
+</div>
 
                 <div>
                   <label className="block text-sm text-muted mb-1">Buyer NTN / CNIC *</label>
