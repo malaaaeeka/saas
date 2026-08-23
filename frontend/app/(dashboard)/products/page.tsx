@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect from '@/components/ui/StyledSelect'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -252,43 +254,28 @@ export default function ProductsPage() {
 
   const handleExportPDF = () => {
     setShowExportMenu(false)
-    const rowsHtml = filteredProducts.map((p, idx) => `
-      <tr>
-        <td>${idx + 1}</td>
-        <td>${p.description || ''}</td>
-        <td>${p.hsCode || ''}</td>
-        <td>${p.uom || ''}</td>
-        <td>${p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : ''}</td>
-        <td>${p.taxRate || ''}</td>
-        <td>${p.sroSchedule || ''}</td>
-        <td>${p.itemSNo || ''}</td>
-      </tr>`).join('')
-    const html = `
-      <html>
-        <head>
-          <title>Products</title>
-          <style>
-            body { font-family: sans-serif; padding: 24px; }
-            table { width: 100%; border-collapse: collapse; font-size: 12px; }
-            th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
-            th { background: #f3f3f3; }
-          </style>
-        </head>
-        <body>
-          <h2>Products</h2>
-          <table>
-            <thead><tr><th>Serial No.</th><th>Description</th><th>HS Code</th><th>UoM</th><th>Rate</th><th>Tax Rate</th><th>SRO</th><th>Item S. No.</th></tr></thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-        </body>
-      </html>`
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(html)
-      printWindow.document.close()
-      printWindow.focus()
-      printWindow.print()
-    }
+    const doc = new jsPDF({ orientation: 'landscape' })
+    doc.setFontSize(14)
+    doc.text('Products', 14, 15)
+
+    autoTable(doc, {
+      startY: 20,
+      head: [['Serial No.', 'Description', 'HS Code', 'UoM', 'Rate', 'Tax Rate', 'SRO', 'Item S. No.']],
+      body: filteredProducts.map((p, idx) => [
+        idx + 1,
+        p.description || '',
+        p.hsCode || '',
+        p.uom || '',
+        p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : '',
+        p.taxRate || '',
+        p.sroSchedule || '',
+        p.itemSNo || ''
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 20 }
+    })
+
+    doc.save('products.pdf')
   }
 
   return (
