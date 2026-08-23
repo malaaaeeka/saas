@@ -908,13 +908,11 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
     const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
     doc.pipe(res)
 
-    doc.fontSize(16).font('Helvetica-Bold').text('Invoices', 30, 30)
-    doc.fontSize(9).font('Helvetica').fillColor('gray')
-      .text(`${invoices.length} invoice${invoices.length === 1 ? '' : 's'} · Generated ${new Date().toLocaleDateString()}`, 30, 52)
+    doc.fontSize(16).font('Helvetica').fillColor('#141414').text('Invoices', 30, 30)
     doc.fillColor('black')
 
     const tableLeft = 30
-    let tableTop = 75
+    let tableTop = 60
 
     const cols = [
       { key: 'id',       label: 'Invoice ID', w: 90  },
@@ -932,14 +930,15 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
     cols.forEach(c => { colX.push(runningX); runningX += c.w })
     const tableWidth = runningX - tableLeft
 
-    const drawHeader = (y: number) => {
+       const drawHeader = (y: number) => {
       const headerHeight = 20
       doc.rect(tableLeft, y, tableWidth, headerHeight).fill('#e5e5e5')
-      doc.fillColor('black')
+      doc.fillColor('#141414')
       doc.fontSize(8).font('Helvetica-Bold')
       cols.forEach((c, i) => {
         doc.text(c.label, colX[i] + 4, y + 6, { width: c.w - 8 })
       })
+      doc.fillColor('black')
       return y + headerHeight
     }
 
@@ -950,7 +949,7 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       SALE: 'Sale', PURCHASE: 'Purchase', CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
     }
 
-    invoices.forEach(inv => {
+    invoices.forEach((inv, idx) => {
       if (tableTop > doc.page.height - 60) {
         doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
         tableTop = drawHeader(30)
@@ -959,6 +958,11 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
 
       const rowHeight = 18
       const rowY = tableTop
+
+      if (idx % 2 === 0) {
+        doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
+      }
+      doc.fillColor('#505050')
 
       const valueMap: Record<string, string> = {
         id: inv.id.slice(0, 12) + '...',
@@ -975,6 +979,7 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
         doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
       })
 
+      doc.fillColor('black')
       tableTop += rowHeight
     })
 

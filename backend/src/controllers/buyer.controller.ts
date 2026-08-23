@@ -205,13 +205,11 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
     doc.pipe(res)
 
-    doc.fontSize(16).font('Helvetica-Bold').text('Buyers', 30, 30)
-    doc.fontSize(9).font('Helvetica').fillColor('gray')
-      .text(`${buyers.length} buyer${buyers.length === 1 ? '' : 's'} · Generated ${new Date().toLocaleDateString()}`, 30, 52)
+    doc.fontSize(16).font('Helvetica').fillColor('#141414').text('Buyers', 30, 30)
     doc.fillColor('black')
 
     const tableLeft = 30
-    let tableTop = 75
+    let tableTop = 60
 
     const cols = [
       { key: 'sr',       label: 'Serial No.', w: 45  },
@@ -233,11 +231,12 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     const drawHeader = (y: number) => {
       const headerHeight = 20
       doc.rect(tableLeft, y, tableWidth, headerHeight).fill('#e5e5e5')
-      doc.fillColor('black')
+      doc.fillColor('#141414')
       doc.fontSize(8).font('Helvetica-Bold')
       cols.forEach((c, i) => {
         doc.text(c.label, colX[i] + 4, y + 6, { width: c.w - 8 })
       })
+      doc.fillColor('black')
       return y + headerHeight
     }
 
@@ -253,6 +252,11 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
 
       const rowHeight = 18
       const rowY = tableTop
+
+      if (idx % 2 === 0) {
+        doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
+      }
+      doc.fillColor('#505050')
 
       const valueMap: Record<string, string> = {
         sr: String(idx + 1),
@@ -270,6 +274,7 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
         doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
       })
 
+      doc.fillColor('black')
       tableTop += rowHeight
     })
 
