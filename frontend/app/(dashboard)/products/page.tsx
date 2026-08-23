@@ -467,23 +467,27 @@ export default function ProductsPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[20%]">Description</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">HS Code</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">UoM</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Rate</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Tax Rate</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[15%]">SRO</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Item S. No.</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[5%]">#</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[18%]">Description</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">HS Code</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">UoM</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Rate</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Tax Rate</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">SRO</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Item S. No.</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {pagedProducts.map(p => (
+                {pagedProducts.map((p, idx) => (
                   <tr
                     key={p.id}
                     onClick={() => router.push(`/products/${p.id}`)}
                     className="border-t border-border hover:bg-border-light transition cursor-pointer"
                   >
+                    <td className="px-4 py-4 font-mono text-xs text-muted">
+                      {pageSize === 'ALL' ? idx + 1 : (page - 1) * (pageSize as number) + idx + 1}
+                    </td>
                     <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{p.description}</td>
                     <td className="px-4 py-4 text-sm font-mono">{p.hsCode || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted text-xs font-mono">—</span>}</td>

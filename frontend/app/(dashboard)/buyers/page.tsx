@@ -523,24 +523,28 @@ export default function BuyersPage() {
             <table className="w-full table-fixed">
               <thead className="bg-border-light">
                 <tr>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[14%]">Name</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[5%]">#</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">Name</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">NTN</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[13%]">CNIC</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">CNIC</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Type</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Province</th>
                   <th className="text-left px-4 py-4 text-muted text-sm w-[9%]">Phone</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Email</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Address</th>
-                  <th className="text-left px-4 py-4 text-muted text-sm w-[12%]">Action</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Email</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[10%]">Address</th>
+                  <th className="text-left px-4 py-4 text-muted text-sm w-[11%]">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {pagedBuyers.map(b => (
+                {pagedBuyers.map((b, idx) => (
                   <tr
                     key={b.id}
                     onClick={() => router.push(`/buyers/${b.id}`)}
                     className="border-t border-border hover:bg-border-light transition cursor-pointer"
                   >
+                    <td className="px-4 py-4 font-mono text-xs text-muted">
+                      {pageSize === 'ALL' ? idx + 1 : (page - 1) * (pageSize as number) + idx + 1}
+                    </td>
                     <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{b.buyerName}</td>
                     <td className="px-4 py-4 text-sm font-mono">{b.buyerNtn || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm font-mono">{b.buyerCnic || <span className="text-muted text-xs font-mono">—</span>}</td>
