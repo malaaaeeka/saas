@@ -337,7 +337,7 @@ export default function ProductsPage() {
                       >
                         <p className="text-2xl text-heading mb-1">{p.description}</p>
                         <p className="text-sm text-muted">
-                          {p.hsCode || 'No HS code'} · {p.rate !== null ? `PKR ${p.rate.toFixed(2)}` : 'No rate on file'}
+                          {p.hsCode || 'No HS code'} · {p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : 'No rate on file'}
                           
                         </p>
                       </div>
@@ -506,7 +506,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{p.description}</td>
                     <td className="px-4 py-4 text-sm font-mono">{p.hsCode || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted text-xs font-mono">—</span>}</td>
-                    <td className="px-4 py-4 text-sm font-semibold whitespace-nowrap">{p.rate !== null ? `PKR ${p.rate.toFixed(2)}` : <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm font-semibold whitespace-nowrap">{p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.taxRate || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm break-words">{p.sroSchedule || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.itemSNo || <span className="text-muted text-xs font-mono">—</span>}</td>
