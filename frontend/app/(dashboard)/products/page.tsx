@@ -337,7 +337,8 @@ export default function ProductsPage() {
                       >
                         <p className="text-2xl text-heading mb-1">{p.description}</p>
                         <p className="text-sm text-muted">
-                          {p.hsCode || 'No HS code'} · {p.rate !== null ? `PKR ${p.rate}` : 'No rate on file'}
+                          {p.hsCode || 'No HS code'} · {p.rate !== null ? `PKR ${p.rate.toFixed(2)}` : 'No rate on file'}
+                          
                         </p>
                       </div>
                     ))
@@ -355,7 +356,7 @@ export default function ProductsPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...uomOptions].map(opt => (
                   <button key={opt} onClick={() => handleUomFilterChange(opt)} className={`text-left text-sm transition ${uomFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All UoM' : opt} ({opt === 'ALL' ? products.length : (uomCounts[opt] || 0)})
+                    {opt === 'ALL' ? 'All UoM' : opt} ({opt === 'ALL' ? uomCounts.total : (uomCounts.counts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -505,7 +506,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{p.description}</td>
                     <td className="px-4 py-4 text-sm font-mono">{p.hsCode || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.uom || <span className="text-muted text-xs font-mono">—</span>}</td>
-                    <td className="px-4 py-4 text-sm font-semibold">{p.rate !== null ? `PKR ${p.rate}` : <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4 text-sm font-semibold whitespace-nowrap">{p.rate !== null ? `PKR ${p.rate.toFixed(2)}` : <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.taxRate || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm break-words">{p.sroSchedule || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{p.itemSNo || <span className="text-muted text-xs font-mono">—</span>}</td>
