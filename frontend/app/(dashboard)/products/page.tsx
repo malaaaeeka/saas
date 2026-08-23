@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import StyledSelect from '@/components/ui/StyledSelect'
+import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
+import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
+import ItemSNoAutocomplete from '@/components/ui/ItemSNoAutocomplete'
+import { UOMS, RATES, SRO_SCHEDULES, needsSroReference } from '@/lib/invoiceConstants'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -25,7 +28,7 @@ interface Product {
 
 const EMPTY_FORM = {
   description: '', hsCode: '', hsCodeDescription: '',
-  uom: '', rate: '', taxRate: '', sroSchedule: '', itemSNo: ''
+  uom: 'KG', rate: '', taxRate: '18%', sroSchedule: SRO_SCHEDULES[0], itemSNo: ''
 }
 
 export default function ProductsPage() {
@@ -166,9 +169,33 @@ export default function ProductsPage() {
     setSaveError('')
 
     if (!form.description.trim()) {
-      setSaveError('Product description is required')
-      return
-    }
+  setSaveError('Product description is required')
+  return
+}
+if (!form.hsCode.trim()) {
+  setSaveError('HS Code is required')
+  return
+}
+if (!form.uom.trim()) {
+  setSaveError('UoM is required')
+  return
+}
+if (!(Number(form.rate) > 0)) {
+  setSaveError('Rate must be greater than 0')
+  return
+}
+if (!form.taxRate.trim()) {
+  setSaveError('Tax Rate is required')
+  return
+}
+if (needsSroReference(form.taxRate) && !form.sroSchedule.trim()) {
+  setSaveError('SRO No. / Schedule No. is required for exempt or reduced-rate items')
+  return
+}
+if (needsSroReference(form.taxRate) && !form.itemSNo.trim()) {
+  setSaveError('Item S. No. is required for exempt or reduced-rate items')
+  return
+}
 
     setSaving(true)
     try {
@@ -495,53 +522,73 @@ export default function ProductsPage() {
                       attemptedSubmit && !form.description.trim() ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
                     }`} />
                 </div>
-
-                <div>
-                  <label className="block text-sm text-muted mb-1">HS Code</label>
-                  <input type="text" value={form.hsCode} onChange={e => handleFormChange('hsCode', e.target.value)}
-                    placeholder="e.g. 0601"
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-muted mb-1">HS Code Description</label>
-                  <input type="text" value={form.hsCodeDescription} onChange={e => handleFormChange('hsCodeDescription', e.target.value)}
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                </div>
+<div>
+  <label className="block text-sm text-muted mb-1">
+    HS Code Description *
+    {form.hsCode && <span className="ml-2 text-link font-mono">{form.hsCode}</span>}
+  </label>
+  <div className={attemptedSubmit && !form.hsCode.trim() ? 'rounded ring-1 ring-red-500' : ''}>
+    <HsCodeAutocomplete
+  value={form.hsCodeDescription}
+  onSelect={(code, desc, fullEntry) => {
+    setForm(prev => ({ ...prev, hsCode: code, hsCodeDescription: `${code}:-${fullEntry}` }))
+  }}
+/>
+  </div>
+</div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm text-muted mb-1">UoM</label>
-                    <input type="text" value={form.uom} onChange={e => handleFormChange('uom', e.target.value)}
-                      placeholder="e.g. KG"
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                  </div>
+  <label className="block text-sm text-muted mb-1">UoM *</label>
+  <div className={attemptedSubmit && !form.uom.trim() ? 'rounded ring-2 ring-red-500' : ''}>
+    <StyledSelect
+      options={toOptions(UOMS)}
+      value={{ value: form.uom, label: form.uom }}
+      onChange={opt => handleFormChange('uom', opt?.value || '')}
+    />
+  </div>
+</div>
                   <div>
-                    <label className="block text-sm text-muted mb-1">Rate (PKR)</label>
+                    <label className="block text-sm text-muted mb-1">Rate (PKR) *</label>
                     <input type="number" value={form.rate} onChange={e => handleFormChange('rate', e.target.value)}
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                      className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                        attemptedSubmit && !(Number(form.rate) > 0) ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                      }`} />
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm text-muted mb-1">Tax Rate</label>
-                  <input type="text" value={form.taxRate} onChange={e => handleFormChange('taxRate', e.target.value)}
-                    placeholder="e.g. 18%"
-                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                </div>
+<div>
+  <label className="block text-sm text-muted mb-1">Tax Rate *</label>
+  <div className={attemptedSubmit && !form.taxRate.trim() ? 'rounded ring-2 ring-red-500' : ''}>
+    <StyledSelect
+      options={toOptions(RATES)}
+      value={{ value: form.taxRate, label: form.taxRate }}
+      onChange={opt => handleFormChange('taxRate', opt?.value || '')}
+    />
+  </div>
+</div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm text-muted mb-1">SRO No. / Schedule No.</label>
-                    <input type="text" value={form.sroSchedule} onChange={e => handleFormChange('sroSchedule', e.target.value)}
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-muted mb-1">Item S. No.</label>
-                    <input type="text" value={form.itemSNo} onChange={e => handleFormChange('itemSNo', e.target.value)}
-                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
-                  </div>
-                </div>
+  <div>
+    <label className="block text-sm text-muted mb-1">
+      SRO No. / Schedule No.{needsSroReference(form.taxRate) && <span className="ml-1 text-red-500">*</span>}
+    </label>
+    <div className={attemptedSubmit && needsSroReference(form.taxRate) && !form.sroSchedule.trim() ? 'rounded ring-2 ring-red-500' : ''}>
+      <StyledSelect
+        options={toOptions(SRO_SCHEDULES)}
+        value={{ value: form.sroSchedule, label: form.sroSchedule }}
+        onChange={opt => handleFormChange('sroSchedule', opt?.value || '')}
+      />
+    </div>
+  </div>
+  <div>
+    <label className="block text-sm text-muted mb-1">
+      Item S. No.{needsSroReference(form.taxRate) && <span className="ml-1 text-red-500">*</span>}
+    </label>
+    <div className={attemptedSubmit && needsSroReference(form.taxRate) && !form.itemSNo.trim() ? 'rounded ring-2 ring-red-500' : ''}>
+      <ItemSNoAutocomplete value={form.itemSNo} onChange={val => handleFormChange('itemSNo', val)} />
+    </div>
+  </div>
+</div>
 
                 <div className="flex gap-3 pt-2">
                   <button type="submit" disabled={saving}

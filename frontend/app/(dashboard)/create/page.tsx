@@ -958,7 +958,35 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
     const allUnmatched = Object.keys(ALIAS_MAP).filter(f => !headerIndex[f])
 
-    if (allUnmatched.length > 0) {
+    // Run the SAME required-field checks used on manual entry (validateForm)
+    // against every imported row, so gaps are caught right after upload
+    // instead of only at submit time.
+    const rowIssues: string[] = []
+    items.forEach((item, i) => {
+      const rowNum = i + 1
+      if (!item.documentNumber.trim()) rowIssues.push(`Row ${rowNum}: missing Document Number`)
+      if (!item.hsCode.trim()) rowIssues.push(`Row ${rowNum}: missing HS Code`)
+      if (!item.description.trim()) rowIssues.push(`Row ${rowNum}: missing Product Description`)
+      if (!(Number(item.quantity) > 0)) rowIssues.push(`Row ${rowNum}: Qty must be greater than 0`)
+      if (!(Number(item.rate) > 0)) rowIssues.push(`Row ${rowNum}: Unit Price must be greater than 0`)
+      if (!item.uom.trim()) rowIssues.push(`Row ${rowNum}: missing UoM`)
+      if (!item.taxRate.trim()) rowIssues.push(`Row ${rowNum}: missing Tax Rate`)
+      if (needsSroReference(item.taxRate) && !item.sroSchedule.trim()) {
+        rowIssues.push(`Row ${rowNum}: SRO No. / Schedule No. is required for exempt/reduced-rate items`)
+      }
+      if (needsSroReference(item.taxRate) && !item.itemSNo.trim()) {
+        rowIssues.push(`Row ${rowNum}: Item S. No. is required for exempt/reduced-rate items`)
+      }
+    })
+
+    if (rowIssues.length > 0) {
+      // Cap the list so the message doesn't become unreadable on large files
+      const shown = rowIssues.slice(0, 8)
+      const more = rowIssues.length > shown.length ? ` (+${rowIssues.length - shown.length} more)` : ''
+      setError(
+        `Loaded ${items.length} item(s) from ${file.name}, but some required fields are missing: ${shown.join('; ')}${more}. Please fill these in before submitting.`
+      )
+    } else if (allUnmatched.length > 0) {
       setSuccess(
         `Loaded ${items.length} item(s) from ${file.name}. Note: couldn't find column(s) ${allUnmatched.join(', ')} — please review and fill these in manually before submitting.`
       )
