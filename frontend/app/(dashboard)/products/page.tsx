@@ -23,6 +23,11 @@ interface Product {
   itemSNo: string | null
 }
 
+const EMPTY_FORM = {
+  description: '', hsCode: '', hsCodeDescription: '',
+  uom: '', rate: '', taxRate: '', sroSchedule: '', itemSNo: ''
+}
+
 export default function ProductsPage() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
@@ -35,6 +40,13 @@ export default function ProductsPage() {
   const [taxRateFilter, setTaxRateFilter] = useState('ALL')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<number | 'ALL'>(10)
+
+  const [showModal, setShowModal] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -119,8 +131,83 @@ export default function ProductsPage() {
   const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(filteredProducts.length / (pageSize as number))
   const pagedProducts = pageSize === 'ALL' ? filteredProducts : filteredProducts.slice((page - 1) * (pageSize as number), page * (pageSize as number))
 
-  const openAddModal = () => router.push('/products/create')
-  const openEditModal = (p: Product) => router.push(`/products/create?edit=${p.id}`)
+  const handleFormChange = (field: string, value: string) => {
+    setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const openAddModal = () => {
+    setEditingId(null)
+    setForm(EMPTY_FORM)
+    setSaveError('')
+    setAttemptedSubmit(false)
+    setShowModal(true)
+  }
+
+  const openEditModal = (p: Product) => {
+    setEditingId(p.id)
+    setForm({
+      description: p.description,
+      hsCode: p.hsCode || '',
+      hsCodeDescription: p.hsCodeDescription || '',
+      uom: p.uom || '',
+      rate: p.rate !== null ? String(p.rate) : '',
+      taxRate: p.taxRate || '',
+      sroSchedule: p.sroSchedule || '',
+      itemSNo: p.itemSNo || ''
+    })
+    setSaveError('')
+    setAttemptedSubmit(false)
+    setShowModal(true)
+  }
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAttemptedSubmit(true)
+    setSaveError('')
+
+    if (!form.description.trim()) {
+      setSaveError('Product description is required')
+      return
+    }
+
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('token')
+      const url = editingId
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/products/${editingId}`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/products`
+      const method = editingId ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          description: form.description,
+          hsCode: form.hsCode,
+          hsCodeDescription: form.hsCodeDescription,
+          uom: form.uom,
+          rate: form.rate ? Number(form.rate) : null,
+          taxRate: form.taxRate,
+          sroSchedule: form.sroSchedule,
+          itemSNo: form.itemSNo
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setShowModal(false)
+        setForm(EMPTY_FORM)
+        setEditingId(null)
+        setAttemptedSubmit(false)
+        fetchProducts('')
+      } else {
+        setSaveError(data.message || 'Failed to save product')
+      }
+    } catch {
+      setSaveError('Cannot reach server')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const handleDeleteProduct = async (id: string) => {
     setDeletingId(id)
@@ -382,6 +469,91 @@ export default function ProductsPage() {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {showModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-surface border border-border rounded-xl shadow-lg w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-heading">{editingId ? 'Edit Product' : 'Add Product'}</h2>
+                <button onClick={() => setShowModal(false)} className="text-muted hover:text-heading text-xl leading-none">✕</button>
+              </div>
+
+              {saveError && (
+                <div className="bg-surface border border-border border-l-4 border-l-red-500 rounded-lg px-3 py-2 mb-4">
+                  <p className="text-red-700 text-sm">{saveError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProduct} className="space-y-3">
+                <div>
+                  <label className="block text-sm text-muted mb-1">Product Description *</label>
+                  <input type="text" value={form.description} onChange={e => handleFormChange('description', e.target.value)}
+                    className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+                      attemptedSubmit && !form.description.trim() ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`} />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">HS Code</label>
+                  <input type="text" value={form.hsCode} onChange={e => handleFormChange('hsCode', e.target.value)}
+                    placeholder="e.g. 0601"
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">HS Code Description</label>
+                  <input type="text" value={form.hsCodeDescription} onChange={e => handleFormChange('hsCodeDescription', e.target.value)}
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-muted mb-1">UoM</label>
+                    <input type="text" value={form.uom} onChange={e => handleFormChange('uom', e.target.value)}
+                      placeholder="e.g. KG"
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-muted mb-1">Rate (PKR)</label>
+                    <input type="number" value={form.rate} onChange={e => handleFormChange('rate', e.target.value)}
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-1">Tax Rate</label>
+                  <input type="text" value={form.taxRate} onChange={e => handleFormChange('taxRate', e.target.value)}
+                    placeholder="e.g. 18%"
+                    className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm text-muted mb-1">SRO No. / Schedule No.</label>
+                    <input type="text" value={form.sroSchedule} onChange={e => handleFormChange('sroSchedule', e.target.value)}
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-muted mb-1">Item S. No.</label>
+                    <input type="text" value={form.itemSNo} onChange={e => handleFormChange('itemSNo', e.target.value)}
+                      className="w-full bg-surface border border-border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent" />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" disabled={saving}
+                    className="bg-btn-dark hover:bg-btn-dark-hover disabled:opacity-50 text-btn-dark-text font-semibold py-2 px-6 rounded-lg text-sm transition">
+                    {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Save Product'}
+                  </button>
+                  <button type="button" onClick={() => setShowModal(false)}
+                    className="bg-surface border border-border hover:border-heading text-heading font-semibold py-2 px-6 rounded-lg text-sm transition">
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
