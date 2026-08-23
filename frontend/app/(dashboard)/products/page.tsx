@@ -4,8 +4,79 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
 import HsCodeAutocomplete from '@/components/ui/HsCodeAutocomplete'
-import ItemSNoAutocomplete from '@/components/ui/ItemSNoAutocomplete'
-import { UOMS, RATES, SRO_SCHEDULES, needsSroReference } from '@/lib/invoiceConstants'
+
+
+const UOMS = [
+  'MT', 'Bill of lading', 'SET', 'NO', '1000 kWh', 'KWH', '40KG', 'Liter',
+  'SqY', 'Bag', 'KG', 'MMBTU', 'Meter', 'Carat', 'Cubic Metre', 'Dozen',
+  'Gram', 'Gallon', 'Kilogram', 'Pound', 'Timber Logs', 'Packs', 'Pair',
+  'Square Foot', 'Square Metre', 'Thousand Unit', 'Mega Watt', 'Foot',
+  'Barrels', 'Numbers, pieces, units'
+]
+
+const RATES: string[] = [
+  '0%', '0.20%', '0.25%', '0.46%', '0.50%', '0.79%', '1%', '1.43%', '1.5%',
+  '1.63%', '2%', '2.5%', '2.7%', '2.74%', '3%', '3.17%', '3.67%', '4.5%',
+  '4.77%', '5%', '5.3%', '5.44%', '6.5%', '6.7%', '6.75%', '6.84%', '7%',
+  '7.2%', '7.37%', '7.5%', '7.56%', '8%', '8.19%', '8.3%', '8.5%', '9.08%',
+  '9.15%', '10%', '10.07%', '10.32%', '10.54%', '10.77%', '11.64%', '12%',
+  '12.5%', '12.75%', '13%', '14%', '15%', '15.44%', '16%', '16.4%', '17%',
+  '18%', '18.5%', '19.5%', '20%', '25%',
+  '100/SqY',
+  '17% along with rupees 60 per kilogram',
+  '18% along with rupees 60 per kilogram',
+  '17% along with rupees 90 per kilogram',
+  '200/bill',
+  '50/SqY',
+  'DTRE',
+  'Exempt',
+  'Rs.10', 'Rs.10.58', 'Rs.10.65', 'Rs.1000/IMEI', 'Rs.10400/MT', 'Rs.12.89',
+  'Rs.13.9', 'Rs.13/KWH', 'Rs.130', 'Rs.14.48', 'Rs.1500/IMEI', 'Rs.1680',
+  'Rs.1740', 'Rs.18.47', 'Rs.18.57', 'Rs.2', 'Rs.200', 'Rs.25.16', 'Rs.250',
+  'Rs.250/IMEI', 'Rs.29.57', 'Rs.3', 'Rs.3.38', 'Rs.3.60', 'Rs.300/IMEI',
+  'Rs.4.72', 'Rs.4.76', 'Rs.4/KWH', 'Rs.425/MT', 'Rs.700/MT', 'Rs.5',
+  'Rs.5.58', 'Rs.5400', 'Rs.5600/MT', 'Rs.5862/MT', 'Rs.650/IMEI',
+  'Rs.6700/MT', 'Rs.7/KWH', 'Rs.9.36', 'Rs.9.63', 'Rs.9.89', 'Rs.9/KWH',
+  'Rs.9270', 'Rs.9500/MT', 'Rs.1000', 'Rs. 16500 per KG', 'Rs. 2000 per Fan'
+]
+
+const SRO_SCHEDULES: string[] = [
+  "01(I)/2022", "1007(I)/2005", "1125(I)/2011", "1167(I)/2018", "1180(I)/2016",
+  "1212(I)/2018", "125(I)/2017", "1308(I)/2018", "1450(I)/2021", "1579(1)/2021",
+  "1604(I)/2021", "1636(1)/2022", "164(I)/2010", "172(I)/2006", "183(I)/2022",
+  "188(I)/2015", "1st Schedule FED", "21(I)/2017", "213(I)/2013", "223(I)/2017",
+  "237(I)/2020", "253(I)/2019", "292(I)/2017", "297(I)/2023-Table-I",
+  "297(I)/2023-Table-II", "321(I)/2022", "326(I)/2008", "327(I)/2008",
+  "398(I)/2015", "3rd Schd Table II", "3rd Schedule goods", "408(I)/2012",
+  "408(I)/2017", "484(I)/2015", "495(I)/2016", "499(I)/2013", "501(I)/2013",
+  "525(I)/2008", "539(I)/2008", "542(I)/2008", "549(I)/2008", "551(I)/2008",
+  "572(I)/2014", "581(1)/2024", "581(I)/2017", "587(I)/2017", "590(I)/2017",
+  "5th Schedule", "608(I)/2012", "641(I)/2017", "646(I)/2005", "657(I)/2013",
+  "670(I)/2013", "678(I)/2004", "6th Schd Table I", "6th Schd Table II",
+  "6th Schd Table III", "6th Schedule", "713(I)/2017", "727(I)/2011",
+  "757(I)/2017", "76(I)/2008", "760(I)/2012", "777(I)2018", "781(I)2018",
+  "79(I)/2012", "802(I)/2009", "811(I)/2009", "863(I)/2007", "867(I)/2017",
+  "88(I)/2022", "880(I)/2007", "896(I)/2013", "898(I)/2013", "8th Schedules",
+  "91(I)/2017", "946(1)/2013", "984(I)/2017", "9th Schedule", "9th Schedules",
+  "DTRE", "EIGHTH SCHEDULE Table 1", "EIGHTH SCHEDULE Table 2",
+  "FED 3rd Schd Table I", "FED 3rd Schd Table II", "FIFTH SCHEDULE", "ICTO",
+  "ICTO TABLE I", "ICTO TABLE II", "NINTH SCHEDULE", "Section 4(b)",
+  "SECTION 49", "SRO 342 (I)/2002", "Zero Rated Elec.", "Zero Rated Gas",
+  "S.R.O. 1217(I)/2025"
+]
+
+function rateToPercent(rate: string): number | null {
+  const match = rate.match(/^(\d+(\.\d+)?)%/)
+  if (match) return parseFloat(match[1]) / 100
+  return null
+}
+
+function needsSroReference(taxRate: string): boolean {
+  if (taxRate === 'Exempt' || taxRate === 'DTRE') return true
+  const pct = rateToPercent(taxRate)
+  if (pct !== null && pct < 0.18) return true
+  return false
+}
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -584,9 +655,12 @@ if (needsSroReference(form.taxRate) && !form.itemSNo.trim()) {
     <label className="block text-sm text-muted mb-1">
       Item S. No.{needsSroReference(form.taxRate) && <span className="ml-1 text-red-500">*</span>}
     </label>
-    <div className={attemptedSubmit && needsSroReference(form.taxRate) && !form.itemSNo.trim() ? 'rounded ring-2 ring-red-500' : ''}>
-      <ItemSNoAutocomplete value={form.itemSNo} onChange={val => handleFormChange('itemSNo', val)} />
-    </div>
+    <input type="text" value={form.itemSNo}
+      onChange={e => handleFormChange('itemSNo', e.target.value)}
+      placeholder="e.g. 1(i)(a)"
+      className={`w-full bg-surface border text-heading rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent ${
+        attemptedSubmit && needsSroReference(form.taxRate) && !form.itemSNo.trim() ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+      }`} />
   </div>
 </div>
 
