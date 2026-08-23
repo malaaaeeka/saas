@@ -7,12 +7,13 @@ import { processBuyerExport } from '../services/exportJob.service'
 export const searchBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { q } = req.query
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!q || String(q).trim().length < 2) {
       sendError(res, 'Search query must be at least 2 characters', 400)
@@ -40,13 +41,14 @@ export const searchBuyers = async (req: AuthRequest, res: Response): Promise<voi
 
 export const createBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { buyerName, buyerNtn, buyerCnic, buyerType, province, address, phone, email } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!buyerName || !buyerName.trim()) {
       sendError(res, 'Buyer name is required', 400)
@@ -89,13 +91,14 @@ export const createBuyer = async (req: AuthRequest, res: Response): Promise<void
 
 export const bulkCreateBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { buyers } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!Array.isArray(buyers) || buyers.length === 0) {
       sendError(res, 'No buyers provided', 400)
@@ -152,13 +155,14 @@ export const bulkCreateBuyers = async (req: AuthRequest, res: Response): Promise
 
 export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { q } = req.query
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const where: any = { businessId }
     if (q && String(q).trim().length > 0) {
@@ -181,11 +185,12 @@ export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<voi
 }
 export const startExportBuyersPDF = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const type = req.query.type as string | undefined
     const province = req.query.province as string | undefined
@@ -240,13 +245,14 @@ export const downloadBuyerExportJob = async (req: AuthRequest, res: Response): P
 export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { buyerName, buyerNtn, buyerCnic, buyerType, province, address, phone, email } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const existing = await prisma.buyer.findUnique({ where: { id } })
     if (!existing || existing.businessId !== businessId) {
@@ -296,12 +302,13 @@ export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void
 export const deleteBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const existing = await prisma.buyer.findUnique({ where: { id } })
     if (!existing || existing.businessId !== businessId) {
@@ -325,12 +332,13 @@ export const deleteBuyer = async (req: AuthRequest, res: Response): Promise<void
 export const getBuyerById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const buyer = await prisma.buyer.findUnique({ where: { id } })
     if (!buyer || buyer.businessId !== businessId) {

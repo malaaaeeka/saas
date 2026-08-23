@@ -7,12 +7,13 @@ import { processProductExport } from '../services/exportJob.service'
 export const searchProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { q } = req.query
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!q || String(q).trim().length < 2) {
       sendError(res, 'Search query must be at least 2 characters', 400)
@@ -36,13 +37,14 @@ export const searchProducts = async (req: AuthRequest, res: Response): Promise<v
 
 export const getAllProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { q } = req.query
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const where: any = { businessId }
     if (q && String(q).trim().length > 0) {
@@ -61,11 +63,12 @@ export const getAllProducts = async (req: AuthRequest, res: Response): Promise<v
 }
 export const startExportProductsPDF = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const uom = req.query.uom as string | undefined
     const taxRate = req.query.taxRate as string | undefined
@@ -120,12 +123,13 @@ export const downloadProductExportJob = async (req: AuthRequest, res: Response):
 export const getProductById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const product = await prisma.product.findUnique({ where: { id } })
     if (!product || product.businessId !== businessId) {
@@ -141,13 +145,14 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
 
 export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { description, hsCode, hsCodeDescription, uom, rate, taxRate, sroSchedule, itemSNo } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!description || !description.trim()) {
       sendError(res, 'Product description is required', 400)
@@ -180,13 +185,14 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 
 export const bulkCreateProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { products } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     if (!Array.isArray(products) || products.length === 0) {
       sendError(res, 'No products provided', 400)
@@ -236,13 +242,14 @@ export const bulkCreateProducts = async (req: AuthRequest, res: Response): Promi
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
     const { description, hsCode, hsCodeDescription, uom, rate, taxRate, sroSchedule, itemSNo } = req.body
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const existing = await prisma.product.findUnique({ where: { id } })
     if (!existing || existing.businessId !== businessId) {
@@ -282,12 +289,13 @@ export const updateProduct = async (req: AuthRequest, res: Response): Promise<vo
 export const deleteProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params
-    const businessId = req.user?.business?.id
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
 
-    if (!businessId) {
-      sendError(res, 'No business profile found for this user', 401)
+    if (!business) {
+      sendError(res, 'Business not found', 404)
       return
     }
+    const businessId = business.id
 
     const existing = await prisma.product.findUnique({ where: { id } })
     if (!existing || existing.businessId !== businessId) {

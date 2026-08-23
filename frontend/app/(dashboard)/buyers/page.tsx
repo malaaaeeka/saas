@@ -103,10 +103,11 @@ export default function BuyersPage() {
         : `${process.env.NEXT_PUBLIC_API_URL}/api/buyers`
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       const data = await res.json()
+      console.log('Buyers API response:', res.status, data)
       if (data.success) {
         setBuyers(data.data || [])
       } else {
-        setError('Failed to load buyers')
+        setError(data.message || `Failed to load buyers (status ${res.status})`)
       }
     } catch {
       setError('Cannot reach server')
