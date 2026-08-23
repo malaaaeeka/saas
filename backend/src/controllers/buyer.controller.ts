@@ -194,10 +194,7 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     if (type && type !== 'ALL') where.buyerType = type
     if (province && province !== 'ALL') where.province = province
 
-    const buyers = await prisma.buyer.findMany({
-      where,
-      orderBy: { buyerName: 'asc' }
-    })
+    const totalCount = await prisma.buyer.count({ where })
 
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'attachment; filename="buyers.pdf"')
@@ -247,40 +244,57 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     tableTop = drawHeader(tableTop)
     doc.font('Helvetica').fontSize(7.5)
 
-    buyers.forEach((b, idx) => {
-      if (tableTop > doc.page.height - 60) {
-        doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
-        tableTop = drawHeader(30)
-        doc.font('Helvetica').fontSize(7.5)
-      }
+    const BATCH_SIZE = 500
+    let processed = 0
+    let rowIdx = 0
 
-      const rowHeight = 18
-      const rowY = tableTop
+    while (processed < totalCount) {
+      const batch = await prisma.buyer.findMany({
+        where,
+        orderBy: { buyerName: 'asc' },
+        skip: processed,
+        take: BATCH_SIZE
+      })
+      if (batch.length === 0) break
 
-      if (idx % 2 === 0) {
-        doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
-      }
-      doc.fillColor('#505050')
+      batch.forEach(b => {
+        if (tableTop > doc.page.height - 60) {
+          doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
+          tableTop = drawHeader(30)
+          doc.font('Helvetica').fontSize(7.5)
+        }
 
-      const valueMap: Record<string, string> = {
-        sr: String(idx + 1),
-        name: b.buyerName || '—',
-        ntn: b.buyerNtn || '—',
-        cnic: b.buyerCnic || '—',
-        type: b.buyerType || 'Unregistered',
-        province: b.province || '—',
-        phone: b.phone || '—',
-        email: b.email || '—',
-        address: b.address || '—'
-      }
+        const rowHeight = 18
+        const rowY = tableTop
 
-      cols.forEach((c, i) => {
-        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        if (rowIdx % 2 === 0) {
+          doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
+        }
+        doc.fillColor('#505050')
+
+        const valueMap: Record<string, string> = {
+          sr: String(rowIdx + 1),
+          name: b.buyerName || '—',
+          ntn: b.buyerNtn || '—',
+          cnic: b.buyerCnic || '—',
+          type: b.buyerType || 'Unregistered',
+          province: b.province || '—',
+          phone: b.phone || '—',
+          email: b.email || '—',
+          address: b.address || '—'
+        }
+
+        cols.forEach((c, i) => {
+          doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        })
+
+        doc.fillColor('black')
+        tableTop += rowHeight
+        rowIdx++
       })
 
-      doc.fillColor('black')
-      tableTop += rowHeight
-    })
+      processed += batch.length
+    }
 
     doc.end()
   } catch (error) {

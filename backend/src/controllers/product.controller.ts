@@ -75,10 +75,7 @@ export const exportProductsPDF = async (req: AuthRequest, res: Response): Promis
     if (uom && uom !== 'ALL') where.uom = uom
     if (taxRate && taxRate !== 'ALL') where.taxRate = taxRate
 
-    const products = await prisma.product.findMany({
-      where,
-      orderBy: { description: 'asc' }
-    })
+    const totalCount = await prisma.product.count({ where })
 
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'attachment; filename="products.pdf"')
@@ -127,39 +124,56 @@ export const exportProductsPDF = async (req: AuthRequest, res: Response): Promis
     tableTop = drawHeader(tableTop)
     doc.font('Helvetica').fontSize(7.5)
 
-    products.forEach((p, idx) => {
-      if (tableTop > doc.page.height - 60) {
-        doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
-        tableTop = drawHeader(30)
-        doc.font('Helvetica').fontSize(7.5)
-      }
+    const BATCH_SIZE = 500
+    let processed = 0
+    let rowIdx = 0
 
-      const rowHeight = 18
-      const rowY = tableTop
+    while (processed < totalCount) {
+      const batch = await prisma.product.findMany({
+        where,
+        orderBy: { description: 'asc' },
+        skip: processed,
+        take: BATCH_SIZE
+      })
+      if (batch.length === 0) break
 
-      if (idx % 2 === 0) {
-        doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
-      }
-      doc.fillColor('#505050')
+      batch.forEach(p => {
+        if (tableTop > doc.page.height - 60) {
+          doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
+          tableTop = drawHeader(30)
+          doc.font('Helvetica').fontSize(7.5)
+        }
 
-      const valueMap: Record<string, string> = {
-        sr: String(idx + 1),
-        desc: p.description || '—',
-        hsCode: p.hsCode || '—',
-        uom: p.uom || '—',
-        rate: p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : '—',
-        taxRate: p.taxRate || '—',
-        sro: p.sroSchedule || '—',
-        itemSNo: p.itemSNo || '—'
-      }
+        const rowHeight = 18
+        const rowY = tableTop
 
-      cols.forEach((c, i) => {
-        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        if (rowIdx % 2 === 0) {
+          doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
+        }
+        doc.fillColor('#505050')
+
+        const valueMap: Record<string, string> = {
+          sr: String(rowIdx + 1),
+          desc: p.description || '—',
+          hsCode: p.hsCode || '—',
+          uom: p.uom || '—',
+          rate: p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : '—',
+          taxRate: p.taxRate || '—',
+          sro: p.sroSchedule || '—',
+          itemSNo: p.itemSNo || '—'
+        }
+
+        cols.forEach((c, i) => {
+          doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        })
+
+        doc.fillColor('black')
+        tableTop += rowHeight
+        rowIdx++
       })
 
-      doc.fillColor('black')
-      tableTop += rowHeight
-    })
+      processed += batch.length
+    }
 
     doc.end()
   } catch (error) {

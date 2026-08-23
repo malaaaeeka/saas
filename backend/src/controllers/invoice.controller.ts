@@ -897,10 +897,7 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       ]
     }
 
-    const invoices = await prisma.invoice.findMany({
-      where,
-      orderBy: { createdAt: 'desc' }
-    })
+    const totalCount = await prisma.invoice.count({ where })
 
     res.setHeader('Content-Type', 'application/pdf')
     res.setHeader('Content-Disposition', 'attachment; filename="invoices.pdf"')
@@ -955,39 +952,59 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       SALE: 'Sale', PURCHASE: 'Purchase', CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
     }
 
-    invoices.forEach((inv, idx) => {
-      if (tableTop > doc.page.height - 60) {
-        doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
-        tableTop = drawHeader(30)
-        doc.font('Helvetica').fontSize(7.5)
-      }
+    // Fetch and draw in bounded batches so memory usage never scales with
+    // total invoice count — only ever holds BATCH_SIZE rows at a time,
+    // regardless of whether there are 12,000 or 200,000 invoices.
+    const BATCH_SIZE = 500
+    let processed = 0
+    let rowIdx = 0
 
-      const rowHeight = 18
-      const rowY = tableTop
+    while (processed < totalCount) {
+      const batch = await prisma.invoice.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: processed,
+        take: BATCH_SIZE
+      })
+      if (batch.length === 0) break
 
-      if (idx % 2 === 0) {
-        doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
-      }
-      doc.fillColor('#505050')
+      batch.forEach(inv => {
+        if (tableTop > doc.page.height - 60) {
+          doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
+          tableTop = drawHeader(30)
+          doc.font('Helvetica').fontSize(7.5)
+        }
 
-      const valueMap: Record<string, string> = {
-        id: inv.id.slice(0, 12) + '...',
-        date: new Date(inv.invoiceDate).toLocaleDateString(),
-        type: typeLabels[inv.invoiceType] || inv.invoiceType,
-        buyer: inv.buyerName || 'Walk-in Customer',
-        amount: `PKR ${Number(inv.totalAmount).toFixed(2)}`,
-        tax: `PKR ${Number(inv.totalSalesTax).toFixed(2)}`,
-        status: inv.status,
-        fbrNo: inv.fbrInvoiceNo || '—'
-      }
+        const rowHeight = 18
+        const rowY = tableTop
 
-      cols.forEach((c, i) => {
-        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        if (rowIdx % 2 === 0) {
+          doc.rect(tableLeft, rowY, tableWidth, rowHeight).fill('#f5f5f5')
+        }
+        doc.fillColor('#505050')
+
+        const valueMap: Record<string, string> = {
+          id: inv.id.slice(0, 12) + '...',
+          date: new Date(inv.invoiceDate).toLocaleDateString(),
+          type: typeLabels[inv.invoiceType] || inv.invoiceType,
+          buyer: inv.buyerName || 'Walk-in Customer',
+          amount: `PKR ${Number(inv.totalAmount).toFixed(2)}`,
+          tax: `PKR ${Number(inv.totalSalesTax).toFixed(2)}`,
+          status: inv.status,
+          fbrNo: inv.fbrInvoiceNo || '—'
+        }
+
+        cols.forEach((c, i) => {
+          doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+        })
+
+        doc.fillColor('black')
+        tableTop += rowHeight
+        rowIdx++
       })
 
-      doc.fillColor('black')
-      tableTop += rowHeight
-    })
+      processed += batch.length
+    }
 
     doc.end()
   } catch (error: any) {
