@@ -1,3 +1,5 @@
+import { classifyBuyerIdColumns, checkBuyerType, checkProvince, checkRequired } from '@/lib/fbrValidation'
+
 export interface BuyerPayload {
   buyerName: string
   buyerNtn: string
@@ -16,28 +18,6 @@ export interface BuyerRow {
   errors: string[]
 }
 
-const BUYER_TYPES = ['Registered', 'Unregistered', 'Unregistered Distributor', 'Retail Consumer']
-const PROVINCES = [
-  'AZAD JAMMU AND KASHMIR', 'BALOCHISTAN', 'CAPITAL TERRITORY', 'GILGIT BALTISTAN',
-  'KHYBER PAKHTUNKHWA', 'PUNJAB', 'SINDH', 'FATA/PATA'
-]
-
-function onlyDigits(v: string): string {
-  return String(v || '').replace(/\D/g, '')
-}
-function normalizeCnic(v: string): string {
-  const d = onlyDigits(v)
-  if (d.length !== 13) return v
-  return `${d.slice(0, 5)}-${d.slice(5, 12)}-${d.slice(12)}`
-}
-function classifyId(ntnRaw: string, cnicRaw: string) {
-  const ntnDigits = onlyDigits(ntnRaw)
-  const cnicDigits = onlyDigits(cnicRaw)
-  if (ntnDigits && cnicDigits) return { kind: 'both' as const, value: '' }
-  if (ntnDigits) return /^\d{7}$/.test(ntnDigits) ? { kind: 'ntn' as const, value: ntnDigits } : { kind: 'invalid' as const, value: '' }
-  if (cnicDigits) return cnicDigits.length === 13 ? { kind: 'cnic' as const, value: normalizeCnic(cnicRaw) } : { kind: 'invalid' as const, value: '' }
-  return { kind: 'none' as const, value: '' }
-}
 function findCol(headers: string[], ...names: string[]): number {
   const norm = headers.map(h => h.trim().toLowerCase())
   for (const name of names) {
@@ -64,19 +44,19 @@ export function parseBuyerRows(dataRows: any[][], rawHeaders: string[]): BuyerRo
     const errors: string[] = []
 
     const buyerName = get(col.name)
-    if (!buyerName) errors.push('Missing Buyer Name')
+    const nameErr = checkRequired(buyerName, 'Buyer Name')
+    if (nameErr) errors.push(nameErr)
 
-    const idResult = classifyId(get(col.ntn), get(col.cnic))
+    const idResult = classifyBuyerIdColumns(get(col.ntn), get(col.cnic))
     if (idResult.kind === 'none') errors.push('Missing NTN/CNIC')
     if (idResult.kind === 'both') errors.push('Provide only one of NTN or CNIC')
     if (idResult.kind === 'invalid') errors.push('Invalid NTN (7 digits) or CNIC (13 digits)')
 
-    const buyerType = BUYER_TYPES.find(t => t.toLowerCase() === get(col.type).toLowerCase()) || ''
-    if (!buyerType) errors.push(`Invalid/missing Buyer Type (${BUYER_TYPES.join(', ')})`)
+    const { value: buyerType, error: typeErr } = checkBuyerType(get(col.type))
+    if (typeErr) errors.push(typeErr)
 
-    const provinceRaw = get(col.province)
-    const province = PROVINCES.find(p => p.toLowerCase() === provinceRaw.toLowerCase()) || ''
-    if (provinceRaw && !province) errors.push('Unrecognized Province')
+    const { value: province, error: provinceErr } = checkProvince(get(col.province), false)
+    if (provinceErr) errors.push(provinceErr)
 
     return {
       rowNumber: i + 2,

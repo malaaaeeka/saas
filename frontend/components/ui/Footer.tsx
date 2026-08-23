@@ -26,7 +26,13 @@ export default function Footer() {
             <p className="text-heading font-semibold text-sm mb-3">Templates</p>
             <div className="flex flex-col gap-2">
               <a href="/templates/invoice_upload_template.xlsx" download className="text-muted hover:text-heading text-sm transition">
-                Excel Template
+                Invoice Template
+              </a>
+              <a href="/templates/bulk_buyer_upload_template.xlsx" download className="text-muted hover:text-heading text-sm transition">
+                Buyer Template
+              </a>
+              <a href="/templates/bulk_product_upload_template.xlsx" download className="text-muted hover:text-heading text-sm transition">
+                Product Template
               </a>
             </div>
           </div>

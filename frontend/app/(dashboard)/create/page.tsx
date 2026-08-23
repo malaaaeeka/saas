@@ -962,6 +962,20 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // against every imported row, so gaps are caught right after upload
     // instead of only at submit time.
     const rowIssues: string[] = []
+
+    // ---- Header-level checks (missing from the old version) ----
+    const headerFirst = dataRows[0]
+    if (!String(get(headerFirst, 'invoiceType', '')).trim()) rowIssues.push('Missing Invoice Type')
+    if (!String(get(headerFirst, 'documentType', '')).trim()) rowIssues.push('Missing Document Type')
+    if (!String(get(headerFirst, 'originationProvince', '')).trim()) rowIssues.push('Missing Sale Origination Province')
+    if (!String(get(headerFirst, 'destinationProvince', '')).trim()) rowIssues.push('Missing Destination of Supply')
+    if (!String(get(headerFirst, 'buyerType', '')).trim()) rowIssues.push('Missing Buyer Type')
+    if (!String(get(headerFirst, 'sellerRegNo', '')).trim()) rowIssues.push('Missing Seller Registration No.')
+    const headerBuyerNtn = String(get(headerFirst, 'buyerNtn', ''))
+    const headerBuyerCnic = String(get(headerFirst, 'buyerCnic', ''))
+    if (!headerBuyerNtn && !headerBuyerCnic) rowIssues.push('Missing Buyer NTN/CNIC')
+
+    // ---- Per-item checks (unchanged from before) ----
     items.forEach((item, i) => {
       const rowNum = i + 1
       if (!item.documentNumber.trim()) rowIssues.push(`Row ${rowNum}: missing Document Number`)
@@ -976,6 +990,12 @@ const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       }
       if (needsSroReference(item.taxRate) && !item.itemSNo.trim()) {
         rowIssues.push(`Row ${rowNum}: Item S. No. is required for exempt/reduced-rate items`)
+      }
+      // ===== Col Y check, only when this row is for a Credit/Debit Note =====
+      const docType = String(get(headerFirst, 'documentType', ''))
+      const isAmendmentRow = docType === 'Credit Note' || docType === 'Debit Note'
+      if (isAmendmentRow && !item.invoiceRefNo.trim()) {
+        rowIssues.push(`Row ${rowNum}: Invoice Reference No. is required for ${docType} (FBR col Y)`)
       }
     })
 

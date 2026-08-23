@@ -1,3 +1,5 @@
+import { needsSroReference, checkRequired, checkPositiveNumber } from '@/lib/fbrValidation'
+
 export interface ProductPayload {
   description: string
   hsCode: string
@@ -41,31 +43,62 @@ export function parseProductRows(dataRows: any[][], rawHeaders: string[]): Produ
     const get = (idx: number) => (idx === -1 ? '' : String(row[idx] ?? '').trim())
     const errors: string[] = []
 
+    // ---- Description (required — matches manual) ----
     const description = get(col.description)
-    if (!description) errors.push('Missing Description')
+    const descErr = checkRequired(description, 'Product Description')
+    if (descErr) errors.push(descErr)
 
+    // ---- HS Code (required — matches manual) ----
+    const hsCode = get(col.hsCode)
+    const hsErr = checkRequired(hsCode, 'HS Code')
+    if (hsErr) errors.push(hsErr)
+
+    // ---- UoM (required — matches manual) ----
+    const uom = get(col.uom)
+    const uomErr = checkRequired(uom, 'UoM')
+    if (uomErr) errors.push(uomErr)
+
+    // ---- Rate (required AND must be > 0 — matches manual) ----
     const rateRaw = get(col.rate)
     let rate: number | null = null
-    if (rateRaw) {
+    if (!rateRaw) {
+      errors.push('Rate is required')
+    } else {
       const n = Number(rateRaw)
       if (Number.isNaN(n)) {
         errors.push('Rate must be a number')
       } else {
         rate = n
+        const rateErr = checkPositiveNumber(rate, 'Rate')
+        if (rateErr) errors.push(rateErr)
       }
+    }
+
+    // ---- Tax Rate (required — matches manual) ----
+    const taxRate = get(col.taxRate)
+    const taxRateErr = checkRequired(taxRate, 'Tax Rate')
+    if (taxRateErr) errors.push(taxRateErr)
+
+    // ---- SRO / Item S.No. — required ONLY for exempt/reduced-rate items,
+    // using the SAME needsSroReference() rule the manual form uses ----
+    const sroSchedule = get(col.sroSchedule)
+    const itemSNo = get(col.itemSNo)
+    if (taxRate && needsSroReference(taxRate)) {
+      if (!sroSchedule) errors.push('SRO No. / Schedule No. is required for exempt or reduced-rate items')
+      if (!itemSNo) errors.push('Item S. No. is required for exempt or reduced-rate items')
     }
 
     return {
       rowNumber: i + 2,
       payload: {
         description,
-        hsCode: get(col.hsCode),
+        hsCode,
         hsCodeDescription: get(col.hsCodeDescription),
-        uom: get(col.uom),
+        uom,
         rate,
-        taxRate: get(col.taxRate),
-        sroSchedule: get(col.sroSchedule),
-        itemSNo: get(col.itemSNo),
+        taxRate,
+        sroSchedule,
+        itemSNo,
       },
       valid: errors.length === 0,
       errors,
