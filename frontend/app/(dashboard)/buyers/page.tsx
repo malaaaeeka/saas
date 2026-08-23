@@ -562,11 +562,19 @@ export default function BuyersPage() {
                     <td className="px-4 py-4 font-mono text-xs text-muted">
                       {pageSize === 'ALL' ? idx + 1 : (page - 1) * (pageSize as number) + idx + 1}
                     </td>
-                    <td className="px-4 py-4 text-sm font-semibold text-heading break-words">{b.buyerName}</td>
+                    <td className="px-4 py-4 font-mono text-xs text-muted break-words">{b.buyerName}</td>
                     <td className="px-4 py-4 text-sm font-mono">{b.buyerNtn || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm font-mono">{b.buyerCnic || <span className="text-muted text-xs font-mono">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.buyerType || <span className="text-muted text-xs font-mono">—</span>}</td>
-                    <td className="px-4 py-4 text-sm">{b.province || <span className="text-muted text-xs font-mono">—</span>}</td>
+                    <td className="px-4 py-4">
+  {b.buyerType ? (
+    <span className="px-3 py-1 rounded-full text-xs font-semibold text-success-text bg-success-bg">
+      {b.buyerType}
+    </span>
+  ) : (
+    <span className="text-muted text-xs font-mono">—</span>
+  )}
+</td>
+                    <td className="px-4 py-4 text-xs font-medium text-success-text">{b.province || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm">{b.phone || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.email || <span className="text-muted text-xs font-mono">—</span>}</td>
                     <td className="px-4 py-4 text-sm break-words">{b.address || <span className="text-muted text-xs font-mono">—</span>}</td>
