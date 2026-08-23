@@ -33,15 +33,36 @@ const RATES: string[] = [
 ]
 
 const SRO_SCHEDULES: string[] = [
-  '', "01(I)/2022", "1007(I)/2005", "1125(I)/2011", "1167(I)/2018", "1180(I)/2016",
+  '',
+  "01(I)/2022", "1007(I)/2005", "1125(I)/2011", "1167(I)/2018", "1180(I)/2016",
   "1212(I)/2018", "125(I)/2017", "1308(I)/2018", "1450(I)/2021", "1579(1)/2021",
-  "6th Schedule", "9th Schedule", "DTRE", "FIFTH SCHEDULE", "ICTO", "NINTH SCHEDULE"
-  // ...trim/extend to match the full list in invoices/create/page.tsx if you want parity
+  "1604(I)/2021", "1636(1)/2022", "164(I)/2010", "172(I)/2006", "183(I)/2022",
+  "188(I)/2015", "1st Schedule FED", "21(I)/2017", "213(I)/2013", "223(I)/2017",
+  "237(I)/2020", "253(I)/2019", "292(I)/2017", "297(I)/2023-Table-I",
+  "297(I)/2023-Table-II", "321(I)/2022", "326(I)/2008", "327(I)/2008",
+  "398(I)/2015", "3rd Schd Table II", "3rd Schedule goods", "408(I)/2012",
+  "408(I)/2017", "484(I)/2015", "495(I)/2016", "499(I)/2013", "501(I)/2013",
+  "525(I)/2008", "539(I)/2008", "542(I)/2008", "549(I)/2008", "551(I)/2008",
+  "572(I)/2014", "581(1)/2024", "581(I)/2017", "587(I)/2017", "590(I)/2017",
+  "5th Schedule", "608(I)/2012", "641(I)/2017", "646(I)/2005", "657(I)/2013",
+  "670(I)/2013", "678(I)/2004", "6th Schd Table I", "6th Schd Table II",
+  "6th Schd Table III", "6th Schedule", "713(I)/2017", "727(I)/2011",
+  "757(I)/2017", "76(I)/2008", "760(I)/2012", "777(I)2018", "781(I)2018",
+  "79(I)/2012", "802(I)/2009", "811(I)/2009", "863(I)/2007", "867(I)/2017",
+  "88(I)/2022", "880(I)/2007", "896(I)/2013", "898(I)/2013", "8th Schedules",
+  "91(I)/2017", "946(1)/2013", "984(I)/2017", "9th Schedule", "9th Schedules",
+  "DTRE", "EIGHTH SCHEDULE Table 1", "EIGHTH SCHEDULE Table 2",
+  "FED 3rd Schd Table I", "FED 3rd Schd Table II", "FIFTH SCHEDULE", "ICTO",
+  "ICTO TABLE I", "ICTO TABLE II", "NINTH SCHEDULE", "Section 4(b)",
+  "SECTION 49", "SRO 342 (I)/2002", "Zero Rated Elec.", "Zero Rated Gas",
+  "S.R.O. 1217(I)/2025"
 ]
 
 const ITEM_SR_NOS: string[] = [
-  '', '-', '1', '2', '3', '4', '5'
-  // full list lives in invoices/create/page.tsx — copy over if needed
+  '',
+  "-", "1", "1(A)", "1(B)", "1(E)", "1(F)", "1(G)", "1(i)", "1(i)(a)", "1(i)(b)",
+  // ...(paste the rest of the ITEM_SR_NOS array exactly as it appears in Document 2)...
+  "Region-I", "Region-II"
 ]
 
 const EMPTY_FORM = {
@@ -219,21 +240,36 @@ function CreateProductPageContent() {
                   }`}
                 />
               </div>
-
-              <div className="mb-4">
-                <label className="block text-sm text-muted mb-2">
-                  HS Code Description *
-                  {form.hsCode && <span className="ml-2 text-link font-mono">{form.hsCode}</span>}
-                </label>
-                <div className={attemptedSubmit && errors.hsCode ? 'rounded-lg ring-1 ring-red-500' : ''}>
-                  <HsCodeAutocomplete
-                    value={form.hsCodeDescription}
-                    onSelect={(code, desc) => handleHsCodeSelect(code, desc)}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm text-muted mb-2">Product Description *</label>
+                  <input
+                    ref={descriptionRef}
+                    type="text"
+                    value={form.description}
+                    onChange={e => handleChange('description', e.target.value)}
+                    placeholder="e.g. Cotton Yarn 30/1"
+                    className={`w-full bg-surface border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent ${
+                      attemptedSubmit && errors.description ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                    }`}
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-muted mb-2">
+                    HS Code Description *
+                    {form.hsCode && <span className="ml-2 text-link font-mono">{form.hsCode}</span>}
+                  </label>
+                  <div className={attemptedSubmit && errors.hsCode ? 'rounded-lg ring-1 ring-red-500' : ''}>
+                    <HsCodeAutocomplete
+                      value={form.hsCodeDescription}
+                      onSelect={(code, desc) => handleHsCodeSelect(code, desc)}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm text-muted mb-2">UoM *</label>
                   <div className={attemptedSubmit && errors.uom ? 'rounded-lg ring-2 ring-red-500' : ''}>
@@ -246,7 +282,7 @@ function CreateProductPageContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-muted mb-2">Rate (PKR) *</label>
+                  <label className="block text-sm text-muted mb-2">Unit Price (PKR) *</label>
                   <input
                     type="number"
                     value={form.rate}
@@ -257,17 +293,16 @@ function CreateProductPageContent() {
                     }`}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm text-muted mb-2">Tax Rate *</label>
-                <div className={attemptedSubmit && errors.taxRate ? 'rounded-lg ring-2 ring-red-500' : ''}>
-                  <StyledSelect
-                    options={toOptions(RATES)}
-                    value={form.taxRate ? { value: form.taxRate, label: form.taxRate } : null}
-                    onChange={opt => handleChange('taxRate', opt?.value || '')}
-                    placeholder="Select tax rate"
-                  />
+                <div>
+                  <label className="block text-sm text-muted mb-2">Tax Rate *</label>
+                  <div className={attemptedSubmit && errors.taxRate ? 'rounded-lg ring-2 ring-red-500' : ''}>
+                    <StyledSelect
+                      options={toOptions(RATES)}
+                      value={form.taxRate ? { value: form.taxRate, label: form.taxRate } : null}
+                      onChange={opt => handleChange('taxRate', opt?.value || '')}
+                      placeholder="Select tax rate"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
