@@ -92,7 +92,7 @@ export const exportProductsPDF = async (req: AuthRequest, res: Response): Promis
     const tableLeft = 30
     let tableTop = 60
 
-    const cols = [
+    const baseCols = [
       { key: 'sr',       label: 'Serial No.',  w: 50  },
       { key: 'desc',     label: 'Description', w: 160 },
       { key: 'hsCode',   label: 'HS Code',     w: 60  },
@@ -102,6 +102,10 @@ export const exportProductsPDF = async (req: AuthRequest, res: Response): Promis
       { key: 'sro',      label: 'SRO',         w: 100 },
       { key: 'itemSNo',  label: 'Item S. No.', w: 75  },
     ]
+
+    const availableWidth = doc.page.width - tableLeft * 2
+    const baseTotalWidth = baseCols.reduce((sum, c) => sum + c.w, 0)
+    const cols = baseCols.map(c => ({ ...c, w: c.w * (availableWidth / baseTotalWidth) }))
 
     let runningX = tableLeft
     const colX: number[] = []

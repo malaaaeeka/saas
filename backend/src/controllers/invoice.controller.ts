@@ -914,7 +914,7 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
     const tableLeft = 30
     let tableTop = 60
 
-    const cols = [
+    const baseCols = [
       { key: 'id',       label: 'Invoice ID', w: 90  },
       { key: 'date',     label: 'Date',        w: 60  },
       { key: 'type',     label: 'Type',        w: 60  },
@@ -924,6 +924,12 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       { key: 'status',   label: 'Status',      w: 55  },
       { key: 'fbrNo',    label: 'FBR No.',     w: 120 },
     ]
+
+    // Stretch columns proportionally so the table always fills the full
+    // usable page width instead of leaving a dead gap on the right.
+    const availableWidth = doc.page.width - tableLeft * 2
+    const baseTotalWidth = baseCols.reduce((sum, c) => sum + c.w, 0)
+    const cols = baseCols.map(c => ({ ...c, w: c.w * (availableWidth / baseTotalWidth) }))
 
     let runningX = tableLeft
     const colX: number[] = []
