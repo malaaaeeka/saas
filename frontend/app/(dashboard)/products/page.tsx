@@ -287,7 +287,7 @@ export default function ProductsPage() {
       if (data.success) {
         setProducts(data.data || [])
       } else {
-        setError('Failed to load products')
+        setError(data.message || 'Failed to load products')
       }
     } catch {
       setError('Cannot reach server')
