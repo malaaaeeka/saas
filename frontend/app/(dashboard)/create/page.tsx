@@ -246,6 +246,17 @@ function rateToPercent(rate: string): number | null {
   return null
 }
 
+// True when the selected tax rate means the item is exempt, zero-rated,
+// DTRE, or below the standard 18% rate — these are the cases where FBR
+// requires a supporting SRO/Schedule reference and clause (Item S. No.)
+// to justify the non-standard rate.
+function needsSroReference(taxRate: string): boolean {
+  if (taxRate === 'Exempt' || taxRate === 'DTRE') return true
+  const pct = rateToPercent(taxRate)
+  if (pct !== null && pct < 0.18) return true
+  return false
+}
+
 function toNum(v: any): number {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
@@ -475,6 +486,46 @@ function validateForm(formData: any, amendmentType: string | null): FormError | 
   const missingDocNum = formData.items.findIndex((i: any) => !i.documentNumber.trim())
   if (missingDocNum !== -1) {
     return { message: `Item ${missingDocNum + 1}: Document Number is required`, scrollTarget: { item: missingDocNum } }
+  }
+
+  const missingHsCode = formData.items.findIndex((i: any) => !i.hsCode.trim())
+  if (missingHsCode !== -1) {
+    return { message: `Item ${missingHsCode + 1}: HS Code is required`, scrollTarget: { item: missingHsCode } }
+  }
+
+  const missingDescription = formData.items.findIndex((i: any) => !i.description.trim())
+  if (missingDescription !== -1) {
+    return { message: `Item ${missingDescription + 1}: Product Description is required`, scrollTarget: { item: missingDescription } }
+  }
+
+  const badQty = formData.items.findIndex((i: any) => !(Number(i.quantity) > 0))
+  if (badQty !== -1) {
+    return { message: `Item ${badQty + 1}: Qty must be greater than 0`, scrollTarget: { item: badQty } }
+  }
+
+  const badRate = formData.items.findIndex((i: any) => !(Number(i.rate) > 0))
+  if (badRate !== -1) {
+    return { message: `Item ${badRate + 1}: Unit Price must be greater than 0`, scrollTarget: { item: badRate } }
+  }
+
+  const missingUom = formData.items.findIndex((i: any) => !i.uom.trim())
+  if (missingUom !== -1) {
+    return { message: `Item ${missingUom + 1}: UoM is required`, scrollTarget: { item: missingUom } }
+  }
+
+  const missingTaxRate = formData.items.findIndex((i: any) => !i.taxRate.trim())
+  if (missingTaxRate !== -1) {
+    return { message: `Item ${missingTaxRate + 1}: Tax Rate is required`, scrollTarget: { item: missingTaxRate } }
+  }
+
+  const missingSroRef = formData.items.findIndex((i: any) => needsSroReference(i.taxRate) && !i.sroSchedule.trim())
+  if (missingSroRef !== -1) {
+    return { message: `Item ${missingSroRef + 1}: SRO No. / Schedule No. is required for exempt or reduced-rate items`, scrollTarget: { item: missingSroRef } }
+  }
+
+  const missingItemSNo = formData.items.findIndex((i: any) => needsSroReference(i.taxRate) && !i.itemSNo.trim())
+  if (missingItemSNo !== -1) {
+    return { message: `Item ${missingItemSNo + 1}: Item S. No. is required for exempt or reduced-rate items`, scrollTarget: { item: missingItemSNo } }
   }
 
   const isAmendment = formData.documentType === 'Credit Note' || formData.documentType === 'Debit Note'
@@ -1316,36 +1367,44 @@ setTimeout(() => {
                     {/* Row 1a: HS Code — full width, own row */}
                     <div className="mb-3">
                       <label className="block text-xs text-muted mb-1">
-                        HS Code Description
+                        HS Code Description *
                         {item.hsCode && <span className="ml-2 text-link font-mono">{item.hsCode}</span>}
                       </label>
-                      <HsCodeAutocomplete value={item.hsCodeDescription}
-                        onSelect={(code, desc, fullEntry) => handleHsCodeSelect(index, code, fullEntry)} />
+                      <div className={!item.hsCode.trim() && error ? 'rounded ring-1 ring-red-500' : ''}>
+                        <HsCodeAutocomplete value={item.hsCodeDescription}
+                          onSelect={(code, desc, fullEntry) => handleHsCodeSelect(index, code, fullEntry)} />
+                      </div>
                     </div>
 
                     {/* Row 1b: Product Description, Qty, Unit Price, Total */}
                     <div className="grid grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs text-muted mb-1">Product Description</label>
-                        <ProductAutocomplete
-                          value={item.description}
-                          onSelect={(product) => handleProductSelect(index, product)}
-                          onTextChange={(text) => handleItemChange(index, 'description', text)}
-                        />
+                        <label className="block text-xs text-muted mb-1">Product Description *</label>
+                        <div className={!item.description.trim() && error ? 'rounded ring-1 ring-red-500' : ''}>
+                          <ProductAutocomplete
+                            value={item.description}
+                            onSelect={(product) => handleProductSelect(index, product)}
+                            onTextChange={(text) => handleItemChange(index, 'description', text)}
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-xs text-muted mb-1">Qty</label>
+                        <label className="block text-xs text-muted mb-1">Qty *</label>
                         <input type="number" value={item.quantity}
                           onChange={e => handleItemChange(index, 'quantity', e.target.value)}
                           placeholder=""
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                          className={`w-full bg-surface border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent ${
+                            !(Number(item.quantity) > 0) && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                          }`} />
                       </div>
                       <div>
-                        <label className="block text-xs text-muted mb-1">Unit Price</label>
+                        <label className="block text-xs text-muted mb-1">Unit Price *</label>
                         <input type="number" value={item.rate}
                           onChange={e => handleItemChange(index, 'rate', e.target.value)}
                           placeholder=""
-                          className="w-full bg-surface border border-border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent" />
+                          className={`w-full bg-surface border text-heading rounded px-3 py-1 text-sm focus:outline-none focus:border-accent ${
+                            !(Number(item.rate) > 0) && error ? 'border-red-500 ring-1 ring-red-500' : 'border-border'
+                          }`} />
                       </div>
                       <div>
                         <label className="block text-xs text-muted mb-1">Total</label>
@@ -1357,20 +1416,24 @@ setTimeout(() => {
                     {/* Row 2: UoM, Tax Rate */}
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
-                        <label className="block text-xs text-muted mb-1">UoM</label>
-                       <StyledSelect
-  options={toOptions(UOMS)}
-  value={{ value: item.uom, label: item.uom }}
-  onChange={opt => handleItemChange(index, 'uom', opt?.value || '')}
-/>
+                        <label className="block text-xs text-muted mb-1">UoM *</label>
+                        <div className={!item.uom.trim() && error ? 'rounded ring-2 ring-red-500' : ''}>
+                          <StyledSelect
+                            options={toOptions(UOMS)}
+                            value={{ value: item.uom, label: item.uom }}
+                            onChange={opt => handleItemChange(index, 'uom', opt?.value || '')}
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-xs text-muted mb-1">Rate (Tax %) — fixed-charge rates won&apos;t auto-calc sales tax</label>
-                       <StyledSelect
-  options={toOptions(RATES)}
-  value={{ value: item.taxRate, label: item.taxRate }}
-  onChange={opt => handleItemChange(index, 'taxRate', opt?.value || '')}
-/>
+                        <label className="block text-xs text-muted mb-1">Rate (Tax %) * — fixed-charge rates won&apos;t auto-calc sales tax</label>
+                        <div className={!item.taxRate.trim() && error ? 'rounded ring-2 ring-red-500' : ''}>
+                          <StyledSelect
+                            options={toOptions(RATES)}
+                            value={{ value: item.taxRate, label: item.taxRate }}
+                            onChange={opt => handleItemChange(index, 'taxRate', opt?.value || '')}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1435,20 +1498,25 @@ setTimeout(() => {
                     <div className="mt-3">
                       <p className="text-xs text-muted font-semibold uppercase tracking-wide mb-2">
                         Exemption / Zero &amp; Reduced Rate Reference
+                        {needsSroReference(item.taxRate) && <span className="ml-1 text-red-500">*</span>}
                       </p>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="block text-xs text-muted mb-1">SRO No. / Schedule No.</label>
-                         <StyledSelect
-  options={toOptions(SRO_SCHEDULES)}
-  value={{ value: item.sroSchedule, label: item.sroSchedule }}
-  onChange={opt => handleItemChange(index, 'sroSchedule', opt?.value || '')}
-/>
+                          <div className={needsSroReference(item.taxRate) && !item.sroSchedule.trim() && error ? 'rounded ring-2 ring-red-500' : ''}>
+                            <StyledSelect
+                              options={toOptions(SRO_SCHEDULES)}
+                              value={{ value: item.sroSchedule, label: item.sroSchedule }}
+                              onChange={opt => handleItemChange(index, 'sroSchedule', opt?.value || '')}
+                            />
+                          </div>
                           <p className="text-xs text-muted mt-1">Required for exempt/zero-rated/reduced-rate items</p>
                         </div>
                         <div>
                           <label className="block text-xs text-muted mb-1">Item S. No.</label>
-                          <ItemSNoAutocomplete value={item.itemSNo} onChange={val => handleItemChange(index, 'itemSNo', val)} />
+                          <div className={needsSroReference(item.taxRate) && !item.itemSNo.trim() && error ? 'rounded ring-2 ring-red-500' : ''}>
+                            <ItemSNoAutocomplete value={item.itemSNo} onChange={val => handleItemChange(index, 'itemSNo', val)} />
+                          </div>
                           <p className="text-xs text-muted mt-1">Clause number within the selected SRO/Schedule</p>
                         </div>
                       </div>
