@@ -51,6 +51,7 @@ export default function ProductsPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState('')
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -230,6 +231,66 @@ export default function ProductsPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    setShowExportMenu(false)
+    const headers = ['Serial No.', 'Description', 'HS Code', 'UoM', 'Rate', 'Tax Rate', 'SRO', 'Item S. No.']
+    const escape = (val: string | number | null) => `"${String(val ?? '').replace(/"/g, '""')}"`
+    const rows = filteredProducts.map((p, idx) => [
+      idx + 1, p.description, p.hsCode, p.uom,
+      p.rate !== null ? Number(p.rate).toFixed(2) : '',
+      p.taxRate, p.sroSchedule, p.itemSNo
+    ].map(escape).join(','))
+    const csv = [headers.map(escape).join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'products.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleExportPDF = () => {
+    setShowExportMenu(false)
+    const rowsHtml = filteredProducts.map((p, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${p.description || ''}</td>
+        <td>${p.hsCode || ''}</td>
+        <td>${p.uom || ''}</td>
+        <td>${p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : ''}</td>
+        <td>${p.taxRate || ''}</td>
+        <td>${p.sroSchedule || ''}</td>
+        <td>${p.itemSNo || ''}</td>
+      </tr>`).join('')
+    const html = `
+      <html>
+        <head>
+          <title>Products</title>
+          <style>
+            body { font-family: sans-serif; padding: 24px; }
+            table { width: 100%; border-collapse: collapse; font-size: 12px; }
+            th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+            th { background: #f3f3f3; }
+          </style>
+        </head>
+        <body>
+          <h2>Products</h2>
+          <table>
+            <thead><tr><th>Serial No.</th><th>Description</th><th>HS Code</th><th>UoM</th><th>Rate</th><th>Tax Rate</th><th>SRO</th><th>Item S. No.</th></tr></thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </body>
+      </html>`
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(html)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-7xl mx-auto">
@@ -300,6 +361,33 @@ export default function ProductsPage() {
                   dropdownIndicator: () => 'text-muted/70 px-1',
                 }}
               />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(v => !v)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-heading hover:bg-border-light transition"
+              >
+                ⋮
+              </button>
+              {showExportMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-1 w-40 bg-surface border border-border rounded-lg shadow-lg z-20 overflow-hidden">
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download PDF
+                    </button>
+                    <button
+                      onClick={handleExportCSV}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download CSV
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
