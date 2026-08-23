@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -87,6 +89,7 @@ export default function BuyersPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState('')
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -281,6 +284,51 @@ export default function BuyersPage() {
     }
   }
 
+  const handleExportCSV = () => {
+    setShowExportMenu(false)
+    const headers = ['Serial No.', 'Name', 'NTN', 'CNIC', 'Type', 'Province', 'Phone', 'Email', 'Address']
+    const escape = (val: string | number | null) => `"${String(val ?? '').replace(/"/g, '""')}"`
+    const rows = filteredBuyers.map((b, idx) => [
+      idx + 1, b.buyerName, b.buyerNtn, b.buyerCnic,
+      b.buyerType || 'Unregistered', b.province, b.phone, b.email, b.address
+    ].map(escape).join(','))
+    const csv = [headers.map(escape).join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'buyers.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleExportPDF = () => {
+    setShowExportMenu(false)
+    const doc = new jsPDF({ orientation: 'landscape' })
+    doc.setFontSize(14)
+    doc.text('Buyers', 14, 15)
+
+    autoTable(doc, {
+      startY: 20,
+      head: [['Serial No.', 'Name', 'NTN', 'CNIC', 'Type', 'Province', 'Phone', 'Email', 'Address']],
+      body: filteredBuyers.map((b, idx) => [
+        idx + 1,
+        b.buyerName || '',
+        b.buyerNtn || '',
+        b.buyerCnic || '',
+        b.buyerType || 'Unregistered',
+        b.province || '',
+        b.phone || '',
+        b.email || '',
+        b.address || ''
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 20 }
+    })
+
+    doc.save('buyers.pdf')
+  }
+
   return (
     <div className="min-h-screen bg-background text-heading p-8">
       <div className="max-w-7xl mx-auto">
@@ -351,6 +399,33 @@ export default function BuyersPage() {
                   dropdownIndicator: () => 'text-muted/70 px-1',
                 }}
               />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(v => !v)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-heading hover:bg-border-light transition"
+              >
+                ⋮
+              </button>
+              {showExportMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-1 w-40 bg-surface border border-border rounded-lg shadow-lg z-20 overflow-hidden">
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download PDF
+                    </button>
+                    <button
+                      onClick={handleExportCSV}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download CSV
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

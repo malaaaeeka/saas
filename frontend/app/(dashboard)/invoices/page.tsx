@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect, { toOptions } from '@/components/ui/StyledSelect'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -31,6 +33,7 @@ export default function InvoicesPage() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   // Cancels an in-flight "All" fetch loop if filters change mid-fetch
   const fetchIdRef = useRef(0)
@@ -252,6 +255,58 @@ export default function InvoicesPage() {
     return invoices.map(inv => ({ ...inv, isAmendment: !!inv.originalInvoiceId }))
   }, [invoices])
 
+  // Export covers whatever is currently loaded (the visible page, or the
+  // full set when pageSize is "All") — not the entire unfiltered database.
+  const handleExportCSV = () => {
+    setShowExportMenu(false)
+    const headers = ['Invoice ID', 'Date', 'Type', 'Buyer', 'Amount', 'Tax', 'Status', 'FBR No.']
+    const escape = (val: string | number | null) => `"${String(val ?? '').replace(/"/g, '""')}"`
+    const rows = flatFilteredRows.map(inv => [
+      inv.id,
+      new Date(inv.invoiceDate).toLocaleDateString(),
+      getTypeLabel(inv.invoiceType).label,
+      inv.buyerName || 'Walk-in Customer',
+      Number(inv.totalAmount).toFixed(2),
+      Number(inv.totalSalesTax).toFixed(2),
+      inv.status,
+      inv.fbrInvoiceNo || ''
+    ].map(escape).join(','))
+    const csv = [headers.map(escape).join(','), ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'invoices.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleExportPDF = () => {
+    setShowExportMenu(false)
+    const doc = new jsPDF({ orientation: 'landscape' })
+    doc.setFontSize(14)
+    doc.text('Invoices', 14, 15)
+
+    autoTable(doc, {
+      startY: 20,
+      head: [['Invoice ID', 'Date', 'Type', 'Buyer', 'Amount', 'Tax', 'Status', 'FBR No.']],
+      body: flatFilteredRows.map(inv => [
+        inv.id.slice(0, 12) + '...',
+        new Date(inv.invoiceDate).toLocaleDateString(),
+        getTypeLabel(inv.invoiceType).label,
+        inv.buyerName || 'Walk-in Customer',
+        `PKR ${Number(inv.totalAmount).toFixed(2)}`,
+        `PKR ${Number(inv.totalSalesTax).toFixed(2)}`,
+        inv.status,
+        inv.fbrInvoiceNo || '—'
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 20 }
+    })
+
+    doc.save('invoices.pdf')
+  }
+
   const totalPages = pageSize === 'ALL' ? 1 : Math.ceil(totalCount / (pageSize as number))
 
   const typeOptions = [
@@ -393,6 +448,33 @@ const statusCount = (value: string) => value === 'ALL' ? invoiceCounts.totalForS
                   dropdownIndicator: () => 'text-muted/70 px-1',
                 }}
               />
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(v => !v)}
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-heading hover:bg-border-light transition"
+              >
+                ⋮
+              </button>
+              {showExportMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-1 w-40 bg-surface border border-border rounded-lg shadow-lg z-20 overflow-hidden">
+                    <button
+                      onClick={handleExportPDF}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download PDF
+                    </button>
+                    <button
+                      onClick={handleExportCSV}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                    >
+                      Download CSV
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
