@@ -953,7 +953,7 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
 
     invoices.forEach(inv => {
       if (tableTop > doc.page.height - 60) {
-        doc.addPage({ layout: 'landscape' })
+        doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
         tableTop = drawHeader(30)
         doc.font('Helvetica').fontSize(7.5)
       }
@@ -973,15 +973,12 @@ export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> 
       }
 
       cols.forEach((c, i) => {
+        doc.rect(colX[i], rowY, c.w, rowHeight).stroke()
         doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
       })
 
-      doc.moveTo(tableLeft, rowY + rowHeight).lineTo(tableLeft + tableWidth, rowY + rowHeight).stroke()
       tableTop += rowHeight
     })
-
-    colX.forEach(x => doc.moveTo(x, 75).lineTo(x, tableTop).stroke())
-    doc.moveTo(tableLeft + tableWidth, 75).lineTo(tableLeft + tableWidth, tableTop).stroke()
 
     doc.end()
   } catch (error: any) {

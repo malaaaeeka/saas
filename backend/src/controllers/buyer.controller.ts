@@ -214,14 +214,15 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
     let tableTop = 75
 
     const cols = [
-      { key: 'sr',       label: 'Serial No.', w: 50  },
-      { key: 'name',     label: 'Name',       w: 110 },
-      { key: 'ntn',      label: 'NTN',        w: 70  },
-      { key: 'cnic',     label: 'CNIC',       w: 90  },
-      { key: 'type',     label: 'Type',       w: 90  },
-      { key: 'province', label: 'Province',   w: 100 },
-      { key: 'phone',    label: 'Phone',      w: 70  },
-      { key: 'email',    label: 'Email',      w: 100 },
+      { key: 'sr',       label: 'Serial No.', w: 45  },
+      { key: 'name',     label: 'Name',       w: 95  },
+      { key: 'ntn',      label: 'NTN',        w: 60  },
+      { key: 'cnic',     label: 'CNIC',       w: 80  },
+      { key: 'type',     label: 'Type',       w: 80  },
+      { key: 'province', label: 'Province',   w: 85  },
+      { key: 'phone',    label: 'Phone',      w: 60  },
+      { key: 'email',    label: 'Email',      w: 85  },
+      { key: 'address',  label: 'Address',    w: 100 },
     ]
 
     let runningX = tableLeft
@@ -246,7 +247,7 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
 
     buyers.forEach((b, idx) => {
       if (tableTop > doc.page.height - 60) {
-        doc.addPage({ layout: 'landscape' })
+        doc.addPage({ margin: 30, size: 'A4', layout: 'landscape' })
         tableTop = drawHeader(30)
         doc.font('Helvetica').fontSize(7.5)
       }
@@ -262,19 +263,17 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
         type: b.buyerType || 'Unregistered',
         province: b.province || '—',
         phone: b.phone || '—',
-        email: b.email || '—'
+        email: b.email || '—',
+        address: b.address || '—'
       }
 
       cols.forEach((c, i) => {
+        doc.rect(colX[i], rowY, c.w, rowHeight).stroke()
         doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
       })
 
-      doc.moveTo(tableLeft, rowY + rowHeight).lineTo(tableLeft + tableWidth, rowY + rowHeight).stroke()
       tableTop += rowHeight
     })
-
-    colX.forEach(x => doc.moveTo(x, 75).lineTo(x, tableTop).stroke())
-    doc.moveTo(tableLeft + tableWidth, 75).lineTo(tableLeft + tableWidth, tableTop).stroke()
 
     doc.end()
   } catch (error) {
