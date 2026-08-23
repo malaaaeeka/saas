@@ -140,19 +140,21 @@ export default function BuyersPage() {
   }
 
   const typeCounts = useMemo(() => {
+    const filtered = buyers.filter(b => provinceFilter === 'ALL' || b.province === provinceFilter)
     const counts: Record<string, number> = {}
-    buyers.forEach(b => {
+    filtered.forEach(b => {
       const t = b.buyerType || 'Unregistered'
       counts[t] = (counts[t] || 0) + 1
     })
-    return counts
-  }, [buyers])
+    return { counts, total: filtered.length }
+  }, [buyers, provinceFilter])
 
   const provinceCounts = useMemo(() => {
+    const filtered = buyers.filter(b => typeFilter === 'ALL' || (b.buyerType || 'Unregistered') === typeFilter)
     const counts: Record<string, number> = {}
-    buyers.forEach(b => { if (b.province) counts[b.province] = (counts[b.province] || 0) + 1 })
-    return counts
-  }, [buyers])
+    filtered.forEach(b => { if (b.province) counts[b.province] = (counts[b.province] || 0) + 1 })
+    return { counts, total: filtered.length }
+  }, [buyers, typeFilter])
 
   const filteredBuyers = buyers.filter(b => {
     if (typeFilter !== 'ALL' && (b.buyerType || 'Unregistered') !== typeFilter) return false
@@ -404,7 +406,7 @@ export default function BuyersPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...BUYER_TYPES].map(opt => (
                   <button key={opt} onClick={() => handleTypeFilterChange(opt)} className={`text-left text-sm transition ${typeFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Types' : opt} ({opt === 'ALL' ? buyers.length : (typeCounts[opt] || 0)})
+                    {opt === 'ALL' ? 'All Types' : opt} ({opt === 'ALL' ? typeCounts.total : (typeCounts.counts[opt] || 0)})
                   </button>
                 ))}
               </div>
@@ -414,7 +416,7 @@ export default function BuyersPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...PROVINCES].map(opt => (
                   <button key={opt} onClick={() => handleProvinceFilterChange(opt)} className={`text-left text-sm transition ${provinceFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Provinces' : opt} ({opt === 'ALL' ? buyers.length : (provinceCounts[opt] || 0)})
+                    {opt === 'ALL' ? 'All Provinces' : opt} ({opt === 'ALL' ? provinceCounts.total : (provinceCounts.counts[opt] || 0)})
                   </button>
                 ))}
               </div>

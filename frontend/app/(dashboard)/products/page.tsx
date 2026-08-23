@@ -107,16 +107,18 @@ export default function ProductsPage() {
   const taxRateOptions = Array.from(new Set(products.map(p => p.taxRate).filter(Boolean))) as string[]
 
   const uomCounts = useMemo(() => {
+    const filtered = products.filter(p => taxRateFilter === 'ALL' || p.taxRate === taxRateFilter)
     const counts: Record<string, number> = {}
-    products.forEach(p => { if (p.uom) counts[p.uom] = (counts[p.uom] || 0) + 1 })
-    return counts
-  }, [products])
+    filtered.forEach(p => { if (p.uom) counts[p.uom] = (counts[p.uom] || 0) + 1 })
+    return { counts, total: filtered.length }
+  }, [products, taxRateFilter])
 
   const taxRateCounts = useMemo(() => {
+    const filtered = products.filter(p => uomFilter === 'ALL' || p.uom === uomFilter)
     const counts: Record<string, number> = {}
-    products.forEach(p => { if (p.taxRate) counts[p.taxRate] = (counts[p.taxRate] || 0) + 1 })
-    return counts
-  }, [products])
+    filtered.forEach(p => { if (p.taxRate) counts[p.taxRate] = (counts[p.taxRate] || 0) + 1 })
+    return { counts, total: filtered.length }
+  }, [products, uomFilter])
 
   const filteredProducts = products.filter(p => {
     if (uomFilter !== 'ALL' && p.uom !== uomFilter) return false
@@ -363,7 +365,7 @@ export default function ProductsPage() {
               <div className="flex flex-col gap-2">
                 {['ALL', ...taxRateOptions].map(opt => (
                   <button key={opt} onClick={() => handleTaxRateFilterChange(opt)} className={`text-left text-sm transition ${taxRateFilter === opt ? 'text-heading font-semibold underline' : 'text-muted hover:text-heading'}`}>
-                    {opt === 'ALL' ? 'All Tax Rates' : opt} ({opt === 'ALL' ? products.length : (taxRateCounts[opt] || 0)})
+                    {opt === 'ALL' ? 'All Tax Rates' : opt} ({opt === 'ALL' ? taxRateCounts.total : (taxRateCounts.counts[opt] || 0)})
                   </button>
                 ))}
               </div>
