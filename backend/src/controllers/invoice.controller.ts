@@ -874,6 +874,121 @@ export const getStats = async (req: any, res: Response): Promise<void> => {
   }
 }
 
+export const exportInvoicesPDF = async (req: any, res: Response): Promise<void> => {
+  try {
+    const business = await prisma.business.findUnique({ where: { userId: req.user.id } })
+    if (!business) {
+      sendError(res, 'Business not found', 404)
+      return
+    }
+
+    const type = req.query.type as string | undefined
+    const status = req.query.status as string | undefined
+    const search = (req.query.search as string | undefined)?.trim()
+
+    const where: any = { businessId: business.id }
+    if (type && type !== 'ALL') where.invoiceType = type
+    if (status && status !== 'ALL') where.status = status
+    if (search) {
+      where.OR = [
+        { buyerName: { contains: search, mode: 'insensitive' } },
+        { fbrInvoiceNo: { contains: search, mode: 'insensitive' } },
+        { id: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const invoices = await prisma.invoice.findMany({
+      where,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'attachment; filename="invoices.pdf"')
+
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
+    doc.pipe(res)
+
+    doc.fontSize(16).font('Helvetica-Bold').text('Invoices', 30, 30)
+    doc.fontSize(9).font('Helvetica').fillColor('gray')
+      .text(`${invoices.length} invoice${invoices.length === 1 ? '' : 's'} · Generated ${new Date().toLocaleDateString()}`, 30, 52)
+    doc.fillColor('black')
+
+    const tableLeft = 30
+    let tableTop = 75
+
+    const cols = [
+      { key: 'id',       label: 'Invoice ID', w: 90  },
+      { key: 'date',     label: 'Date',        w: 60  },
+      { key: 'type',     label: 'Type',        w: 60  },
+      { key: 'buyer',    label: 'Buyer',       w: 130 },
+      { key: 'amount',   label: 'Amount',      w: 80  },
+      { key: 'tax',      label: 'Tax',         w: 80  },
+      { key: 'status',   label: 'Status',      w: 55  },
+      { key: 'fbrNo',    label: 'FBR No.',     w: 120 },
+    ]
+
+    let runningX = tableLeft
+    const colX: number[] = []
+    cols.forEach(c => { colX.push(runningX); runningX += c.w })
+    const tableWidth = runningX - tableLeft
+
+    const drawHeader = (y: number) => {
+      const headerHeight = 20
+      doc.rect(tableLeft, y, tableWidth, headerHeight).stroke()
+      doc.fontSize(8).font('Helvetica-Bold')
+      cols.forEach((c, i) => {
+        doc.text(c.label, colX[i] + 4, y + 5, { width: c.w - 8 })
+        doc.moveTo(colX[i], y).lineTo(colX[i], y + headerHeight).stroke()
+      })
+      doc.moveTo(tableLeft + tableWidth, y).lineTo(tableLeft + tableWidth, y + headerHeight).stroke()
+      return y + headerHeight
+    }
+
+    tableTop = drawHeader(tableTop)
+    doc.font('Helvetica').fontSize(7.5)
+
+    const typeLabels: Record<string, string> = {
+      SALE: 'Sale', PURCHASE: 'Purchase', CREDIT_NOTE: 'Credit Note', DEBIT_NOTE: 'Debit Note'
+    }
+
+    invoices.forEach(inv => {
+      if (tableTop > doc.page.height - 60) {
+        doc.addPage({ layout: 'landscape' })
+        tableTop = drawHeader(30)
+        doc.font('Helvetica').fontSize(7.5)
+      }
+
+      const rowHeight = 18
+      const rowY = tableTop
+
+      const valueMap: Record<string, string> = {
+        id: inv.id.slice(0, 12) + '...',
+        date: new Date(inv.invoiceDate).toLocaleDateString(),
+        type: typeLabels[inv.invoiceType] || inv.invoiceType,
+        buyer: inv.buyerName || 'Walk-in Customer',
+        amount: `PKR ${Number(inv.totalAmount).toFixed(2)}`,
+        tax: `PKR ${Number(inv.totalSalesTax).toFixed(2)}`,
+        status: inv.status,
+        fbrNo: inv.fbrInvoiceNo || '—'
+      }
+
+      cols.forEach((c, i) => {
+        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+      })
+
+      doc.moveTo(tableLeft, rowY + rowHeight).lineTo(tableLeft + tableWidth, rowY + rowHeight).stroke()
+      tableTop += rowHeight
+    })
+
+    colX.forEach(x => doc.moveTo(x, 75).lineTo(x, tableTop).stroke())
+    doc.moveTo(tableLeft + tableWidth, 75).lineTo(tableLeft + tableWidth, tableTop).stroke()
+
+    doc.end()
+  } catch (error: any) {
+    sendError(res, error.message || 'Failed to export invoices PDF', 500)
+  }
+}
+
 export const downloadInvoicePdf = async (req: any, res: Response): Promise<void> => {
   try {
     const { id } = req.params

@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import StyledSelect from '@/components/ui/StyledSelect'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 
 const PAGE_SIZE_OPTIONS = [
   { value: '10', label: '10' },
@@ -54,6 +52,7 @@ export default function ProductsPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState('')
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -252,30 +251,28 @@ export default function ProductsPage() {
     window.URL.revokeObjectURL(url)
   }
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setShowExportMenu(false)
-    const doc = new jsPDF({ orientation: 'landscape' })
-    doc.setFontSize(14)
-    doc.text('Products', 14, 15)
-
-    autoTable(doc, {
-      startY: 20,
-      head: [['Serial No.', 'Description', 'HS Code', 'UoM', 'Rate', 'Tax Rate', 'SRO', 'Item S. No.']],
-      body: filteredProducts.map((p, idx) => [
-        idx + 1,
-        p.description || '',
-        p.hsCode || '',
-        p.uom || '',
-        p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : '',
-        p.taxRate || '',
-        p.sroSchedule || '',
-        p.itemSNo || ''
-      ]),
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [230, 230, 230], textColor: 20 }
-    })
-
-    doc.save('products.pdf')
+    setExporting(true)
+    try {
+      const token = localStorage.getItem('token')
+      const params = new URLSearchParams({ uom: uomFilter, taxRate: taxRateFilter })
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/products/export?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error('Export failed')
+      const blob = await res.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'products.pdf'
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch {
+      alert('Failed to export PDF. Please try again.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -362,9 +359,10 @@ export default function ProductsPage() {
                   <div className="absolute right-0 mt-1 w-40 bg-surface border border-border rounded-lg shadow-lg z-20 overflow-hidden">
                     <button
                       onClick={handleExportPDF}
-                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition"
+                      disabled={exporting}
+                      className="w-full text-left px-4 py-2 text-sm text-body hover:bg-border-light transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Download PDF
+                      {exporting ? 'Generating…' : 'Download PDF'}
                     </button>
                     <button
                       onClick={handleExportCSV}

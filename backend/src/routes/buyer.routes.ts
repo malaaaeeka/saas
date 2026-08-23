@@ -2,12 +2,13 @@
 
 
 import { Router } from 'express'
-import { searchBuyers, createBuyer, getAllBuyers, getBuyerById, updateBuyer, deleteBuyer, bulkCreateBuyers } from '../controllers/buyer.controller'
+import { searchBuyers, createBuyer, getAllBuyers, getBuyerById, updateBuyer, deleteBuyer, bulkCreateBuyers, exportBuyersPDF } from '../controllers/buyer.controller'
 import { authenticate } from '../middleware/auth.middleware'
 
 const router = Router()
 
 router.get('/search', authenticate, searchBuyers)
+router.get('/export', authenticate, exportBuyersPDF)
 router.get('/', authenticate, getAllBuyers)
 router.post('/', authenticate, createBuyer)
 router.post('/bulk', authenticate, bulkCreateBuyers)

@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { AuthRequest } from '../middleware/auth.middleware'
 import prisma from '../config/database'
 import { sendSuccess, sendError } from '../utils/response'
+import PDFDocument from 'pdfkit'
 
 export const searchProducts = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -56,6 +57,109 @@ export const getAllProducts = async (req: AuthRequest, res: Response): Promise<v
     sendSuccess(res, products)
   } catch (error) {
     sendError(res, 'Failed to fetch products', 500)
+  }
+}
+
+export const exportProductsPDF = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const uom = req.query.uom as string | undefined
+    const taxRate = req.query.taxRate as string | undefined
+
+    const where: any = { businessId }
+    if (uom && uom !== 'ALL') where.uom = uom
+    if (taxRate && taxRate !== 'ALL') where.taxRate = taxRate
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: { description: 'asc' }
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'attachment; filename="products.pdf"')
+
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
+    doc.pipe(res)
+
+    doc.fontSize(16).font('Helvetica-Bold').text('Products', 30, 30)
+    doc.fontSize(9).font('Helvetica').fillColor('gray')
+      .text(`${products.length} product${products.length === 1 ? '' : 's'} · Generated ${new Date().toLocaleDateString()}`, 30, 52)
+    doc.fillColor('black')
+
+    const tableLeft = 30
+    let tableTop = 75
+
+    const cols = [
+      { key: 'sr',       label: 'Serial No.',  w: 50  },
+      { key: 'desc',     label: 'Description', w: 160 },
+      { key: 'hsCode',   label: 'HS Code',     w: 60  },
+      { key: 'uom',      label: 'UoM',         w: 45  },
+      { key: 'rate',     label: 'Rate',        w: 75  },
+      { key: 'taxRate',  label: 'Tax Rate',    w: 55  },
+      { key: 'sro',      label: 'SRO',         w: 100 },
+      { key: 'itemSNo',  label: 'Item S. No.', w: 75  },
+    ]
+
+    let runningX = tableLeft
+    const colX: number[] = []
+    cols.forEach(c => { colX.push(runningX); runningX += c.w })
+    const tableWidth = runningX - tableLeft
+
+    const drawHeader = (y: number) => {
+      const headerHeight = 20
+      doc.rect(tableLeft, y, tableWidth, headerHeight).stroke()
+      doc.fontSize(8).font('Helvetica-Bold')
+      cols.forEach((c, i) => {
+        doc.text(c.label, colX[i] + 4, y + 5, { width: c.w - 8 })
+        doc.moveTo(colX[i], y).lineTo(colX[i], y + headerHeight).stroke()
+      })
+      doc.moveTo(tableLeft + tableWidth, y).lineTo(tableLeft + tableWidth, y + headerHeight).stroke()
+      return y + headerHeight
+    }
+
+    tableTop = drawHeader(tableTop)
+    doc.font('Helvetica').fontSize(7.5)
+
+    products.forEach((p, idx) => {
+      if (tableTop > doc.page.height - 60) {
+        doc.addPage({ layout: 'landscape' })
+        tableTop = drawHeader(30)
+        doc.font('Helvetica').fontSize(7.5)
+      }
+
+      const rowHeight = 18
+      const rowY = tableTop
+
+      const valueMap: Record<string, string> = {
+        sr: String(idx + 1),
+        desc: p.description || '—',
+        hsCode: p.hsCode || '—',
+        uom: p.uom || '—',
+        rate: p.rate !== null ? `PKR ${Number(p.rate).toFixed(2)}` : '—',
+        taxRate: p.taxRate || '—',
+        sro: p.sroSchedule || '—',
+        itemSNo: p.itemSNo || '—'
+      }
+
+      cols.forEach((c, i) => {
+        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+      })
+
+      doc.moveTo(tableLeft, rowY + rowHeight).lineTo(tableLeft + tableWidth, rowY + rowHeight).stroke()
+      tableTop += rowHeight
+    })
+
+    colX.forEach(x => doc.moveTo(x, 75).lineTo(x, tableTop).stroke())
+    doc.moveTo(tableLeft + tableWidth, 75).lineTo(tableLeft + tableWidth, tableTop).stroke()
+
+    doc.end()
+  } catch (error) {
+    sendError(res, 'Failed to export products PDF', 500)
   }
 }
 

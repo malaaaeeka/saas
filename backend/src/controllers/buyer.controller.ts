@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { AuthRequest } from '../middleware/auth.middleware'
 import prisma from '../config/database'
 import { sendSuccess, sendError } from '../utils/response'
+import PDFDocument from 'pdfkit'
 
 export const searchBuyers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -178,6 +179,109 @@ export const getAllBuyers = async (req: AuthRequest, res: Response): Promise<voi
     sendError(res, 'Failed to fetch buyers', 500)
   }
 }
+export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const businessId = req.user?.business?.id
+    if (!businessId) {
+      sendError(res, 'No business profile found for this user', 401)
+      return
+    }
+
+    const type = req.query.type as string | undefined
+    const province = req.query.province as string | undefined
+
+    const where: any = { businessId }
+    if (type && type !== 'ALL') where.buyerType = type
+    if (province && province !== 'ALL') where.province = province
+
+    const buyers = await prisma.buyer.findMany({
+      where,
+      orderBy: { buyerName: 'asc' }
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'attachment; filename="buyers.pdf"')
+
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' })
+    doc.pipe(res)
+
+    doc.fontSize(16).font('Helvetica-Bold').text('Buyers', 30, 30)
+    doc.fontSize(9).font('Helvetica').fillColor('gray')
+      .text(`${buyers.length} buyer${buyers.length === 1 ? '' : 's'} · Generated ${new Date().toLocaleDateString()}`, 30, 52)
+    doc.fillColor('black')
+
+    const tableLeft = 30
+    let tableTop = 75
+
+    const cols = [
+      { key: 'sr',       label: 'Serial No.', w: 50  },
+      { key: 'name',     label: 'Name',       w: 110 },
+      { key: 'ntn',      label: 'NTN',        w: 70  },
+      { key: 'cnic',     label: 'CNIC',       w: 90  },
+      { key: 'type',     label: 'Type',       w: 90  },
+      { key: 'province', label: 'Province',   w: 100 },
+      { key: 'phone',    label: 'Phone',      w: 70  },
+      { key: 'email',    label: 'Email',      w: 100 },
+    ]
+
+    let runningX = tableLeft
+    const colX: number[] = []
+    cols.forEach(c => { colX.push(runningX); runningX += c.w })
+    const tableWidth = runningX - tableLeft
+
+    const drawHeader = (y: number) => {
+      const headerHeight = 20
+      doc.rect(tableLeft, y, tableWidth, headerHeight).stroke()
+      doc.fontSize(8).font('Helvetica-Bold')
+      cols.forEach((c, i) => {
+        doc.text(c.label, colX[i] + 4, y + 5, { width: c.w - 8 })
+        doc.moveTo(colX[i], y).lineTo(colX[i], y + headerHeight).stroke()
+      })
+      doc.moveTo(tableLeft + tableWidth, y).lineTo(tableLeft + tableWidth, y + headerHeight).stroke()
+      return y + headerHeight
+    }
+
+    tableTop = drawHeader(tableTop)
+    doc.font('Helvetica').fontSize(7.5)
+
+    buyers.forEach((b, idx) => {
+      if (tableTop > doc.page.height - 60) {
+        doc.addPage({ layout: 'landscape' })
+        tableTop = drawHeader(30)
+        doc.font('Helvetica').fontSize(7.5)
+      }
+
+      const rowHeight = 18
+      const rowY = tableTop
+
+      const valueMap: Record<string, string> = {
+        sr: String(idx + 1),
+        name: b.buyerName || '—',
+        ntn: b.buyerNtn || '—',
+        cnic: b.buyerCnic || '—',
+        type: b.buyerType || 'Unregistered',
+        province: b.province || '—',
+        phone: b.phone || '—',
+        email: b.email || '—'
+      }
+
+      cols.forEach((c, i) => {
+        doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
+      })
+
+      doc.moveTo(tableLeft, rowY + rowHeight).lineTo(tableLeft + tableWidth, rowY + rowHeight).stroke()
+      tableTop += rowHeight
+    })
+
+    colX.forEach(x => doc.moveTo(x, 75).lineTo(x, tableTop).stroke())
+    doc.moveTo(tableLeft + tableWidth, 75).lineTo(tableLeft + tableWidth, tableTop).stroke()
+
+    doc.end()
+  } catch (error) {
+    sendError(res, 'Failed to export buyers PDF', 500)
+  }
+}
+
 export const updateBuyer = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id } = req.params

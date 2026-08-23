@@ -6,14 +6,16 @@ import {
   createProduct,
   bulkCreateProducts,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  exportProductsPDF
 } from '../controllers/product.controller'
 import { authenticate } from '../middleware/auth.middleware'
 
 const router = Router()
 
-// '/search' and '/bulk' must come before '/:id' so they aren't swallowed by the :id param
+// '/search', '/bulk', and '/export' must come before '/:id' so they aren't swallowed by the :id param
 router.get('/search', authenticate, searchProducts)
+router.get('/export', authenticate, exportProductsPDF)
 router.get('/', authenticate, getAllProducts)
 router.post('/', authenticate, createProduct)
 router.post('/bulk', authenticate, bulkCreateProducts)
