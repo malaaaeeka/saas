@@ -232,13 +232,12 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
 
     const drawHeader = (y: number) => {
       const headerHeight = 20
-      doc.rect(tableLeft, y, tableWidth, headerHeight).stroke()
+      doc.rect(tableLeft, y, tableWidth, headerHeight).fill('#e5e5e5')
+      doc.fillColor('black')
       doc.fontSize(8).font('Helvetica-Bold')
       cols.forEach((c, i) => {
-        doc.text(c.label, colX[i] + 4, y + 5, { width: c.w - 8 })
-        doc.moveTo(colX[i], y).lineTo(colX[i], y + headerHeight).stroke()
+        doc.text(c.label, colX[i] + 4, y + 6, { width: c.w - 8 })
       })
-      doc.moveTo(tableLeft + tableWidth, y).lineTo(tableLeft + tableWidth, y + headerHeight).stroke()
       return y + headerHeight
     }
 
@@ -268,7 +267,6 @@ export const exportBuyersPDF = async (req: AuthRequest, res: Response): Promise<
       }
 
       cols.forEach((c, i) => {
-        doc.rect(colX[i], rowY, c.w, rowHeight).stroke()
         doc.text(valueMap[c.key], colX[i] + 4, rowY + 5, { width: c.w - 8 })
       })
 
