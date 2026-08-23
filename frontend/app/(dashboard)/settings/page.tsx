@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({
     businessName: '',
     ntn: '',
+    strn: '',
     address: '',
     city: '',
     phone: '',
@@ -66,6 +67,7 @@ export default function SettingsPage() {
       setFormData({
   businessName: data.data.businessName || '',
   ntn:          (data.data.ntn && !data.data.ntn.startsWith('PENDING')) ? data.data.ntn : '',
+  strn:         data.data.strn || '',
   address:      data.data.address || '',
   city:         data.data.city || '',
   phone:        data.data.phone || '',
@@ -310,6 +312,19 @@ if (!/^\d{7}$/.test(formData.ntn) && !/^\d{13}$/.test(formData.ntn)) {
 {isProfileComplete && (
   <p className="text-xs text-muted mt-1">NTN/CNIC cannot be changed after registration</p>
 )}
+</div>
+
+<div>
+  <label className="block text-sm text-muted mb-2">STRN (optional)</label>
+  <input
+    type="text"
+    name="strn"
+    value={formData.strn}
+    onChange={handleInputChange}
+    placeholder="11-digit Sales Tax Registration No."
+    className="w-full bg-surface border border-border text-heading rounded-lg px-4 py-2 focus:outline-none focus:border-accent transition"
+  />
+  <p className="text-xs text-muted mt-1">Only if your business is registered for sales tax</p>
 </div>
 
                 <div className="col-span-2">

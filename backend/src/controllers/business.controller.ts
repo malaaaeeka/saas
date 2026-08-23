@@ -8,7 +8,7 @@ export const createBusinessProfile = async (req: any, res: Response): Promise<vo
     const { businessName, ntn, strn, address, city, phone, businessType, securityToken, posId } = req.body
 
     // Validation
-    if (!businessName || !ntn || !strn || !address || !city || !phone || !businessType) {
+    if (!businessName || !ntn || !address || !city || !phone || !businessType) {
       sendError(res, 'All required fields must be filled', 400)
       return
     }
@@ -16,7 +16,7 @@ export const createBusinessProfile = async (req: any, res: Response): Promise<vo
       sendError(res, 'Invalid NTN format (must be 7 digits)', 400)
       return
     }
-    if (!isValidSTRN(strn)) {
+    if (strn && !isValidSTRN(strn)) {
       sendError(res, 'Invalid STRN format (must be 11 digits)', 400)
       return
     }
@@ -35,11 +35,13 @@ export const createBusinessProfile = async (req: any, res: Response): Promise<vo
       return
     }
 
-    // Check STRN uniqueness manually
-    const strnTaken = await prisma.business.findUnique({ where: { strn } })
-    if (strnTaken) {
-      sendError(res, 'STRN is already registered to another business', 400)
-      return
+    // Check STRN uniqueness manually — only when provided
+    if (strn) {
+      const strnTaken = await prisma.business.findUnique({ where: { strn } })
+      if (strnTaken) {
+        sendError(res, 'STRN is already registered to another business', 400)
+        return
+      }
     }
 
     const business = await prisma.business.create({
@@ -47,7 +49,7 @@ export const createBusinessProfile = async (req: any, res: Response): Promise<vo
         userId:       req.user.id,
         businessName,
         ntn,
-        strn,
+        strn: strn || null,
         address,
         city,
         phone,
